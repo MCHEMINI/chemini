@@ -10,6 +10,7 @@ require APP_DIR . '/lib/webauthn.php';
 require APP_DIR . '/lib/auth.php';
 require APP_DIR . '/lib/feeds.php';
 require APP_DIR . '/lib/graph.php';
+require APP_DIR . '/lib/mail.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -17,7 +18,7 @@ mb_internal_encoding('UTF-8');
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
-header("Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self' https://login.microsoftonline.com");
+header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self' https://login.microsoftonline.com");
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 
 session_boot();
@@ -43,13 +44,29 @@ try {
             $u = require_user();
             require APP_DIR . '/pages/perso.php';
             page_perso($u);
+        case 'honoraires':
+        case 'honoraires/vue':
+        case 'honoraires/import':
+            $u = require_user();
+            require APP_DIR . '/pages/docs.php';
+            if ($route === 'honoraires/vue') doc_view($u, 'honoraires');
+            if ($route === 'honoraires/import' && $method === 'POST') doc_import($u, 'honoraires');
+            page_doc($u, 'honoraires');
         case 'securite':
             $u = require_user();
             require APP_DIR . '/pages/security.php';
             page_security($u);
         case 'connexion':
             if (current_user()) redirect('/');
-            render('login', ['title' => 'Connexion'], false);
+            render('login', ['title' => 'Connexion', 'startStep' => 'main'], false);
+        case 'connexion/lien':
+            $tok = (string)($_GET['t'] ?? '');
+            $row = $tok !== '' ? q('SELECT * FROM magic_links WHERE token_hash=? AND used_at IS NULL AND expires_at>?', [hash('sha256', $tok), time()])->fetch() : null;
+            if (!$row) { http_response_code(410); render('notfound', ['title' => 'Lien expiré', 'message' => 'Ce lien de connexion a expiré ou a déjà été utilisé. Demandez-en un nouveau.'], false); }
+            q('UPDATE magic_links SET used_at=? WHERE id=?', [time(), $row['id']]);
+            login_session((int)$row['user_id']);
+            audit((int)$row['user_id'], 'login_magic_link');
+            render('login', ['title' => 'Connexion', 'startStep' => 'trust'], false);
         case 'activation':
             require APP_DIR . '/pages/enroll.php';
             page_enroll((string)($_GET['t'] ?? ''));

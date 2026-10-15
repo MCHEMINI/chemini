@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=1">
+<link rel="stylesheet" href="/assets/app.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -20,6 +20,7 @@
     <nav>
       <div class="group">Commun</div>
       <a class="<?= ($nav ?? '') === 'dash' ? 'active' : '' ?>" href="/"><i class="dot"></i>Tableau de bord</a>
+      <a class="<?= ($nav ?? '') === 'honoraires' ? 'active' : '' ?>" href="/honoraires"><i class="dot"></i>Honoraires</a>
       <div class="group">Personnel</div>
       <a class="<?= ($nav ?? '') === 'perso' ? 'active' : '' ?>" href="/espace"><?= avatar($u, 'sm') ?>Mon espace</a>
       <div class="group">Compte</div>
@@ -31,6 +32,6 @@
   <main><?= $content ?></main>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=1"></script>
+<script src="/assets/app.js?v=2"></script>
 </body>
 </html>

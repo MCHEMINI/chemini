@@ -28,6 +28,11 @@ $set('TRUST_DAYS', 90);
 $set('GRAPH_TENANT', 'organizations');
 $set('GRAPH_CLIENT_ID', '');
 $set('GRAPH_CLIENT_SECRET', '');
+$set('MAIL_FROM', 'noreply@gidsas.fr');
+$set('SMTP_HOST', '');
+$set('SMTP_PORT', 587);
+$set('SMTP_USER', '');
+$set('SMTP_PASS', '');
 $set('FEED_TTL', 3600);
 $set('LEGAL_FEEDS', [
     'https://news.google.com/rss/search?q=copropri%C3%A9t%C3%A9+(loi+OR+d%C3%A9cret+OR+arr%C3%AAt%C3%A9+OR+%22Cour+de+cassation%22+OR+%22Journal+officiel%22)+when:30d&hl=fr&gl=FR&ceid=FR:fr',

@@ -13,18 +13,50 @@ function api(string $r): never {
         $hasPk = $u && q('SELECT 1 FROM passkeys WHERE user_id=?', [$u['id']])->fetchColumn();
         json_out(['ok' => true, 'passkey' => (bool)$hasPk]);
     }
+    if ($r === 'login/password') {
+        $email = strtolower(in_str('email', 190));
+        $key = 'pw:' . $email . ':' . client_ip();
+        if (rate_limited($key, 6, 900) || rate_limited('ip:' . client_ip(), 30, 900)) json_out(['error' => 'Trop de tentatives. Réessayez dans 15 minutes.'], 429);
+        rate_hit('ip:' . client_ip());
+        $u = q('SELECT * FROM users WHERE email=? AND totp_enabled=1', [$email])->fetch();
+        $ok = $u && $u['password_hash'] && password_verify((string)(body()['password'] ?? ''), $u['password_hash']);
+        if (!$ok) {
+            if (!$u) password_verify('x', '$2y$10$65KTt1rntwzVlz1Ta3xogeE8ue36leMFTeMtegj4e./2fx0eQ5sne'); // temps constant
+            rate_hit($key);
+            json_out(['error' => $u && !$u['password_hash'] ? 'Aucun mot de passe défini pour ce compte. Utilisez Face ID ou le lien par e-mail.' : 'Adresse ou mot de passe incorrect.'], 401);
+        }
+        rate_clear($key);
+        $_SESSION['pw_uid'] = (int)$u['id'];
+        $_SESSION['pw_t'] = time();
+        json_out(['ok' => true, 'next' => 'totp']);
+    }
     if ($r === 'login/totp') {
-        $uid = (int)($_SESSION['pending_uid'] ?? 0);
+        $uid = (int)($_SESSION['pw_uid'] ?? 0);
+        if (!$uid || time() - (int)($_SESSION['pw_t'] ?? 0) > 300) json_out(['error' => 'Session expirée, saisissez à nouveau votre mot de passe.'], 401);
         $key = 'totp:' . $uid . ':' . client_ip();
         if (rate_limited($key, 6, 900)) json_out(['error' => 'Trop de codes erronés. Réessayez dans 15 minutes.'], 429);
-        $u = $uid ? q('SELECT * FROM users WHERE id=?', [$uid])->fetch() : null;
+        $u = q('SELECT * FROM users WHERE id=?', [$uid])->fetch();
         $step = $u ? totp_verify($u['totp_secret'], in_str('code', 10), (int)$u['totp_last_step']) : null;
         if (!$step) { rate_hit($key); json_out(['error' => 'Code incorrect ou expiré.'], 401); }
         rate_clear($key);
         q('UPDATE users SET totp_last_step=? WHERE id=?', [$step, $uid]);
+        unset($_SESSION['pw_uid'], $_SESSION['pw_t']);
         login_session($uid);
-        audit($uid, 'login_totp');
+        audit($uid, 'login_password_totp');
         json_out(['ok' => true]);
+    }
+    if ($r === 'login/link') {
+        $email = strtolower(in_str('email', 190));
+        if (rate_limited('link:' . $email, 3, 900) || rate_limited('ip:' . client_ip(), 30, 900)) json_out(['error' => 'Trop de demandes. Réessayez dans 15 minutes.'], 429);
+        rate_hit('link:' . $email); rate_hit('ip:' . client_ip());
+        $u = q('SELECT * FROM users WHERE email=? AND totp_enabled=1', [$email])->fetch();
+        if ($u) {
+            $tok = b64u_enc(random_bytes(32));
+            q('INSERT INTO magic_links(user_id,token_hash,expires_at) VALUES(?,?,?)', [$u['id'], hash('sha256', $tok), time() + 900]);
+            $sent = send_magic_link($u, BASE_URL . '/connexion/lien?t=' . $tok);
+            audit((int)$u['id'], $sent ? 'magic_link_sent' : 'magic_link_failed');
+        }
+        json_out(['ok' => true]); // réponse identique, que le compte existe ou non
     }
     if ($r === 'login/passkey-options') {
         $uid = (int)($_SESSION['pending_uid'] ?? 0);
@@ -45,6 +77,8 @@ function api(string $r): never {
         $e = $_SESSION['enroll'] ?? null;
         if (!$e || time() - $e['t'] > 1800) json_out(['error' => 'Lien expiré, rouvrez le lien d\'activation.'], 400);
         if (rate_limited('enroll:' . client_ip(), 8, 900)) json_out(['error' => 'Trop de tentatives.'], 429);
+        $pw = (string)(body()['password'] ?? '');
+        if (mb_strlen($pw) < 10) json_out(['error' => 'Choisissez un mot de passe d\'au moins 10 caractères.'], 400);
         $step = totp_verify($e['secret'], in_str('code', 10));
         if (!$step) { rate_hit('enroll:' . client_ip()); json_out(['error' => 'Code incorrect. Vérifiez l\'heure de votre téléphone.'], 401); }
         db()->beginTransaction();
@@ -56,9 +90,10 @@ function api(string $r): never {
             db()->rollBack(); json_out(['error' => 'Compte déjà activé.'], 400);
         }
         $ex = q('SELECT id FROM users WHERE email=?', [$e['email']])->fetchColumn();
-        if ($ex) q('UPDATE users SET totp_secret=?, totp_enabled=1, totp_last_step=? WHERE id=?', [$e['secret'], $step, $ex]);
-        else q('INSERT INTO users(email,name,initials,role,totp_secret,totp_enabled,totp_last_step,created_at) VALUES(?,?,?,?,?,1,?,?)',
-            [$e['email'], $e['name'], $e['initials'], $e['role'], $e['secret'], $step, time()]);
+        $hash = password_hash($pw, PASSWORD_DEFAULT);
+        if ($ex) q('UPDATE users SET totp_secret=?, totp_enabled=1, totp_last_step=?, password_hash=? WHERE id=?', [$e['secret'], $step, $hash, $ex]);
+        else q('INSERT INTO users(email,name,initials,role,totp_secret,totp_enabled,totp_last_step,password_hash,created_at) VALUES(?,?,?,?,?,1,?,?,?)',
+            [$e['email'], $e['name'], $e['initials'], $e['role'], $e['secret'], $step, $hash, time()]);
         $uid = $ex ?: (int)db()->lastInsertId();
         db()->commit();
         unset($_SESSION['enroll']);
@@ -90,6 +125,15 @@ function api(string $r): never {
         case 'passkey/delete':
             q('DELETE FROM passkeys WHERE id=? AND user_id=?', [in_int('id'), $uid]);
             audit($uid, 'passkey_removed');
+            json_out(['ok' => true]);
+
+        case 'password/set':
+            $new = (string)(body()['password'] ?? '');
+            if (mb_strlen($new) < 10) json_out(['error' => 'Au moins 10 caractères.'], 400);
+            if ($new !== (string)(body()['confirm'] ?? '')) json_out(['error' => 'Les deux saisies ne correspondent pas.'], 400);
+            if ($u['password_hash'] && !password_verify((string)(body()['current'] ?? ''), $u['password_hash'])) json_out(['error' => 'Mot de passe actuel incorrect.'], 401);
+            q('UPDATE users SET password_hash=? WHERE id=?', [password_hash($new, PASSWORD_DEFAULT), $uid]);
+            audit($uid, 'password_set');
             json_out(['ok' => true]);
 
         case 'device/revoke':
@@ -142,6 +186,17 @@ function api(string $r): never {
             json_out(['ok' => true]);
         case 'deadlines/delete':
             q('DELETE FROM deadlines WHERE id=?', [in_int('id')]);
+            json_out(['ok' => true]);
+
+        /* Outils partagés : état commun */
+        case 'doc/state':
+            $slug = in_str('slug', 40);
+            if (!q('SELECT 1 FROM docs WHERE slug=?', [$slug])->fetchColumn()) json_out(['error' => 'Document inconnu'], 404);
+            if (body()['reset'] ?? false) { q('DELETE FROM doc_state WHERE slug=?', [$slug]); json_out(['ok' => true]); }
+            $json = (string)(body()['json'] ?? '');
+            if (strlen($json) > 6_000_000 || json_decode($json) === null) json_out(['error' => 'Données invalides'], 400);
+            q('INSERT INTO doc_state(slug,json,updated_at,updated_by) VALUES(?,?,?,?) ON CONFLICT(slug) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at, updated_by=excluded.updated_by',
+                [$slug, $json, time(), $uid]);
             json_out(['ok' => true]);
 
         /* Espace personnel (privé) */

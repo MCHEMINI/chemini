@@ -26,8 +26,17 @@
 
   <section class="col-6">
     <div class="panel stack">
-      <div class="sec-h flat"><h2>Code TOTP</h2><span class="chip ok">Actif</span></div>
-      <p class="muted">Code à 6 chiffres de votre application d'authentification. Il reste disponible en secours de Face ID.</p>
+      <div class="sec-h flat"><h2>Mot de passe + code</h2><span class="chip <?= $u['password_hash'] ? 'ok' : 'warn' ?>"><?= $u['password_hash'] ? 'Actif' : 'À définir' ?></span></div>
+      <p class="muted">Connexion par mot de passe, confirmée par le code à 6 chiffres de votre application d'authentification.</p>
+      <form class="stack" data-api="password/set">
+        <?php if ($u['password_hash']): ?><div class="field"><label for="pw-cur">Mot de passe actuel</label><input class="input" id="pw-cur" name="current" type="password" autocomplete="current-password" required></div><?php endif; ?>
+        <div class="two">
+          <div class="field"><label for="pw-new">Nouveau mot de passe</label><input class="input" id="pw-new" name="password" type="password" autocomplete="new-password" minlength="10" required></div>
+          <div class="field"><label for="pw-conf">Confirmation</label><input class="input" id="pw-conf" name="confirm" type="password" autocomplete="new-password" minlength="10" required></div>
+        </div>
+        <p class="form-error" hidden></p>
+        <button class="btn btn-ghost"><?= $u['password_hash'] ? 'Changer le mot de passe' : 'Définir le mot de passe' ?></button>
+      </form>
     </div>
     <div class="panel stack" style="margin-top:24px">
       <div class="sec-h flat"><h2>Messagerie Outlook</h2><span class="chip <?= $msConnected ? 'ok' : 'warn' ?>"><?= $msConnected ? 'Connectée' : 'Non connectée' ?></span></div>

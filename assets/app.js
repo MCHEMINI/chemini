@@ -59,7 +59,7 @@
 
   function steps(form, name) {
     $$('[data-step]', form).forEach(s => (s.hidden = s.dataset.step !== name));
-    const order = { email: 1, method: 2, totp: 2, trust: 3, code: 2 };
+    const order = { main: 1, totp: 2, sent: 2, trust: 3, code: 2 };
     $$('.steps i', form).forEach((b, i) => b.classList.toggle('on', i < (order[name] || 1)));
   }
 
@@ -73,57 +73,64 @@
   const login = $('#loginFlow');
   if (login) {
     const otp = otpInputs(login);
-    let hasPasskey = false;
-    const emailIn = $('#email');
-    try { emailIn.value = localStorage.getItem('gid_email') || ''; } catch (_) {}
-    (emailIn.value ? login.querySelector('[data-step=email] button') : emailIn)?.focus();
+    const emailIn = $('#email'), pwIn = $('#password'), mainBtn = $('#mainBtn');
+    const MODES = {
+      password: { btn: 'Se connecter', hint: 'Identifiez-vous avec votre adresse professionnelle et votre mot de passe.' },
+      faceid:   { btn: 'Continuer avec Face ID', hint: 'Votre appareil vous reconnaît : aucun mot de passe à saisir.' },
+      link:     { btn: 'Recevoir un lien de connexion', hint: 'Nous vous envoyons un lien valable 15 minutes.' },
+    };
+    let mode = 'password';
+    const setMode = m => {
+      if (m === 'faceid' && !webauthnOk()) { showError($('[data-step=main]', login), 'Ce navigateur ne prend pas en charge Face ID.'); return; }
+      mode = m;
+      $$('.mode', login).forEach(b => { const on = b.dataset.mode === m; b.classList.toggle('on', on); b.setAttribute('aria-checked', on); });
+      $('#pwField').hidden = m !== 'password';
+      mainBtn.textContent = MODES[m].btn; $('#modeHint').textContent = MODES[m].hint;
+      showError($('[data-step=main]', login), '');
+      try { localStorage.setItem('gid_mode', m); } catch (_) {}
+    };
+    $$('.mode', login).forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+    try { emailIn.value = localStorage.getItem('gid_email') || ''; const m = localStorage.getItem('gid_mode'); if (m && MODES[m]) setMode(m); } catch (_) {}
+    steps(login, login.dataset.start || 'main');
+    if ((login.dataset.start || 'main') === 'main') (emailIn.value ? (mode === 'password' ? pwIn : mainBtn) : emailIn).focus();
 
+    const scopeMain = () => $('[data-step=main]', login);
     login.addEventListener('submit', async e => {
       e.preventDefault();
-      const step = $('[data-step]:not([hidden])', login).dataset.step;
-      if (step !== 'email') return;
+      if ($('[data-step]:not([hidden])', login).dataset.step !== 'main') return;
       const email = emailIn.value.trim().toLowerCase();
       if (!email) return emailIn.focus();
+      try { localStorage.setItem('gid_email', email); } catch (_) {}
+      showError(scopeMain(), '');
+      mainBtn.disabled = true;
       try {
-        const r = await api('login/start', { email });
-        try { localStorage.setItem('gid_email', email); } catch (_) {}
-        hasPasskey = r.passkey && webauthnOk();
-        $('#methodEmail').textContent = email;
-        $('#useFace').hidden = !hasPasskey;
-        $('#orDivider').hidden = !hasPasskey;
-        showError($('[data-step=method]', login), '');
-        steps(login, 'method');
-        if (hasPasskey) $('#useFace').click();
-      } catch (err) { alertInline(login, err.message); }
-    });
-
-    function alertInline(scope, msg) { showError($('[data-step]:not([hidden])', scope), msg); }
-
-    $('#useFace').addEventListener('click', async () => {
-      const scope = $('[data-step=method]', login);
-      showError(scope, '');
-      try {
-        const opt = await api('login/passkey-options');
-        opt.challenge = b64uToBuf(opt.challenge);
-        opt.allowCredentials = (opt.allowCredentials || []).map(c => ({ ...c, id: b64uToBuf(c.id) }));
-        const cred = await navigator.credentials.get({ publicKey: opt });
-        await api('login/passkey', {
-          id: cred.id,
-          clientDataJSON: bufToB64u(cred.response.clientDataJSON),
-          authenticatorData: bufToB64u(cred.response.authenticatorData),
-          signature: bufToB64u(cred.response.signature),
-        });
-        steps(login, 'trust');
+        if (mode === 'password') {
+          if (!pwIn.value) { pwIn.focus(); return; }
+          await api('login/password', { email, password: pwIn.value });
+          pwIn.value = ''; steps(login, 'totp'); otp.clear();
+        } else if (mode === 'link') {
+          await api('login/link', { email });
+          steps(login, 'sent');
+        } else {
+          await api('login/start', { email });
+          const opt = await api('login/passkey-options');
+          opt.challenge = b64uToBuf(opt.challenge);
+          opt.allowCredentials = (opt.allowCredentials || []).map(c => ({ ...c, id: b64uToBuf(c.id) }));
+          const cred = await navigator.credentials.get({ publicKey: opt });
+          await api('login/passkey', {
+            id: cred.id,
+            clientDataJSON: bufToB64u(cred.response.clientDataJSON),
+            authenticatorData: bufToB64u(cred.response.authenticatorData),
+            signature: bufToB64u(cred.response.signature),
+          });
+          steps(login, 'trust');
+        }
       } catch (err) {
-        showError(scope, err.name === 'NotAllowedError' ? 'Vérification annulée. Réessayez ou utilisez le code.' : err.message);
-      }
+        showError(scopeMain(), err.name === 'NotAllowedError' ? 'Vérification annulée, ou aucun Face ID enregistré pour ce compte sur cet appareil.' : err.message);
+      } finally { mainBtn.disabled = false; }
     });
 
-    $('#useTotp').addEventListener('click', () => { steps(login, 'totp'); otp.clear(); });
-    $$('[data-back]', login).forEach(b => b.addEventListener('click', () => {
-      steps(login, b.closest('[data-step]').dataset.step === 'totp' ? 'method' : 'email');
-    }));
-
+    $$('[data-back]', login).forEach(b => b.addEventListener('click', () => steps(login, 'main')));
     const verifyTotp = async () => {
       const scope = $('[data-step=totp]', login);
       const code = otp.value();
@@ -145,11 +152,13 @@
       const scope = $('[data-step=code]', enroll);
       const code = otp.value();
       if (code.length !== 6) return showError(scope, 'Saisissez les 6 chiffres.');
-      try { await api('enroll/verify', { code }); steps(enroll, 'trust'); }
+      const pw = $('#newPw').value, pw2 = $('#newPw2').value;
+      if (pw.length < 10) return showError(scope, 'Choisissez un mot de passe d\'au moins 10 caractères.');
+      if (pw !== pw2) return showError(scope, 'Les deux mots de passe ne correspondent pas.');
+      try { await api('enroll/verify', { code, password: pw }); steps(enroll, 'trust'); }
       catch (err) { showError(scope, err.message); otp.clear(); }
     };
     $('#enrollOk').addEventListener('click', go);
-    enroll.addEventListener('otp-complete', go);
     enroll.addEventListener('submit', e => e.preventDefault());
     $('#enter').addEventListener('click', e => finishTrust(e.currentTarget));
     $('#copySecret')?.addEventListener('click', () => copy($('#secret').textContent.replace(/\s/g, ''), $('#secret')));

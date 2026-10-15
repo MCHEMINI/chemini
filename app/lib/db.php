@@ -52,6 +52,25 @@ CREATE TABLE audit(id INTEGER PRIMARY KEY, user_id INTEGER, event TEXT NOT NULL,
 PRAGMA user_version = 1;
 SQL);
     }
+    if ($v < 2) {
+        $pdo->exec(<<<SQL
+CREATE TABLE docs(
+  slug TEXT PRIMARY KEY, title TEXT NOT NULL, html TEXT NOT NULL, store_key TEXT,
+  updated_at INTEGER NOT NULL, updated_by INTEGER);
+CREATE TABLE doc_state(
+  slug TEXT PRIMARY KEY, json TEXT NOT NULL, updated_at INTEGER NOT NULL, updated_by INTEGER);
+PRAGMA user_version = 2;
+SQL);
+    }
+    if ($v < 3) {
+        $pdo->exec(<<<SQL
+ALTER TABLE users ADD COLUMN password_hash TEXT;
+CREATE TABLE magic_links(
+  id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT UNIQUE NOT NULL, expires_at INTEGER NOT NULL, used_at INTEGER);
+PRAGMA user_version = 3;
+SQL);
+    }
 }
 
 function q(string $sql, array $p = []): PDOStatement {

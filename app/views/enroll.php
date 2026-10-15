@@ -10,7 +10,10 @@
       <li><strong>Sinon</strong>, dans Google Authenticator ou Microsoft Authenticator, choisissez « Saisir une clé » et copiez :
         <div class="secret mono" id="secret"><?= e(trim(chunk_split($sec, 4, ' '))) ?></div>
         <button type="button" class="btn-link" id="copySecret">Copier la clé</button></li>
-      <li>Saisissez le code à 6 chiffres affiché :</li>
+      <li>Choisissez votre mot de passe (10 caractères minimum) :
+        <div class="field mt"><label for="newPw">Mot de passe</label><input class="input" id="newPw" type="password" autocomplete="new-password" minlength="10"></div>
+        <div class="field mt"><label for="newPw2">Confirmation</label><input class="input" id="newPw2" type="password" autocomplete="new-password" minlength="10"></div></li>
+      <li>Saisissez le code à 6 chiffres affiché par l'application :</li>
     </ol>
 
     <div class="otp">
