@@ -62,15 +62,24 @@ function smtp_send(string $to, string $subj, string $body, array $headers): bool
     }
 }
 
-function send_magic_link(array $user, string $link): bool {
-    $name = explode(' ', $user['name'])[0];
-    $text = "Bonjour $name,\n\nVoici votre lien de connexion à " . APP_NAME . " (valable 15 minutes, utilisable une seule fois) :\n$link\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.";
+function mail_template(string $title, string $intro, string $button, string $link): array {
     $l = htmlspecialchars($link, ENT_QUOTES);
     $html = "<div style=\"font-family:Georgia,serif;max-width:480px;margin:0 auto;padding:32px;color:#151A22\">"
           . "<p style=\"font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8A6A3B\">GID SAS · Chemini</p>"
-          . "<h1 style=\"font-weight:400;font-size:26px\">Votre lien de connexion</h1>"
-          . "<p style=\"font-family:Arial,sans-serif;font-size:15px;color:#52514e\">Valable 15 minutes, utilisable une seule fois.</p>"
-          . "<p><a href=\"$l\" style=\"display:inline-block;background:#151A22;color:#F3F3F0;padding:14px 22px;border-radius:6px;text-decoration:none;font-family:Arial,sans-serif;font-weight:bold\">Se connecter</a></p>"
+          . "<h1 style=\"font-weight:400;font-size:26px\">" . htmlspecialchars($title) . "</h1>"
+          . "<p style=\"font-family:Arial,sans-serif;font-size:15px;color:#52514e\">" . htmlspecialchars($intro) . "</p>"
+          . "<p><a href=\"$l\" style=\"display:inline-block;background:#151A22;color:#F3F3F0;padding:14px 22px;border-radius:6px;text-decoration:none;font-family:Arial,sans-serif;font-weight:bold\">" . htmlspecialchars($button) . "</a></p>"
           . "<p style=\"font-family:Arial,sans-serif;font-size:12px;color:#85837d\">Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.</p></div>";
+    $text = "$title\n\n$intro\n$link\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.";
+    return [$text, $html];
+}
+
+function send_magic_link(array $user, string $link): bool {
+    [$text, $html] = mail_template('Votre lien de connexion', 'Valable 15 minutes, utilisable une seule fois.', 'Se connecter', $link);
     return send_mail($user['email'], 'Votre lien de connexion · ' . APP_NAME, $text, $html);
+}
+
+function send_reset_link(array $user, string $link): bool {
+    [$text, $html] = mail_template('Réinitialiser votre mot de passe', 'Ce lien est valable 30 minutes et utilisable une seule fois. Votre code à 6 chiffres restera demandé à la connexion.', 'Choisir un nouveau mot de passe', $link);
+    return send_mail($user['email'], 'Réinitialisation du mot de passe · ' . APP_NAME, $text, $html);
 }

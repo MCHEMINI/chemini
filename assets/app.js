@@ -59,7 +59,7 @@
 
   function steps(form, name) {
     $$('[data-step]', form).forEach(s => (s.hidden = s.dataset.step !== name));
-    const order = { main: 1, totp: 2, sent: 2, trust: 3, code: 2 };
+    const order = { main: 1, totp: 2, sent: 2, forgot: 2, forgotSent: 2, trust: 3, code: 2 };
     $$('.steps i', form).forEach((b, i) => b.classList.toggle('on', i < (order[name] || 1)));
   }
 
@@ -131,6 +131,27 @@
     });
 
     $$('[data-back]', login).forEach(b => b.addEventListener('click', () => steps(login, 'main')));
+    // Adresse conservée : mémorisée dès la saisie, reprise partout
+    const keepEmail = v => { try { localStorage.setItem('gid_email', v.trim().toLowerCase()); } catch (_) {} };
+    emailIn.addEventListener('input', () => keepEmail(emailIn.value));
+    const forgotIn = $('#emailForgot');
+    forgotIn.addEventListener('input', () => { emailIn.value = forgotIn.value; keepEmail(forgotIn.value); });
+    $('#forgotLink').addEventListener('click', () => {
+      forgotIn.value = emailIn.value.trim();
+      showError($('[data-step=forgot]', login), '');
+      steps(login, 'forgot');
+      (forgotIn.value ? $('#forgotSend') : forgotIn).focus();
+    });
+    $('#forgotSend').addEventListener('click', async e => {
+      const scope = $('[data-step=forgot]', login), btn = e.currentTarget;
+      const email = forgotIn.value.trim().toLowerCase();
+      if (!email) return forgotIn.focus();
+      btn.disabled = true;
+      try { await api('login/forgot', { email }); emailIn.value = email; keepEmail(email); steps(login, 'forgotSent'); }
+      catch (err) { showError(scope, err.message); }
+      finally { btn.disabled = false; }
+    });
+    forgotIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#forgotSend').click(); } });
     const verifyTotp = async () => {
       const scope = $('[data-step=totp]', login);
       const code = otp.value();
@@ -162,6 +183,24 @@
     enroll.addEventListener('submit', e => e.preventDefault());
     $('#enter').addEventListener('click', e => finishTrust(e.currentTarget));
     $('#copySecret')?.addEventListener('click', () => copy($('#secret').textContent.replace(/\s/g, ''), $('#secret')));
+  }
+
+  /* ---------- Nouveau mot de passe ---------- */
+  const reset = $('#resetFlow');
+  if (reset) {
+    $('#rp1').focus();
+    reset.addEventListener('submit', async e => {
+      e.preventDefault();
+      const scope = $('[data-step=form]', reset);
+      const a = $('#rp1').value, b = $('#rp2').value;
+      if (a.length < 10) return showError(scope, 'Au moins 10 caractères.');
+      if (a !== b) return showError(scope, 'Les deux saisies ne correspondent pas.');
+      try {
+        const r = await api('reset/confirm', { token: reset.dataset.token, password: a, confirm: b });
+        try { if (r.email) localStorage.setItem('gid_email', r.email); localStorage.setItem('gid_mode', 'password'); } catch (_) {}
+        $$('[data-step]', reset).forEach(s => (s.hidden = s.dataset.step !== 'done'));
+      } catch (err) { showError(scope, err.message); }
+    });
   }
 
   async function copy(text, selectEl) {

@@ -71,6 +71,14 @@ CREATE TABLE magic_links(
 PRAGMA user_version = 3;
 SQL);
     }
+    if ($v < 4) {
+        $pdo->exec(<<<SQL
+CREATE TABLE password_resets(
+  id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT UNIQUE NOT NULL, expires_at INTEGER NOT NULL, used_at INTEGER);
+PRAGMA user_version = 4;
+SQL);
+    }
 }
 
 function q(string $sql, array $p = []): PDOStatement {

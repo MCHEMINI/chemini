@@ -5,7 +5,7 @@
   <div data-step="main" class="stack lg">
     <div><div class="eyebrow">Connexion</div><h2><?= greeting() ?>.</h2><p class="sub" id="modeHint">Identifiez-vous avec votre adresse professionnelle et votre mot de passe.</p></div>
     <div class="field"><label for="email">Adresse e-mail</label><input class="input" id="email" name="email" type="email" autocomplete="username webauthn" required></div>
-    <div class="field" id="pwField"><label for="password">Mot de passe</label><input class="input" id="password" name="password" type="password" autocomplete="current-password"></div>
+    <div class="field" id="pwField"><label for="password">Mot de passe</label><input class="input" id="password" name="password" type="password" autocomplete="current-password"><button type="button" class="btn-link forgot" id="forgotLink">Mot de passe oublié ?</button></div>
     <p class="form-error" hidden></p>
     <button type="submit" class="btn btn-primary" id="mainBtn">Se connecter</button>
 
@@ -33,6 +33,19 @@
     <p class="form-error" hidden></p>
     <button type="button" class="btn btn-primary" id="totpOk">Vérifier</button>
     <button type="button" class="btn-link" data-back>Retour</button>
+  </div>
+
+  <div data-step="forgot" class="stack lg" hidden>
+    <div><div class="eyebrow">Mot de passe oublié</div><h2>Réinitialiser</h2><p class="sub">Nous vous envoyons un lien pour choisir un nouveau mot de passe. Il est valable 30 minutes.</p></div>
+    <div class="field"><label for="emailForgot">Adresse e-mail</label><input class="input" id="emailForgot" type="email" autocomplete="username"></div>
+    <p class="form-error" hidden></p>
+    <button type="button" class="btn btn-primary" id="forgotSend">Envoyer le lien</button>
+    <button type="button" class="btn-link" data-back>Retour à la connexion</button>
+  </div>
+
+  <div data-step="forgotSent" class="stack lg" hidden>
+    <div><div class="eyebrow">Lien envoyé</div><h2>Consultez votre boîte mail</h2><p class="sub">Si un compte correspond à cette adresse, un lien de réinitialisation vient d'être envoyé. Pensez à vérifier les courriers indésirables.</p></div>
+    <button type="button" class="btn-link" data-back>Retour à la connexion</button>
   </div>
 
   <div data-step="sent" class="stack lg" hidden>

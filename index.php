@@ -59,6 +59,11 @@ try {
         case 'connexion':
             if (current_user()) redirect('/');
             render('login', ['title' => 'Connexion', 'startStep' => 'main'], false);
+        case 'connexion/reinitialiser':
+            $tok = (string)($_GET['t'] ?? '');
+            $ok = $tok !== '' && q('SELECT 1 FROM password_resets WHERE token_hash=? AND used_at IS NULL AND expires_at>?', [hash('sha256', $tok), time()])->fetchColumn();
+            if (!$ok) { http_response_code(410); render('notfound', ['title' => 'Lien expiré', 'message' => 'Ce lien de réinitialisation a expiré ou a déjà servi. Faites une nouvelle demande depuis la page de connexion.'], false); }
+            render('reset', ['title' => 'Nouveau mot de passe', 'token' => $tok], false);
         case 'connexion/lien':
             $tok = (string)($_GET['t'] ?? '');
             $row = $tok !== '' ? q('SELECT * FROM magic_links WHERE token_hash=? AND used_at IS NULL AND expires_at>?', [hash('sha256', $tok), time()])->fetch() : null;

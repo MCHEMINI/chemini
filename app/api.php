@@ -45,6 +45,33 @@ function api(string $r): never {
         audit($uid, 'login_password_totp');
         json_out(['ok' => true]);
     }
+    if ($r === 'login/forgot') {
+        $email = strtolower(in_str('email', 190));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) json_out(['error' => 'Saisissez votre adresse e-mail.'], 400);
+        if (rate_limited('reset:' . $email, 3, 3600) || rate_limited('ip:' . client_ip(), 30, 900)) json_out(['error' => 'Trop de demandes. Réessayez plus tard.'], 429);
+        rate_hit('reset:' . $email); rate_hit('ip:' . client_ip());
+        $u = q('SELECT * FROM users WHERE email=? AND totp_enabled=1', [$email])->fetch();
+        if ($u) {
+            $tok = b64u_enc(random_bytes(32));
+            q('INSERT INTO password_resets(user_id,token_hash,expires_at) VALUES(?,?,?)', [$u['id'], hash('sha256', $tok), time() + 1800]);
+            $sent = send_reset_link($u, BASE_URL . '/connexion/reinitialiser?t=' . $tok);
+            audit((int)$u['id'], $sent ? 'reset_sent' : 'reset_mail_failed');
+        }
+        json_out(['ok' => true]); // réponse identique, que le compte existe ou non
+    }
+    if ($r === 'reset/confirm') {
+        $tok = in_str('token', 100);
+        $row = $tok !== '' ? q('SELECT * FROM password_resets WHERE token_hash=? AND used_at IS NULL AND expires_at>?', [hash('sha256', $tok), time()])->fetch() : null;
+        if (!$row) json_out(['error' => 'Ce lien a expiré ou a déjà servi. Faites une nouvelle demande.'], 410);
+        $pw = (string)(body()['password'] ?? '');
+        if (mb_strlen($pw) < 10) json_out(['error' => 'Au moins 10 caractères.'], 400);
+        if ($pw !== (string)(body()['confirm'] ?? '')) json_out(['error' => 'Les deux saisies ne correspondent pas.'], 400);
+        q('UPDATE users SET password_hash=? WHERE id=?', [password_hash($pw, PASSWORD_DEFAULT), $row['user_id']]);
+        q('UPDATE password_resets SET used_at=? WHERE user_id=? AND used_at IS NULL', [time(), $row['user_id']]);
+        audit((int)$row['user_id'], 'password_reset');
+        $email = q('SELECT email FROM users WHERE id=?', [$row['user_id']])->fetchColumn();
+        json_out(['ok' => true, 'email' => $email]);
+    }
     if ($r === 'login/link') {
         $email = strtolower(in_str('email', 190));
         if (rate_limited('link:' . $email, 3, 900) || rate_limited('ip:' . client_ip(), 30, 900)) json_out(['error' => 'Trop de demandes. Réessayez dans 15 minutes.'], 429);
