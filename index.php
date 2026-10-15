@@ -1,0 +1,77 @@
+<?php
+declare(strict_types=1);
+
+define('APP_DIR', __DIR__ . '/app');
+require APP_DIR . '/config.php';
+require APP_DIR . '/lib/helpers.php';
+require APP_DIR . '/lib/db.php';
+require APP_DIR . '/lib/totp.php';
+require APP_DIR . '/lib/webauthn.php';
+require APP_DIR . '/lib/auth.php';
+require APP_DIR . '/lib/feeds.php';
+require APP_DIR . '/lib/graph.php';
+
+date_default_timezone_set('Europe/Paris');
+mb_internal_encoding('UTF-8');
+
+header('X-Frame-Options: DENY');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: same-origin');
+header("Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self' https://login.microsoftonline.com");
+if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
+
+session_boot();
+
+$route = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+try {
+    if (str_starts_with($route, 'api/')) {
+        if ($method !== 'POST') json_out(['error' => 'Méthode non autorisée'], 405);
+        csrf_check();
+        require APP_DIR . '/api.php';
+        api(substr($route, 4));
+        exit;
+    }
+
+    switch ($route) {
+        case '':
+            $u = require_user();
+            require APP_DIR . '/pages/dashboard.php';
+            page_dashboard($u);
+        case 'espace':
+            $u = require_user();
+            require APP_DIR . '/pages/perso.php';
+            page_perso($u);
+        case 'securite':
+            $u = require_user();
+            require APP_DIR . '/pages/security.php';
+            page_security($u);
+        case 'connexion':
+            if (current_user()) redirect('/');
+            render('login', ['title' => 'Connexion'], false);
+        case 'activation':
+            require APP_DIR . '/pages/enroll.php';
+            page_enroll((string)($_GET['t'] ?? ''));
+        case 'deconnexion':
+            logout();
+            redirect('/connexion');
+        case 'microsoft/connexion':
+            require_user();
+            if (!graph_enabled()) redirect('/securite');
+            redirect(graph_auth_url());
+        case 'microsoft/retour':
+            $u = require_user();
+            $ok = isset($_GET['code']) && graph_callback((int)$u['id'], (string)$_GET['code'], (string)($_GET['state'] ?? ''));
+            audit((int)$u['id'], $ok ? 'microsoft_connected' : 'microsoft_failed');
+            redirect($ok ? '/' : '/securite?ms=erreur');
+        default:
+            http_response_code(404);
+            render('notfound', ['title' => 'Page introuvable'], false);
+    }
+} catch (Throwable $ex) {
+    error_log('[chemini] ' . $ex->getMessage() . ' @ ' . $ex->getFile() . ':' . $ex->getLine());
+    if (str_starts_with($route, 'api/')) json_out(['error' => 'Erreur interne. Réessayez.'], 500);
+    http_response_code(500);
+    echo 'Erreur interne.';
+}
