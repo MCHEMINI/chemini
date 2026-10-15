@@ -59,7 +59,7 @@
 
   function steps(form, name) {
     $$('[data-step]', form).forEach(s => (s.hidden = s.dataset.step !== name));
-    const order = { main: 1, totp: 2, sent: 2, forgot: 2, forgotSent: 2, trust: 3, code: 2 };
+    const order = { main: 1, totp: 2, newpw: 2, enroll: 2, sent: 2, forgot: 2, forgotSent: 2, trust: 3, code: 2 };
     $$('.steps i', form).forEach((b, i) => b.classList.toggle('on', i < (order[name] || 1)));
   }
 
@@ -72,7 +72,8 @@
   /* ---------- Page de connexion ---------- */
   const login = $('#loginFlow');
   if (login) {
-    const otp = otpInputs(login);
+    const otp = otpInputs($('[data-step=totp]', login));
+    const otpE = otpInputs($('[data-step=enroll]', login));
     const emailIn = $('#email'), pwIn = $('#password'), mainBtn = $('#mainBtn');
     const MODES = {
       password: { btn: 'Se connecter', hint: 'Identifiez-vous avec votre adresse professionnelle et votre mot de passe.' },
@@ -106,8 +107,8 @@
       try {
         if (mode === 'password') {
           if (!pwIn.value) { pwIn.focus(); return; }
-          await api('login/password', { email, password: pwIn.value });
-          pwIn.value = ''; steps(login, 'totp'); otp.clear();
+          const r = await api('login/password', { email, password: pwIn.value });
+          pwIn.value = ''; nextStep(r);
         } else if (mode === 'link') {
           await api('login/link', { email });
           steps(login, 'sent');
@@ -131,6 +132,26 @@
     });
 
     $$('[data-back]', login).forEach(b => b.addEventListener('click', () => steps(login, 'main')));
+    function nextStep(r) {
+      if (r.next === 'newpw') { steps(login, 'newpw'); $('#np1').focus(); }
+      else if (r.next === 'enroll') { $('#enrSecret').textContent = r.secret; $('#enrUri').href = r.uri; steps(login, 'enroll'); otpE.clear(); }
+      else { steps(login, 'totp'); otp.clear(); }
+    }
+    $('#npOk').addEventListener('click', async () => {
+      const scope = $('[data-step=newpw]', login), a = $('#np1').value, b = $('#np2').value;
+      if (a.length < 10) return showError(scope, 'Au moins 10 caractères.');
+      if (a !== b) return showError(scope, 'Les deux saisies ne correspondent pas.');
+      try { nextStep(await api('login/newpw', { password: a, confirm: b })); $('#np1').value = $('#np2').value = ''; }
+      catch (err) { showError(scope, err.message); }
+    });
+    const doEnroll = async () => {
+      const scope = $('[data-step=enroll]', login), code = otpE.value();
+      if (code.length !== 6) return showError(scope, 'Saisissez les 6 chiffres.');
+      try { await api('login/enroll', { code }); steps(login, 'trust'); }
+      catch (err) { showError(scope, err.message); otpE.clear(); }
+    };
+    $('#enrOk').addEventListener('click', doEnroll);
+    $('[data-step=enroll]', login).addEventListener('otp-complete', doEnroll);
     // Adresse conservée : mémorisée dès la saisie, reprise partout
     const keepEmail = v => { try { localStorage.setItem('gid_email', v.trim().toLowerCase()); } catch (_) {} };
     emailIn.addEventListener('input', () => keepEmail(emailIn.value));
@@ -160,7 +181,7 @@
       catch (err) { showError(scope, err.message); otp.clear(); }
     };
     $('#totpOk').addEventListener('click', verifyTotp);
-    login.addEventListener('otp-complete', verifyTotp);
+    $('[data-step=totp]', login).addEventListener('otp-complete', verifyTotp);
     $('#enter').addEventListener('click', e => finishTrust(e.currentTarget));
   }
 
@@ -201,6 +222,37 @@
         $$('[data-step]', reset).forEach(s => (s.hidden = s.dataset.step !== 'done'));
       } catch (err) { showError(scope, err.message); }
     });
+  }
+
+  /* ---------- Annuaire des immeubles ---------- */
+  const immQ = $('#immQ');
+  if (immQ) {
+    const norm = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const gestSel = $('#immGest');
+    let tab = 'syndic';
+    try { const t = localStorage.getItem('gid_imm_tab'); if (t) tab = t; } catch (_) {}
+    const rows = $$('[data-filter-table] tbody tr').map(tr => ({ tr, txt: norm(tr.textContent), gest: tr.dataset.gest || '', panel: tr.closest('[data-panel]').dataset.panel }));
+    const cards = $$('[data-filter-card]').map(c => ({ c, txt: norm(c.textContent + ' ' + [...c.querySelectorAll('input')].map(i => i.value).join(' ')) }));
+    const apply = () => {
+      const q = norm(immQ.value.trim()).split(/\s+/).filter(Boolean), g = gestSel.value;
+      let n = 0;
+      rows.forEach(r => { const ok = q.every(w => r.txt.includes(w)) && (!g || r.gest === g || r.panel !== 'syndic'); r.tr.hidden = !ok; if (ok && r.panel === tab) n++; });
+      cards.forEach(c => { c.c.hidden = !q.every(w => c.txt.includes(w)); });
+      $$('[data-panel]').forEach(p => { const none = $('.imm-none', p); if (none) none.hidden = !!p.querySelector('tbody tr:not([hidden])'); });
+      $('#immCount').textContent = (tab === 'syndic' || tab === 'autres') ? n + ' résultat' + (n > 1 ? 's' : '') : '';
+    };
+    const show = t => {
+      tab = t;
+      $$('.imm-tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+      $$('[data-panel]').forEach(p => (p.hidden = p.dataset.panel !== t));
+      gestSel.hidden = t !== 'syndic';
+      try { localStorage.setItem('gid_imm_tab', t); } catch (_) {}
+      apply();
+    };
+    $$('.imm-tabs button').forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
+    immQ.addEventListener('input', apply); gestSel.addEventListener('change', apply);
+    document.addEventListener('keydown', e => { if (e.key === '/' && document.activeElement !== immQ && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); immQ.focus(); } });
+    show(tab); immQ.focus();
   }
 
   async function copy(text, selectEl) {
@@ -266,7 +318,7 @@
     note.addEventListener('input', () => {
       clearTimeout(h); state.textContent = 'Modification…';
       h = setTimeout(async () => {
-        try { await api(note.dataset.autosave, { body: note.value }); state.textContent = 'Enregistré'; }
+        try { await api(note.dataset.autosave, { body: note.value, space: note.dataset.space || '' }); state.textContent = 'Enregistré'; }
         catch (err) { state.textContent = err.message; }
       }, 800);
     });

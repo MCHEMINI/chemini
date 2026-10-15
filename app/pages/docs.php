@@ -13,13 +13,17 @@ function doc_get(string $slug): ?array {
     return q('SELECT d.*, u.name AS by_name FROM docs d LEFT JOIN users u ON u.id=d.updated_by WHERE slug=?', [$slug])->fetch() ?: null;
 }
 
+function doc_space(?array $doc): string { return $doc['space'] ?? 'famille'; }
+
 function page_doc(array $u, string $slug): never {
     $doc = doc_get($slug);
+    if (!can_space($u, doc_space($doc))) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Cette section est réservée à un autre espace.'], false); }
     $state = $doc ? q('SELECT s.updated_at, u.name AS by_name FROM doc_state s LEFT JOIN users u ON u.id=s.updated_by WHERE slug=?', [$slug])->fetch() : null;
-    render('doc', ['title' => DOCS[$slug], 'nav' => $slug, 'u' => $u, 'slug' => $slug, 'doc' => $doc, 'state' => $state ?: null]);
+    render('doc', ['title' => DOCS[$slug], 'spaceName' => SPACES[doc_space($doc)], 'nav' => $slug, 'u' => $u, 'slug' => $slug, 'doc' => $doc, 'state' => $state ?: null]);
 }
 
 function doc_import(array $u, string $slug): never {
+    if (!can_space($u, doc_space(doc_get($slug)))) { http_response_code(403); exit; }
     if (!hash_equals($_SESSION['csrf'] ?? '', (string)($_POST['csrf'] ?? ''))) redirect("/$slug?erreur=session");
     $f = $_FILES['file'] ?? null;
     if (!$f || $f['error'] !== UPLOAD_ERR_OK || $f['size'] > 8_000_000) redirect("/$slug?erreur=fichier");
@@ -39,6 +43,7 @@ function doc_import(array $u, string $slug): never {
 function doc_view(array $u, string $slug): never {
     $doc = doc_get($slug);
     if (!$doc) { http_response_code(404); exit; }
+    if (!can_space($u, doc_space($doc))) { http_response_code(403); exit; }
     $state = q('SELECT json FROM doc_state WHERE slug=?', [$slug])->fetchColumn();
     $cfg = json_encode([
         'slug' => $slug, 'key' => $doc['store_key'], 'state' => $state === false ? null : $state, 'csrf' => $_SESSION['csrf'],

@@ -61,3 +61,21 @@ function avatar(array $u, string $size = ''): string {
     $cls = ((int)$u['id'] % 2) ? 'av-a' : 'av-b';
     return '<span class="avatar ' . $cls . ' ' . $size . '">' . e($u['initials']) . '</span>';
 }
+
+/* ---------- Espaces et droits ---------- */
+const SPACES = ['gid' => 'GID', 'direction' => 'Direction', 'famille' => 'Famille'];
+
+function user_spaces(array $u): array {
+    static $cache = [];
+    $id = (int)$u['id'];
+    if (!isset($cache[$id])) {
+        $s = q('SELECT space FROM space_members WHERE user_id=?', [$id])->fetchAll(PDO::FETCH_COLUMN);
+        $cache[$id] = array_values(array_unique(array_merge(['gid'], $s)));
+    }
+    return $cache[$id];
+}
+function can_space(array $u, string $space): bool { return in_array($space, user_spaces($u), true); }
+function space_members(string $space): array {
+    if ($space === 'gid') return users_all();
+    return q('SELECT u.id,u.name,u.initials,u.email,u.role FROM space_members m JOIN users u ON u.id=m.user_id WHERE m.space=? ORDER BY u.id', [$space])->fetchAll();
+}

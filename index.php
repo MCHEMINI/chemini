@@ -44,6 +44,16 @@ try {
             $u = require_user();
             require APP_DIR . '/pages/perso.php';
             page_perso($u);
+        case 'immeubles':
+            $u = require_user();
+            require APP_DIR . '/pages/immeubles.php';
+            page_immeubles($u);
+        case 'gid':
+        case 'direction':
+        case 'famille':
+            $u = require_user();
+            require APP_DIR . '/pages/space.php';
+            page_space($u, $route);
         case 'honoraires':
         case 'honoraires/vue':
         case 'honoraires/import':

@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 
+function enroll_payload(array $u): array {
+    if (empty($_SESSION['enr_secret'])) $_SESSION['enr_secret'] = totp_new_secret();
+    $sec = $_SESSION['enr_secret'];
+    return ['next' => 'enroll', 'secret' => trim(chunk_split($sec, 4, ' ')), 'uri' => totp_uri($sec, $u['email'])];
+}
+
 function api(string $r): never {
     /* ---------- Connexion (sans session) ---------- */
     if ($r === 'login/start') {
@@ -18,7 +24,7 @@ function api(string $r): never {
         $key = 'pw:' . $email . ':' . client_ip();
         if (rate_limited($key, 6, 900) || rate_limited('ip:' . client_ip(), 30, 900)) json_out(['error' => 'Trop de tentatives. Réessayez dans 15 minutes.'], 429);
         rate_hit('ip:' . client_ip());
-        $u = q('SELECT * FROM users WHERE email=? AND totp_enabled=1', [$email])->fetch();
+        $u = q('SELECT * FROM users WHERE email=?', [$email])->fetch();
         $ok = $u && $u['password_hash'] && password_verify((string)(body()['password'] ?? ''), $u['password_hash']);
         if (!$ok) {
             if (!$u) password_verify('x', '$2y$10$65KTt1rntwzVlz1Ta3xogeE8ue36leMFTeMtegj4e./2fx0eQ5sne'); // temps constant
@@ -26,9 +32,44 @@ function api(string $r): never {
             json_out(['error' => $u && !$u['password_hash'] ? 'Aucun mot de passe défini pour ce compte. Utilisez Face ID ou le lien par e-mail.' : 'Adresse ou mot de passe incorrect.'], 401);
         }
         rate_clear($key);
+        if ((int)$u['must_change'] === 1) {
+            if ($u['default_expires'] && time() > (int)$u['default_expires']) json_out(['error' => 'Le mot de passe provisoire a expiré. Demandez une réinitialisation.'], 401);
+            $_SESSION['chg_uid'] = (int)$u['id']; $_SESSION['chg_t'] = time();
+            json_out(['ok' => true, 'next' => 'newpw']);
+        }
         $_SESSION['pw_uid'] = (int)$u['id'];
         $_SESSION['pw_t'] = time();
+        if (!(int)$u['totp_enabled']) { $_SESSION['chg_uid'] = (int)$u['id']; $_SESSION['chg_t'] = time(); json_out(['ok' => true] + enroll_payload($u)); }
         json_out(['ok' => true, 'next' => 'totp']);
+    }
+    if ($r === 'login/newpw') {
+        $uid = (int)($_SESSION['chg_uid'] ?? 0);
+        if (!$uid || time() - (int)($_SESSION['chg_t'] ?? 0) > 900) json_out(['error' => 'Session expirée, reconnectez-vous.'], 401);
+        $pw = (string)(body()['password'] ?? '');
+        if (mb_strlen($pw) < 10) json_out(['error' => 'Au moins 10 caractères.'], 400);
+        if ($pw !== (string)(body()['confirm'] ?? '')) json_out(['error' => 'Les deux saisies ne correspondent pas.'], 400);
+        $u = q('SELECT * FROM users WHERE id=?', [$uid])->fetch();
+        if (password_verify($pw, (string)$u['password_hash'])) json_out(['error' => 'Choisissez un mot de passe différent du mot de passe provisoire.'], 400);
+        q('UPDATE users SET password_hash=?, must_change=0, default_expires=NULL WHERE id=?', [password_hash($pw, PASSWORD_DEFAULT), $uid]);
+        audit($uid, 'password_initial_change');
+        if ((int)$u['totp_enabled']) { $_SESSION['pw_uid'] = $uid; $_SESSION['pw_t'] = time(); unset($_SESSION['chg_uid']); json_out(['ok' => true, 'next' => 'totp']); }
+        $_SESSION['chg_t'] = time();
+        json_out(['ok' => true] + enroll_payload($u));
+    }
+    if ($r === 'login/enroll') {
+        $uid = (int)($_SESSION['chg_uid'] ?? 0);
+        $sec = (string)($_SESSION['enr_secret'] ?? '');
+        if (!$uid || $sec === '' || time() - (int)($_SESSION['chg_t'] ?? 0) > 1800) json_out(['error' => 'Session expirée, reconnectez-vous.'], 401);
+        if (rate_limited('enr:' . $uid, 8, 900)) json_out(['error' => 'Trop de tentatives.'], 429);
+        $u = q('SELECT * FROM users WHERE id=?', [$uid])->fetch();
+        if ((int)$u['must_change'] === 1) json_out(['error' => 'Changez d\'abord le mot de passe provisoire.'], 400);
+        $step = totp_verify($sec, in_str('code', 10));
+        if (!$step) { rate_hit('enr:' . $uid); json_out(['error' => 'Code incorrect. Vérifiez l\'heure de votre téléphone.'], 401); }
+        q('UPDATE users SET totp_secret=?, totp_enabled=1, totp_last_step=? WHERE id=?', [$sec, $step, $uid]);
+        unset($_SESSION['chg_uid'], $_SESSION['enr_secret'], $_SESSION['pw_uid']);
+        login_session($uid);
+        audit($uid, 'totp_enrolled');
+        json_out(['ok' => true]);
     }
     if ($r === 'login/totp') {
         $uid = (int)($_SESSION['pw_uid'] ?? 0);
@@ -218,7 +259,9 @@ function api(string $r): never {
         /* Outils partagés : état commun */
         case 'doc/state':
             $slug = in_str('slug', 40);
-            if (!q('SELECT 1 FROM docs WHERE slug=?', [$slug])->fetchColumn()) json_out(['error' => 'Document inconnu'], 404);
+            $dsp = q('SELECT space FROM docs WHERE slug=?', [$slug])->fetchColumn();
+            if ($dsp === false) json_out(['error' => 'Document inconnu'], 404);
+            if (!can_space($u, $dsp)) json_out(['error' => 'Accès refusé.'], 403);
             if (body()['reset'] ?? false) { q('DELETE FROM doc_state WHERE slug=?', [$slug]); json_out(['ok' => true]); }
             $json = (string)(body()['json'] ?? '');
             if (strlen($json) > 6_000_000 || json_decode($json) === null) json_out(['error' => 'Données invalides'], 400);
@@ -230,13 +273,29 @@ function api(string $r): never {
         case 'tasks/create':
             $t = in_str('title', 200);
             if ($t === '') json_out(['error' => 'Indiquez une tâche.'], 400);
-            q('INSERT INTO tasks(user_id,title,created_at) VALUES(?,?,?)', [$uid, $t, time()]);
+            $sp = in_str('space', 20) ?: null;
+            if ($sp !== null && (!isset(SPACES[$sp]) || !can_space($u, $sp))) json_out(['error' => 'Accès refusé.'], 403);
+            q('INSERT INTO tasks(user_id,title,space,created_at) VALUES(?,?,?,?)', [$uid, $t, $sp, time()]);
             json_out(['ok' => true]);
         case 'tasks/toggle':
-            q('UPDATE tasks SET done = 1 - done WHERE id=? AND user_id=?', [in_int('id'), $uid]);
-            json_out(['ok' => true]);
         case 'tasks/delete':
-            q('DELETE FROM tasks WHERE id=? AND user_id=?', [in_int('id'), $uid]);
+            $task = q('SELECT * FROM tasks WHERE id=?', [in_int('id')])->fetch();
+            $allowed = $task && ($task['space'] === null ? (int)$task['user_id'] === $uid : can_space($u, $task['space']));
+            if (!$allowed) json_out(['error' => 'Accès refusé.'], 403);
+            q($r === 'tasks/toggle' ? 'UPDATE tasks SET done = 1 - done WHERE id=?' : 'DELETE FROM tasks WHERE id=?', [$task['id']]);
+            json_out(['ok' => true]);
+        case 'space/note':
+            $sp = in_str('space', 20);
+            if (!isset(SPACES[$sp]) || !can_space($u, $sp)) json_out(['error' => 'Accès refusé.'], 403);
+            q('INSERT INTO space_notes(space,body,updated_at,updated_by) VALUES(?,?,?,?) ON CONFLICT(space) DO UPDATE SET body=excluded.body, updated_at=excluded.updated_at, updated_by=excluded.updated_by',
+                [$sp, in_str('body', 20000), time(), $uid]);
+            json_out(['ok' => true]);
+        case 'staff/update':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la direction.'], 403);
+            $name = in_str('name', 120);
+            $email = strtolower(in_str('email', 190));
+            if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) json_out(['error' => 'Adresse e-mail invalide.'], 400);
+            q('UPDATE staff SET email=?, phone=?, updated_at=? WHERE name=?', [$email ?: null, in_str('phone', 40) ?: null, time(), $name]);
             json_out(['ok' => true]);
         case 'note/save':
             q('INSERT INTO notes(user_id,body,updated_at) VALUES(?,?,?) ON CONFLICT(user_id) DO UPDATE SET body=excluded.body, updated_at=excluded.updated_at',

@@ -79,6 +79,58 @@ CREATE TABLE password_resets(
 PRAGMA user_version = 4;
 SQL);
     }
+    if ($v < 5) {
+        $pdo->exec(<<<SQL
+ALTER TABLE users ADD COLUMN must_change INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN default_expires INTEGER;
+ALTER TABLE tasks ADD COLUMN space TEXT;
+ALTER TABLE docs ADD COLUMN space TEXT NOT NULL DEFAULT 'famille';
+CREATE TABLE space_members(space TEXT NOT NULL, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, PRIMARY KEY(space, user_id));
+CREATE TABLE space_notes(space TEXT PRIMARY KEY, body TEXT NOT NULL, updated_at INTEGER NOT NULL, updated_by INTEGER);
+CREATE TABLE buildings(
+  code TEXT PRIMARY KEY, kind TEXT NOT NULL, label TEXT NOT NULL, addr2 TEXT, cp TEXT, ville TEXT,
+  gest TEXT, compta TEXT, assist TEXT, exercice TEXT);
+CREATE TABLE staff(name TEXT PRIMARY KEY, role TEXT, email TEXT, phone TEXT, updated_at INTEGER);
+PRAGMA user_version = 5;
+SQL);
+        seed_from_encrypted($pdo);
+    }
+}
+
+/**
+ * Données de départ chiffrées (comptes, immeubles) : le dépôt est public, elles y sont stockées
+ * chiffrées avec APP_KEY, qui n'existe que dans la configuration privée du serveur.
+ */
+function seed_read(string $name): ?array {
+    $f = APP_DIR . '/seed/' . $name . '.enc';
+    if (!is_file($f)) return null;
+    $plain = unseal(trim((string)file_get_contents($f)));
+    $d = $plain === null ? null : json_decode($plain, true);
+    return is_array($d) ? $d : null;
+}
+
+function seed_from_encrypted(PDO $pdo): void {
+    $users = seed_read('users');
+    if ($users) {
+        foreach ($users as $s) {
+            $id = $pdo->prepare('SELECT id FROM users WHERE email=?'); $id->execute([$s['email']]); $id = $id->fetchColumn();
+            if (!$id) {
+                $pdo->prepare('INSERT INTO users(email,name,initials,role,totp_enabled,password_hash,must_change,default_expires,created_at) VALUES(?,?,?,?,0,?,1,?,?)')
+                    ->execute([$s['email'], $s['name'], $s['initials'], $s['role'], $s['hash'], time() + 30 * 86400, time()]);
+                $id = (int)$pdo->lastInsertId();
+            } else {
+                $pdo->prepare('UPDATE users SET name=?, initials=? WHERE id=?')->execute([$s['name'], $s['initials'], $id]);
+            }
+            foreach ($s['spaces'] as $sp) $pdo->prepare('INSERT OR IGNORE INTO space_members(space,user_id) VALUES(?,?)')->execute([$sp, $id]);
+        }
+    }
+    $imm = seed_read('immeubles');
+    if ($imm) {
+        $b = $pdo->prepare('INSERT OR REPLACE INTO buildings(code,kind,label,addr2,cp,ville,gest,compta,assist,exercice) VALUES(?,?,?,?,?,?,?,?,?,?)');
+        foreach ($imm['buildings'] as $r) $b->execute([$r['code'], $r['kind'], $r['label'], $r['addr2'], $r['cp'], $r['ville'], $r['gest'], $r['compta'], $r['assist'], $r['exercice']]);
+        $st = $pdo->prepare('INSERT OR IGNORE INTO staff(name,role,email,phone,updated_at) VALUES(?,?,?,?,?)');
+        foreach ($imm['staff'] as $r) $st->execute([$r['name'], $r['role'], $r['email'], null, time()]);
+    }
 }
 
 function q(string $sql, array $p = []): PDOStatement {

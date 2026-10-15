@@ -1,13 +1,13 @@
 <?php $err = $_GET['erreur'] ?? null; ?>
 <header class="head doc-head">
   <div>
-    <div class="eyebrow">Espace commun</div>
+    <div class="eyebrow">Espace <?= e($spaceName) ?></div>
     <h1><?= e($title) ?></h1>
     <div class="date">
       <?php if ($doc): ?>
         <?= e($doc['title']) ?> · importé le <?= e(date_short((int)$doc['updated_at'])) ?><?= $doc['by_name'] ? ' par ' . e($doc['by_name']) : '' ?>
         <?php if ($state): ?> · dernière modification <?= e(mb_strtolower(ago((int)$state['updated_at']))) ?><?= $state['by_name'] ? ' par ' . e($state['by_name']) : '' ?><?php endif; ?>
-      <?php else: ?>Partagé entre toute l'équipe<?php endif; ?>
+      <?php else: ?>Partagé avec les membres de l'espace <?= e($spaceName) ?><?php endif; ?>
     </div>
   </div>
   <?php if ($doc): ?>
@@ -23,9 +23,9 @@
 
 <?php if ($doc): ?>
   <div class="doc-frame"><iframe src="/<?= e($slug) ?>/vue" title="<?= e($title) ?>"></iframe></div>
-  <p class="muted small" style="margin-top:10px">Les modifications sont enregistrées pour toute l'équipe. Si deux personnes modifient en même temps, la dernière enregistrée l'emporte.</p>
+  <p class="muted small" style="margin-top:10px">Les modifications sont enregistrées pour tous les membres de l'espace <?= e($spaceName) ?>. Si deux personnes modifient en même temps, la dernière enregistrée l'emporte.</p>
 <?php else: ?>
-  <div class="empty"><strong>Aucun tableau importé.</strong>Importez le fichier HTML du tableau des honoraires : il sera visible et modifiable par toute l'équipe.
+  <div class="empty"><strong>Aucun tableau importé.</strong>Importez le fichier HTML du tableau des honoraires : il sera visible et modifiable par les membres de l'espace <?= e($spaceName) ?>.
     <form class="import-form" method="post" action="/<?= e($slug) ?>/import" enctype="multipart/form-data">
       <input type="hidden" name="csrf" value="<?= e($_SESSION['csrf']) ?>">
       <label for="file-<?= e($slug) ?>" class="sr">Fichier HTML</label>

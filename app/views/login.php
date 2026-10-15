@@ -35,6 +35,28 @@
     <button type="button" class="btn-link" data-back>Retour</button>
   </div>
 
+  <div data-step="newpw" class="stack lg" hidden>
+    <div><div class="eyebrow">Première connexion</div><h2>Choisissez votre mot de passe</h2><p class="sub">Le mot de passe provisoire doit être remplacé. 10 caractères minimum.</p></div>
+    <div class="field"><label for="np1">Nouveau mot de passe</label><input class="input" id="np1" type="password" autocomplete="new-password" minlength="10"></div>
+    <div class="field"><label for="np2">Confirmation</label><input class="input" id="np2" type="password" autocomplete="new-password" minlength="10"></div>
+    <p class="form-error" hidden></p>
+    <button type="button" class="btn btn-primary" id="npOk">Continuer</button>
+  </div>
+
+  <div data-step="enroll" class="stack lg" hidden>
+    <div><div class="eyebrow">Première connexion · sécurité</div><h2>Application d'authentification</h2><p class="sub">Elle vous donnera le code à 6 chiffres demandé à chaque connexion par mot de passe.</p></div>
+    <ol class="enroll-steps">
+      <li><strong>Sur iPhone</strong> : touchez le bouton, puis « Ajouter ». <a class="btn btn-ghost mt" id="enrUri" href="#">Ajouter à mon application</a></li>
+      <li><strong>Sinon</strong>, dans Google ou Microsoft Authenticator, « Saisir une clé » : <div class="secret mono" id="enrSecret"></div></li>
+      <li>Saisissez le code affiché :</li>
+    </ol>
+    <div class="otp">
+      <?php for ($i = 1; $i <= 6; $i++): ?><input id="e<?= $i ?>" inputmode="numeric" autocomplete="<?= $i === 1 ? 'one-time-code' : 'off' ?>" maxlength="<?= $i === 1 ? 6 : 1 ?>" aria-label="Chiffre <?= $i ?>"><?php endfor; ?>
+    </div>
+    <p class="form-error" hidden></p>
+    <button type="button" class="btn btn-primary" id="enrOk">Activer</button>
+  </div>
+
   <div data-step="forgot" class="stack lg" hidden>
     <div><div class="eyebrow">Mot de passe oublié</div><h2>Réinitialiser</h2><p class="sub">Nous vous envoyons un lien pour choisir un nouveau mot de passe. Il est valable 30 minutes.</p></div>
     <div class="field"><label for="emailForgot">Adresse e-mail</label><input class="input" id="emailForgot" type="email" autocomplete="username"></div>
