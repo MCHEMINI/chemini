@@ -151,6 +151,15 @@ CREATE TABLE IF NOT EXISTS compta_done (k TEXT PRIMARY KEY, user_id INTEGER, don
 PRAGMA user_version = 12;
 SQL);
     }
+    if ($v < 13) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS consignes (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body TEXT NOT NULL, priority TEXT NOT NULL DEFAULT 'normale', status TEXT NOT NULL DEFAULT 'todo', result TEXT,
+  created_at INTEGER NOT NULL, started_at INTEGER, done_at INTEGER, updated_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS consignes_user ON consignes(user_id, status);
+PRAGMA user_version = 13;
+SQL);
+    }
 }
 
 /** Dernier audit d'un type (ex. honoraires), décodé. */
