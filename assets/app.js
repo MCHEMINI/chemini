@@ -2,7 +2,7 @@
   'use strict';
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-  const csrf = $('meta[name=csrf]')?.content || '';
+  let csrf = $('meta[name=csrf]')?.content || '';
 
   async function api(path, data = {}) {
     const res = await fetch('/api/' + path, {
@@ -10,6 +10,7 @@
       headers: { 'Content-Type': 'application/json', 'X-CSRF': csrf },
       body: JSON.stringify(data),
     });
+    const fresh = res.headers.get('X-CSRF-Token'); if (fresh) csrf = fresh; // jeton renouvelé après connexion
     let json = {};
     try { json = await res.json(); } catch (_) { /* réponse vide */ }
     if (!res.ok || json.error) throw new Error(json.error || 'Erreur réseau. Réessayez.');
@@ -26,6 +27,15 @@
     t.textContent = msg; t.hidden = false;
     clearTimeout(t._h); t._h = setTimeout(() => (t.hidden = true), 2600);
   }
+
+  /* ---------- Thème : clair / sombre / auto ---------- */
+  const markTheme = () => { const t = document.documentElement.dataset.theme || 'light'; $$('[data-theme-set]').forEach(b => b.setAttribute('aria-pressed', b.dataset.themeSet === t)); };
+  $$('[data-theme-set]').forEach(b => b.addEventListener('click', () => {
+    document.documentElement.dataset.theme = b.dataset.themeSet;
+    try { localStorage.setItem('gid_theme', b.dataset.themeSet); } catch (_) {}
+    markTheme();
+  }));
+  markTheme();
 
   /* ---------- base64url <-> ArrayBuffer ---------- */
   const b64uToBuf = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0)).buffer;
@@ -73,7 +83,6 @@
   const login = $('#loginFlow');
   if (login) {
     const otp = otpInputs($('[data-step=totp]', login));
-    const otpE = otpInputs($('[data-step=enroll]', login));
     const emailIn = $('#email'), pwIn = $('#password'), mainBtn = $('#mainBtn');
     const MODES = {
       password: { btn: 'Se connecter', hint: 'Identifiez-vous avec votre adresse professionnelle et votre mot de passe.' },
@@ -134,7 +143,7 @@
     $$('[data-back]', login).forEach(b => b.addEventListener('click', () => steps(login, 'main')));
     function nextStep(r) {
       if (r.next === 'newpw') { steps(login, 'newpw'); $('#np1').focus(); }
-      else if (r.next === 'enroll') { $('#enrSecret').textContent = r.secret; $('#enrUri').href = r.uri; steps(login, 'enroll'); otpE.clear(); }
+      else if (r.next === 'trust') steps(login, 'trust');
       else { steps(login, 'totp'); otp.clear(); }
     }
     $('#npOk').addEventListener('click', async () => {
@@ -144,14 +153,7 @@
       try { nextStep(await api('login/newpw', { password: a, confirm: b })); $('#np1').value = $('#np2').value = ''; }
       catch (err) { showError(scope, err.message); }
     });
-    const doEnroll = async () => {
-      const scope = $('[data-step=enroll]', login), code = otpE.value();
-      if (code.length !== 6) return showError(scope, 'Saisissez les 6 chiffres.');
-      try { await api('login/enroll', { code }); steps(login, 'trust'); }
-      catch (err) { showError(scope, err.message); otpE.clear(); }
-    };
-    $('#enrOk').addEventListener('click', doEnroll);
-    $('[data-step=enroll]', login).addEventListener('otp-complete', doEnroll);
+
     // Adresse conservée : mémorisée dès la saisie, reprise partout
     const keepEmail = v => { try { localStorage.setItem('gid_email', v.trim().toLowerCase()); } catch (_) {} };
     emailIn.addEventListener('input', () => keepEmail(emailIn.value));
@@ -222,6 +224,27 @@
         $$('[data-step]', reset).forEach(s => (s.hidden = s.dataset.step !== 'done'));
       } catch (err) { showError(scope, err.message); }
     });
+  }
+
+  /* ---------- Sécurité : code à 6 chiffres optionnel ---------- */
+  const totpBox = $('#totpSetup');
+  if (totpBox) {
+    const otpS = otpInputs(totpBox);
+    $('#totpStart')?.addEventListener('click', async () => {
+      try {
+        const r = await api('totp/start');
+        $('#tsSecret').textContent = r.secret; $('#tsUri').href = r.uri;
+        totpBox.hidden = false; $('#totpStart').hidden = true; otpS.clear();
+      } catch (err) { toast(err.message); }
+    });
+    const confirmTotp = async () => {
+      const code = otpS.value();
+      if (code.length !== 6) return showError(totpBox, 'Saisissez les 6 chiffres.');
+      try { await api('totp/confirm', { code }); location.reload(); }
+      catch (err) { showError(totpBox, err.message); otpS.clear(); }
+    };
+    $('#tsOk').addEventListener('click', confirmTotp);
+    totpBox.addEventListener('otp-complete', confirmTotp);
   }
 
   /* ---------- Annuaire des immeubles ---------- */

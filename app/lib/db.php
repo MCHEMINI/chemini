@@ -155,3 +155,16 @@ function rate_limited(string $key, int $max = 6, int $window = 900): bool {
 }
 function rate_hit(string $key): void { q('INSERT INTO attempts(k,at) VALUES(?,?)', [$key, time()]); }
 function rate_clear(string $key): void { q('DELETE FROM attempts WHERE k=?', [$key]); }
+
+/* Blocage de l'adresse IP : 5 échecs de connexion en 30 minutes => IP bloquée 30 minutes. */
+const IP_MAX_FAILS = 5;
+const IP_BLOCK_SECONDS = 1800;
+function ip_blocked(): bool { return rate_limited('fail:' . client_ip(), IP_MAX_FAILS, IP_BLOCK_SECONDS); }
+function ip_fail(?int $uid = null, string $what = 'login'): void {
+    rate_hit('fail:' . client_ip());
+    if (ip_blocked()) audit($uid, 'ip_blocked:' . $what);
+}
+function ip_ok(): void { rate_clear('fail:' . client_ip()); }
+function ip_block_guard(): void {
+    if (ip_blocked()) json_out(['error' => 'Trop de tentatives échouées : cette adresse IP est bloquée pendant 30 minutes.'], 429);
+}

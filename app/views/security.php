@@ -26,8 +26,7 @@
 
   <section class="col-6">
     <div class="panel stack">
-      <div class="sec-h flat"><h2>Mot de passe + code</h2><span class="chip <?= $u['password_hash'] ? 'ok' : 'warn' ?>"><?= $u['password_hash'] ? 'Actif' : 'À définir' ?></span></div>
-      <p class="muted">Connexion par mot de passe, confirmée par le code à 6 chiffres de votre application d'authentification.</p>
+      <div class="sec-h flat"><h2>Mot de passe</h2><span class="chip <?= $u['password_hash'] ? 'ok' : 'warn' ?>"><?= $u['password_hash'] ? 'Actif' : 'À définir' ?></span></div>
       <form class="stack" data-api="password/set">
         <?php if ($u['password_hash']): ?><div class="field"><label for="pw-cur">Mot de passe actuel</label><input class="input" id="pw-cur" name="current" type="password" autocomplete="current-password" required></div><?php endif; ?>
         <div class="two">
@@ -37,6 +36,29 @@
         <p class="form-error" hidden></p>
         <button class="btn btn-ghost"><?= $u['password_hash'] ? 'Changer le mot de passe' : 'Définir le mot de passe' ?></button>
       </form>
+    </div>
+    <div class="panel stack" style="margin-top:24px">
+      <div class="sec-h flat"><h2>Code à 6 chiffres</h2><span class="chip <?= $u['totp_enabled'] ? 'ok' : 'neutral' ?>"><?= $u['totp_enabled'] ? 'Activé' : 'Optionnel' ?></span></div>
+      <p class="muted">Double vérification : après le mot de passe, un code de votre application d'authentification est demandé. Sur un appareil de confiance, il n'est plus demandé.</p>
+      <?php if ($u['totp_enabled']): ?>
+        <form class="stack" data-api="totp/disable">
+          <div class="field"><label for="td-pw">Mot de passe (pour désactiver)</label><input class="input" id="td-pw" name="password" type="password" autocomplete="current-password" required></div>
+          <p class="form-error" hidden></p>
+          <button class="btn btn-ghost">Désactiver le code</button>
+        </form>
+      <?php else: ?>
+        <button class="btn btn-ghost" type="button" id="totpStart">Activer le code à 6 chiffres</button>
+        <div class="stack" id="totpSetup" hidden>
+          <ol class="enroll-steps">
+            <li><strong>Sur iPhone</strong> : <a class="btn btn-ghost mt" id="tsUri" href="#">Ajouter à mon application</a></li>
+            <li><strong>Sinon</strong>, dans Google ou Microsoft Authenticator, « Saisir une clé » : <div class="secret mono" id="tsSecret"></div></li>
+            <li>Saisissez le code affiché :</li>
+          </ol>
+          <div class="otp"><?php for ($i = 1; $i <= 6; $i++): ?><input id="ts<?= $i ?>" inputmode="numeric" autocomplete="<?= $i === 1 ? 'one-time-code' : 'off' ?>" maxlength="<?= $i === 1 ? 6 : 1 ?>" aria-label="Chiffre <?= $i ?>"><?php endfor; ?></div>
+          <p class="form-error" hidden></p>
+          <button class="btn btn-primary" type="button" id="tsOk">Activer</button>
+        </div>
+      <?php endif; ?>
     </div>
     <div class="panel stack" style="margin-top:24px">
       <div class="sec-h flat"><h2>Messagerie Outlook</h2><span class="chip <?= $msConnected ? 'ok' : 'warn' ?>"><?= $msConnected ? 'Connectée' : 'Non connectée' ?></span></div>

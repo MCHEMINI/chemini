@@ -1,18 +1,11 @@
 <?php
 declare(strict_types=1);
 
-function enroll_payload(array $u): array {
-    if (empty($_SESSION['enr_secret'])) $_SESSION['enr_secret'] = totp_new_secret();
-    $sec = $_SESSION['enr_secret'];
-    return ['next' => 'enroll', 'secret' => trim(chunk_split($sec, 4, ' ')), 'uri' => totp_uri($sec, $u['email'])];
-}
-
 function api(string $r): never {
+    if (preg_match('#^(login/|enroll/|reset/)#', $r)) ip_block_guard();
     /* ---------- Connexion (sans session) ---------- */
     if ($r === 'login/start') {
         $email = strtolower(in_str('email', 190));
-        if (rate_limited('ip:' . client_ip(), 30, 900)) json_out(['error' => 'Trop de tentatives. Réessayez dans 15 minutes.'], 429);
-        rate_hit('ip:' . client_ip());
         $u = q('SELECT * FROM users WHERE email=? AND totp_enabled=1', [$email])->fetch();
         // Réponse identique si le compte n'existe pas (pas de divulgation)
         $_SESSION['pending_uid'] = $u ? (int)$u['id'] : 0;
@@ -21,26 +14,28 @@ function api(string $r): never {
     }
     if ($r === 'login/password') {
         $email = strtolower(in_str('email', 190));
-        $key = 'pw:' . $email . ':' . client_ip();
-        if (rate_limited($key, 6, 900) || rate_limited('ip:' . client_ip(), 30, 900)) json_out(['error' => 'Trop de tentatives. Réessayez dans 15 minutes.'], 429);
-        rate_hit('ip:' . client_ip());
         $u = q('SELECT * FROM users WHERE email=?', [$email])->fetch();
         $ok = $u && $u['password_hash'] && password_verify((string)(body()['password'] ?? ''), $u['password_hash']);
         if (!$ok) {
             if (!$u) password_verify('x', '$2y$10$65KTt1rntwzVlz1Ta3xogeE8ue36leMFTeMtegj4e./2fx0eQ5sne'); // temps constant
-            rate_hit($key);
+            ip_fail($u ? (int)$u['id'] : null, 'password');
             json_out(['error' => $u && !$u['password_hash'] ? 'Aucun mot de passe défini pour ce compte. Utilisez Face ID ou le lien par e-mail.' : 'Adresse ou mot de passe incorrect.'], 401);
         }
-        rate_clear($key);
         if ((int)$u['must_change'] === 1) {
             if ($u['default_expires'] && time() > (int)$u['default_expires']) json_out(['error' => 'Le mot de passe provisoire a expiré. Demandez une réinitialisation.'], 401);
             $_SESSION['chg_uid'] = (int)$u['id']; $_SESSION['chg_t'] = time();
             json_out(['ok' => true, 'next' => 'newpw']);
         }
-        $_SESSION['pw_uid'] = (int)$u['id'];
-        $_SESSION['pw_t'] = time();
-        if (!(int)$u['totp_enabled']) { $_SESSION['chg_uid'] = (int)$u['id']; $_SESSION['chg_t'] = time(); json_out(['ok' => true] + enroll_payload($u)); }
-        json_out(['ok' => true, 'next' => 'totp']);
+        if ((int)$u['totp_enabled']) {
+            $_SESSION['pw_uid'] = (int)$u['id'];
+            $_SESSION['pw_t'] = time();
+            json_out(['ok' => true, 'next' => 'totp']);
+        }
+        // Code à 6 chiffres non activé (optionnel) : connexion directe
+        ip_ok();
+        login_session((int)$u['id']);
+        audit((int)$u['id'], 'login_password');
+        json_out(['ok' => true, 'next' => 'trust']);
     }
     if ($r === 'login/newpw') {
         $uid = (int)($_SESSION['chg_uid'] ?? 0);
@@ -52,34 +47,19 @@ function api(string $r): never {
         if (password_verify($pw, (string)$u['password_hash'])) json_out(['error' => 'Choisissez un mot de passe différent du mot de passe provisoire.'], 400);
         q('UPDATE users SET password_hash=?, must_change=0, default_expires=NULL WHERE id=?', [password_hash($pw, PASSWORD_DEFAULT), $uid]);
         audit($uid, 'password_initial_change');
-        if ((int)$u['totp_enabled']) { $_SESSION['pw_uid'] = $uid; $_SESSION['pw_t'] = time(); unset($_SESSION['chg_uid']); json_out(['ok' => true, 'next' => 'totp']); }
-        $_SESSION['chg_t'] = time();
-        json_out(['ok' => true] + enroll_payload($u));
-    }
-    if ($r === 'login/enroll') {
-        $uid = (int)($_SESSION['chg_uid'] ?? 0);
-        $sec = (string)($_SESSION['enr_secret'] ?? '');
-        if (!$uid || $sec === '' || time() - (int)($_SESSION['chg_t'] ?? 0) > 1800) json_out(['error' => 'Session expirée, reconnectez-vous.'], 401);
-        if (rate_limited('enr:' . $uid, 8, 900)) json_out(['error' => 'Trop de tentatives.'], 429);
-        $u = q('SELECT * FROM users WHERE id=?', [$uid])->fetch();
-        if ((int)$u['must_change'] === 1) json_out(['error' => 'Changez d\'abord le mot de passe provisoire.'], 400);
-        $step = totp_verify($sec, in_str('code', 10));
-        if (!$step) { rate_hit('enr:' . $uid); json_out(['error' => 'Code incorrect. Vérifiez l\'heure de votre téléphone.'], 401); }
-        q('UPDATE users SET totp_secret=?, totp_enabled=1, totp_last_step=? WHERE id=?', [$sec, $step, $uid]);
-        unset($_SESSION['chg_uid'], $_SESSION['enr_secret'], $_SESSION['pw_uid']);
+        unset($_SESSION['chg_uid'], $_SESSION['chg_t']);
+        if ((int)$u['totp_enabled']) { $_SESSION['pw_uid'] = $uid; $_SESSION['pw_t'] = time(); json_out(['ok' => true, 'next' => 'totp']); }
+        ip_ok();
         login_session($uid);
-        audit($uid, 'totp_enrolled');
-        json_out(['ok' => true]);
+        json_out(['ok' => true, 'next' => 'trust']);
     }
     if ($r === 'login/totp') {
         $uid = (int)($_SESSION['pw_uid'] ?? 0);
         if (!$uid || time() - (int)($_SESSION['pw_t'] ?? 0) > 300) json_out(['error' => 'Session expirée, saisissez à nouveau votre mot de passe.'], 401);
-        $key = 'totp:' . $uid . ':' . client_ip();
-        if (rate_limited($key, 6, 900)) json_out(['error' => 'Trop de codes erronés. Réessayez dans 15 minutes.'], 429);
         $u = q('SELECT * FROM users WHERE id=?', [$uid])->fetch();
         $step = $u ? totp_verify($u['totp_secret'], in_str('code', 10), (int)$u['totp_last_step']) : null;
-        if (!$step) { rate_hit($key); json_out(['error' => 'Code incorrect ou expiré.'], 401); }
-        rate_clear($key);
+        if (!$step) { ip_fail($uid, 'totp'); json_out(['error' => 'Code incorrect ou expiré.'], 401); }
+        ip_ok();
         q('UPDATE users SET totp_last_step=? WHERE id=?', [$step, $uid]);
         unset($_SESSION['pw_uid'], $_SESSION['pw_t']);
         login_session($uid);
@@ -132,9 +112,9 @@ function api(string $r): never {
         json_out(wa_login_options($ids));
     }
     if ($r === 'login/passkey') {
-        if (rate_limited('pk:' . client_ip(), 10, 900)) json_out(['error' => 'Trop de tentatives.'], 429);
         try { $pk = wa_login_verify(body()); }
-        catch (RuntimeException $ex) { rate_hit('pk:' . client_ip()); json_out(['error' => 'Vérification refusée : ' . $ex->getMessage()], 401); }
+        catch (RuntimeException $ex) { ip_fail(null, 'passkey'); json_out(['error' => 'Vérification refusée : ' . $ex->getMessage()], 401); }
+        ip_ok();
         $pending = (int)($_SESSION['pending_uid'] ?? 0);
         if ($pending && $pending !== (int)$pk['user_id']) json_out(['error' => 'Cette clé appartient à un autre compte.'], 401);
         login_session((int)$pk['user_id']);
@@ -144,11 +124,11 @@ function api(string $r): never {
     if ($r === 'enroll/verify') {
         $e = $_SESSION['enroll'] ?? null;
         if (!$e || time() - $e['t'] > 1800) json_out(['error' => 'Lien expiré, rouvrez le lien d\'activation.'], 400);
-        if (rate_limited('enroll:' . client_ip(), 8, 900)) json_out(['error' => 'Trop de tentatives.'], 429);
+
         $pw = (string)(body()['password'] ?? '');
         if (mb_strlen($pw) < 10) json_out(['error' => 'Choisissez un mot de passe d\'au moins 10 caractères.'], 400);
         $step = totp_verify($e['secret'], in_str('code', 10));
-        if (!$step) { rate_hit('enroll:' . client_ip()); json_out(['error' => 'Code incorrect. Vérifiez l\'heure de votre téléphone.'], 401); }
+        if (!$step) { ip_fail(null, 'enroll'); json_out(['error' => 'Code incorrect. Vérifiez l\'heure de votre téléphone.'], 401); }
         db()->beginTransaction();
         if ($e['invite']) {
             $inv = q('SELECT * FROM invites WHERE id=? AND used_at IS NULL AND expires_at>?', [$e['invite'], time()])->fetch();
@@ -193,6 +173,24 @@ function api(string $r): never {
         case 'passkey/delete':
             q('DELETE FROM passkeys WHERE id=? AND user_id=?', [in_int('id'), $uid]);
             audit($uid, 'passkey_removed');
+            json_out(['ok' => true]);
+
+        case 'totp/start':
+            $_SESSION['setup_secret'] = totp_new_secret();
+            json_out(['ok' => true, 'secret' => trim(chunk_split($_SESSION['setup_secret'], 4, ' ')), 'uri' => totp_uri($_SESSION['setup_secret'], $u['email'])]);
+        case 'totp/confirm':
+            $sec = (string)($_SESSION['setup_secret'] ?? '');
+            if ($sec === '') json_out(['error' => 'Recommencez l\'activation.'], 400);
+            $step = totp_verify($sec, in_str('code', 10));
+            if (!$step) json_out(['error' => 'Code incorrect. Vérifiez l\'heure de votre téléphone.'], 401);
+            q('UPDATE users SET totp_secret=?, totp_enabled=1, totp_last_step=? WHERE id=?', [$sec, $step, $uid]);
+            unset($_SESSION['setup_secret']);
+            audit($uid, 'totp_enabled');
+            json_out(['ok' => true]);
+        case 'totp/disable':
+            if (!$u['password_hash'] || !password_verify((string)(body()['password'] ?? ''), $u['password_hash'])) json_out(['error' => 'Mot de passe incorrect.'], 401);
+            q('UPDATE users SET totp_enabled=0, totp_secret=NULL WHERE id=?', [$uid]);
+            audit($uid, 'totp_disabled');
             json_out(['ok' => true]);
 
         case 'password/set':
