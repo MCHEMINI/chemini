@@ -285,6 +285,16 @@ function api(string $r): never {
             if (!$allowed) json_out(['error' => 'Accès refusé.'], 403);
             q($r === 'tasks/toggle' ? 'UPDATE tasks SET done = 1 - done WHERE id=?' : 'DELETE FROM tasks WHERE id=?', [$task['id']]);
             json_out(['ok' => true]);
+        case 'consignes/create':
+            $b = in_str('body', 4000);
+            if ($b === '') json_out(['error' => 'Écrivez une consigne.'], 400);
+            $p = in_str('priority', 10);
+            if (!isset(CONSIGNE_PRIO[$p])) $p = 'normale';
+            q('INSERT INTO consignes(user_id,body,priority,status,created_at,updated_at) VALUES(?,?,?,?,?,?)', [$uid, $b, $p, 'todo', time(), time()]);
+            json_out(['ok' => true]);
+        case 'consignes/delete':
+            q('DELETE FROM consignes WHERE id=? AND user_id=?', [in_int('id'), $uid]);
+            json_out(['ok' => true]);
         case 'mail/toggle':
             q('UPDATE mail_items SET done = 1 - done, done_at = ? WHERE id=? AND user_id=?', [time(), in_int('id'), $uid]);
             json_out(['ok' => true]);
