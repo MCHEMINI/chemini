@@ -124,6 +124,22 @@ CREATE TABLE IF NOT EXISTS veille (id INTEGER PRIMARY KEY, url TEXT NOT NULL UNI
 PRAGMA user_version = 9;
 SQL);
     }
+    if ($v < 10) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS audits (id INTEGER PRIMARY KEY, kind TEXT NOT NULL, period TEXT NOT NULL, headline TEXT NOT NULL,
+  data TEXT NOT NULL, created_at INTEGER NOT NULL, UNIQUE(kind, period));
+CREATE TABLE IF NOT EXISTS audit_reads (user_id INTEGER NOT NULL, audit_id INTEGER NOT NULL, read_at INTEGER NOT NULL, PRIMARY KEY(user_id, audit_id));
+PRAGMA user_version = 10;
+SQL);
+    }
+}
+
+/** Dernier audit d'un type (ex. honoraires), décodé. */
+function audit_latest(string $kind): ?array {
+    $a = q('SELECT * FROM audits WHERE kind=? ORDER BY period DESC LIMIT 1', [$kind])->fetch();
+    if (!$a) return null;
+    $a['d'] = json_decode($a['data'], true) ?: [];
+    return $a;
 }
 
 /** Outil HTML chiffré dans le dépôt : mis en place (ou remplacé) en gardant les modifications de l'équipe. */

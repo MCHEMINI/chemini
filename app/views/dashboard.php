@@ -11,6 +11,21 @@
   </div>
 </header>
 
+<?php if (!empty($audit)): $am = (int)substr($audit['period'], 5, 2); $ay = substr($audit['period'], 0, 4); ?>
+<div class="audit-alert" role="status">
+  <i class="sev warn"></i>
+  <div>
+    <div class="eyebrow">Audit mensuel · honoraires · <?= e(['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'][$am - 1] . ' ' . $ay) ?></div>
+    <div class="t"><?= e($audit['headline']) ?></div>
+    <?php if (!empty($audit['d']['actions'][0]['title'])): ?><div class="d">Priorité : <?= e($audit['d']['actions'][0]['title']) ?></div><?php endif; ?>
+  </div>
+  <div class="audit-actions">
+    <a class="btn btn-primary" href="/honoraires#opti">Voir l'analyse</a>
+    <button type="button" class="btn-link" data-api="audit/read" data-id="<?= (int)$audit['id'] ?>">Marquer comme lu</button>
+  </div>
+</div>
+<?php endif; ?>
+
 <div class="summary">
   <div><div class="n <?= $stats['crit'] ? 'crit' : '' ?>"><?= $stats['crit'] ?></div><div class="l">Points urgents</div></div>
   <div><div class="n"><?= $mailsCount === null ? '—' : (int)$mailsCount ?></div><div class="l">Mails importants non lus</div></div>

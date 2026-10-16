@@ -47,6 +47,7 @@ function doc_view(array $u, string $slug): never {
     $state = q('SELECT json FROM doc_state WHERE slug=?', [$slug])->fetchColumn();
     $cfg = json_encode([
         'slug' => $slug, 'key' => $doc['store_key'], 'state' => $state === false ? null : $state, 'csrf' => $_SESSION['csrf'],
+        'audit' => $slug === 'honoraires' ? (($a = audit_latest('honoraires')) ? $a['d'] + ['_at' => (int)$a['created_at']] : null) : null,
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
     $shim = <<<JS
 <script>
@@ -56,6 +57,26 @@ function doc_view(array $u, string $slug): never {
     if (t==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'light'); }
   function fs(){ var z=1; try{ z=parseFloat(localStorage.getItem('gid_fs'))||1; }catch(e){} document.documentElement.style.zoom = (z>=0.8&&z<=1.5)?z:1; }
   theme(); fs(); window.addEventListener('storage', function(e){ if(e.key==='gid_theme') theme(); if(e.key==='gid_fs') fs(); });
+  /* Ouverture directe d'un onglet : /honoraires#opti */
+  function goTab(){ var h=(location.hash||'').slice(1); if(!/^[a-z]+$/.test(h)) return; var b=document.querySelector('nav.tabs button[data-tab="'+h+'"]'); if(b) b.click(); }
+  window.addEventListener('hashchange', goTab);
+  /* Dernier audit mensuel, en tête de l'onglet Optimisation & stratégie (texte uniquement, jamais de HTML) */
+  function el(tag, cls, txt){ var x=document.createElement(tag); if(cls) x.className=cls; if(txt!=null) x.textContent=String(txt); return x; }
+  function renderAudit(){
+    var A=C.audit, box=document.getElementById('tab-opti'); if(!A||!box||document.getElementById('gidAudit')) return;
+    var M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    var p=String(A.period||'').split('-'), w=el('div','ga'); w.id='gidAudit';
+    var hd=el('div','ga-h'); hd.appendChild(el('div','ga-eye','Audit mensuel · '+(M[(+p[1]||1)-1]||'')+' '+(p[0]||'')));
+    hd.appendChild(el('h2','ga-t',A.headline)); if(A.summary) hd.appendChild(el('p','ga-s',A.summary)); w.appendChild(hd);
+    if(A.kpis&&A.kpis.length){ var k=el('div','ga-k'); A.kpis.forEach(function(x){ var c=el('div','ga-kc'); c.appendChild(el('div','ga-kl',x.label)); c.appendChild(el('div','ga-kv',x.value)); if(x.note) c.appendChild(el('div','ga-kn',x.note)); k.appendChild(c); }); w.appendChild(k); }
+    if(A.actions&&A.actions.length){ w.appendChild(el('h3','ga-st','Actions prioritaires du mois')); var ol=el('ol','ga-a'); A.actions.forEach(function(x){ var li=el('li'); li.appendChild(el('strong',null,x.title)); if(x.detail) li.appendChild(el('div','ga-d',x.detail)); var m=[x.gain?('Gain estimé : '+x.gain):'',x.owner?('Pilote : '+x.owner):''].filter(Boolean).join(' · '); if(m) li.appendChild(el('div','ga-m',m)); ol.appendChild(li); }); w.appendChild(ol); }
+    if(A.findings&&A.findings.length){ w.appendChild(el('h3','ga-st','Constats')); var ul=el('ul','ga-f'); A.findings.forEach(function(x){ var li=el('li','lv-'+(x.level||'ok')); li.appendChild(el('strong',null,x.title)); if(x.detail) li.appendChild(el('div','ga-d',x.detail)); ul.appendChild(li); }); w.appendChild(ul); }
+    if(A.gestionnaires&&A.gestionnaires.length){ w.appendChild(el('h3','ga-st','Par gestionnaire')); var g=el('div','ga-g'); A.gestionnaires.forEach(function(x){ var c=el('div','ga-gc'); c.appendChild(el('div','ga-gn',(x.name||x.code)+(x.code&&x.name?' · '+x.code:''))); if(x.constat) c.appendChild(el('p','ga-d',x.constat)); if(x.actions&&x.actions.length){ var u=el('ul'); x.actions.forEach(function(a){ u.appendChild(el('li',null,a)); }); c.appendChild(u); } g.appendChild(c); }); w.appendChild(g); }
+    if(A._at) w.appendChild(el('div','ga-m','Audit généré le '+new Date(A._at*1000).toLocaleDateString('fr-FR')+' · prochain audit le 1er du mois prochain. L’analyse détaillée permanente suit ci-dessous.'));
+    var st=document.createElement('style'); st.textContent='.ga{margin:0 0 28px;padding:22px 24px;border:1px solid var(--line,#ddd);border-left:3px solid var(--accent,#8C6A3F);border-radius:10px;background:var(--surface,var(--bg))}.ga-eye{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent,#8C6A3F);font-weight:600}.ga-t{margin:6px 0 6px;font-size:1.45em}.ga-s{margin:0;color:var(--text-2)}.ga-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0 6px}.ga-kc{border:1px solid var(--line,#ddd);border-radius:8px;padding:12px 14px}.ga-kl{font-size:.85em;color:var(--text-2)}.ga-kv{font-size:1.35em;font-weight:600;margin-top:4px}.ga-kn{font-size:.85em;color:var(--text-2);margin-top:2px}.ga-st{margin:20px 0 8px;font-size:1.05em}.ga-a,.ga-f{margin:0;padding-left:20px}.ga-a li,.ga-f li{margin:0 0 10px}.ga-f{list-style:none;padding:0}.ga-f li{padding-left:12px;border-left:3px solid #9aa}.ga-f li.lv-crit{border-color:#b4412f}.ga-f li.lv-warn{border-color:#c08a2c}.ga-f li.lv-ok{border-color:#4f7a5a}.ga-d{color:var(--text-2);margin-top:2px}.ga-m{font-size:.85em;color:var(--text-2);margin-top:4px}.ga-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.ga-gc{border:1px solid var(--line,#ddd);border-radius:8px;padding:12px 14px}.ga-gc ul{margin:6px 0 0;padding-left:18px}.ga-gn{font-weight:600}';
+    w.appendChild(st); box.insertBefore(w, box.firstChild);
+  }
+  window.addEventListener('load', function(){ renderAudit(); setTimeout(goTab, 0); });
   if(!C.key) return;
   var S = Storage.prototype, set = S.setItem, del = S.removeItem, t = null;
   try { if (C.state !== null) set.call(localStorage, C.key, C.state); else del.call(localStorage, C.key); } catch(e) {}

@@ -10,9 +10,18 @@ function ingest_key(): string { return hash_hmac('sha256', 'chemini-ingest-v1', 
 
 function ingest_handle(string $kind): never {
     $send = function (array $d, int $c = 200): never { http_response_code($c); header('Content-Type: application/json'); header('Cache-Control: no-store'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; };
-    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') $send(['error' => 'POST attendu'], 405);
+    $method = $_SERVER['REQUEST_METHOD'] ?? '';
+    if ($method !== 'POST' && !($method === 'GET' && $kind === 'honoraires')) $send(['error' => 'POST attendu'], 405);
     if (ip_blocked()) $send(['error' => 'IP bloquée'], 429);
     if (!hash_equals(ingest_key(), (string)($_SERVER['HTTP_X_INGEST_KEY'] ?? ''))) { ip_fail(null, 'ingest'); $send(['error' => 'clé invalide'], 403); }
+    if ($kind === 'honoraires') { // lecture des données actuelles du tableau des honoraires (pour l'audit mensuel)
+        $st = q('SELECT json, updated_at FROM doc_state WHERE slug=?', ['honoraires'])->fetch();
+        $html = (string)q('SELECT html FROM docs WHERE slug=?', ['honoraires'])->fetchColumn();
+        $data = $st ? json_decode($st['json'], true) : null;
+        if (!$data && preg_match('#<script id="seed" type="application/json">(.*?)</script>#s', $html, $m)) $data = json_decode($m[1], true);
+        $prev = audit_latest('honoraires');
+        $send(['ok' => true, 'modified_at' => $st ? (int)$st['updated_at'] : null, 'data' => $data, 'previous_audit' => $prev['d'] ?? null]);
+    }
     $raw = file_get_contents('php://input') ?: '';
     if (strlen($raw) > 2_000_000) $send(['error' => 'trop volumineux'], 413);
     $d = json_decode($raw, true);
@@ -65,6 +74,16 @@ function ingest_handle(string $kind): never {
             $n++;
         }
         $send(['ok' => true, 'saved' => $n]);
+    }
+    if ($kind === 'audit') {
+        $period = $str($d['period'] ?? '', 7);
+        if (!preg_match('/^\d{4}-\d{2}$/', $period) || $str($d['headline'] ?? '', 300) === '') $send(['error' => 'period (AAAA-MM) et headline requis'], 400);
+        $kindA = in_array($d['kind'] ?? 'honoraires', ['honoraires'], true) ? 'honoraires' : 'honoraires';
+        q('INSERT INTO audits(kind,period,headline,data,created_at) VALUES(?,?,?,?,?) ON CONFLICT(kind,period) DO UPDATE SET headline=excluded.headline, data=excluded.data, created_at=excluded.created_at',
+          [$kindA, $period, $str($d['headline'], 300), json_encode($d, JSON_UNESCAPED_UNICODE), time()]);
+        $id = (int)q('SELECT id FROM audits WHERE kind=? AND period=?', [$kindA, $period])->fetchColumn();
+        q('DELETE FROM audit_reads WHERE audit_id=?', [$id]);
+        $send(['ok' => true, 'id' => $id, 'url' => BASE_URL . '/honoraires#opti']);
     }
     $send(['error' => 'type inconnu'], 404);
 }

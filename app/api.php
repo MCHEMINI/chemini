@@ -285,6 +285,9 @@ function api(string $r): never {
         case 'mail/toggle':
             q('UPDATE mail_items SET done = 1 - done, done_at = ? WHERE id=? AND user_id=?', [time(), in_int('id'), $uid]);
             json_out(['ok' => true]);
+        case 'audit/read':
+            q('INSERT OR IGNORE INTO audit_reads(user_id,audit_id,read_at) VALUES(?,?,?)', [$uid, in_int('id'), time()]);
+            json_out(['ok' => true]);
         case 'space/note':
             $sp = in_str('space', 20);
             if (!isset(SPACES[$sp]) || !can_space($u, $sp)) json_out(['error' => 'Accès refusé.'], 403);

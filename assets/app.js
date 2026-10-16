@@ -393,3 +393,8 @@
     });
   }
 })();
+
+/* /honoraires#opti : transmet l'onglet demandé à l'outil (changement d'ancre, sans rechargement) */
+(function(){ var f=document.querySelector('.doc-frame iframe'); if(!f) return;
+  function pass(){ if(/^#[a-z]+$/.test(location.hash)) f.src = f.getAttribute('src').split('#')[0] + location.hash; }
+  pass(); window.addEventListener('hashchange', pass); })();

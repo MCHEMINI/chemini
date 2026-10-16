@@ -21,11 +21,14 @@ function page_dashboard(array $u): never {
     }
 
     $veille = q('SELECT * FROM veille ORDER BY week DESC, important DESC, COALESCE(published_at, created_at) DESC LIMIT 8')->fetchAll();
+    $audit = null;
+    if (can_space($u, 'direction') && ($a = audit_latest('honoraires')) && $a['created_at'] > time() - 40 * 86400
+        && !q('SELECT 1 FROM audit_reads WHERE user_id=? AND audit_id=?', [$uid, $a['id']])->fetchColumn()) $audit = $a;
     render('dashboard', [
         'title' => 'Tableau de bord', 'nav' => 'dash', 'u' => $u,
         'items' => $items, 'deadlines' => $deadlines, 'overdue' => $overdue,
         'mails' => $mails, 'mailsCount' => $mailsCount,
-        'veille' => $veille, 'legal' => $veille ? [] : feeds_merged(LEGAL_FEEDS, 4), 'news' => feeds_merged(NEWS_FEEDS, 6),
+        'veille' => $veille, 'audit' => $audit, 'legal' => $veille ? [] : feeds_merged(LEGAL_FEEDS, 4), 'news' => feeds_merged(NEWS_FEEDS, 6),
         'stats' => [
             'crit' => count(array_filter($items, fn($i) => $i['severity'] === 'crit')),
             'open' => (int)q("SELECT COUNT(*) FROM items WHERE status='open'")->fetchColumn(),

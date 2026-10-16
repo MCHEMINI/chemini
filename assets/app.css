@@ -353,3 +353,9 @@ main:has(.doc-frame.full) .page-tools{margin:0 0 6px}
 .law.veille .impact{color:var(--ink);background:var(--bg-2,rgba(0,0,0,.03));padding:8px 10px;border-radius:6px;font-size:.95em}
 .law.veille article.imp{border-left:2px solid var(--crit,#b4412f);padding-left:12px}
 .law.veille .more{display:inline-block;margin-top:8px;font-size:.9em}
+
+.audit-alert{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;margin:0 0 28px;padding:18px 22px;border:1px solid var(--line);border-left:3px solid var(--accent,#8C6A3F);border-radius:var(--r);background:var(--surface)}
+.audit-alert .t{font-family:var(--display,inherit);font-size:1.2em;margin-top:4px}
+.audit-alert .d{color:var(--muted);margin-top:4px}
+.audit-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+@media (max-width:720px){.audit-alert{grid-template-columns:auto 1fr}.audit-actions{grid-column:1/-1;flex-direction:row;align-items:center}}
