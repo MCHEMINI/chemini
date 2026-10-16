@@ -64,6 +64,9 @@ function avatar(array $u, string $size = ''): string {
 }
 
 /* ---------- Espaces et droits ---------- */
+/* Assistant IA (Mon espace) : priorités et statuts des consignes */
+const CONSIGNE_PRIO = ['haute' => 'Haute', 'normale' => 'Normale', 'basse' => 'Basse'];
+const CONSIGNE_STATUS = ['todo' => 'À faire', 'doing' => 'En cours', 'done' => 'Fait'];
 const SPACES = ['gid' => 'GID', 'direction' => 'Direction', 'famille' => 'Famille'];
 
 function user_spaces(array $u): array {
