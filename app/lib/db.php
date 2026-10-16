@@ -183,6 +183,17 @@ CREATE INDEX IF NOT EXISTS pv_msg ON pv_votes(msg_id);
 PRAGMA user_version = 17;
 SQL);
     }
+    if ($v < 18) {
+        $pdo->exec(<<<SQL
+ALTER TABLE pv_votes ADD COLUMN pv_date TEXT;
+CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, title TEXT NOT NULL, author TEXT, kind TEXT NOT NULL,
+  size INTEGER NOT NULL DEFAULT 0, cover TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS books_user ON books(user_id);
+CREATE TABLE IF NOT EXISTS book_state (book_id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, pos TEXT, percent REAL NOT NULL DEFAULT 0,
+  bookmarks TEXT, highlights TEXT, read_at INTEGER);
+PRAGMA user_version = 18;
+SQL);
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

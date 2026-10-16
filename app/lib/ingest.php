@@ -82,7 +82,7 @@ function ingest_handle(string $kind): never {
           [$status, $result, time(), $status, time(), $status, time(), $id]);
         $send(['ok' => true, 'id' => $id, 'status' => $status]);
     }
-    if ($kind === 'pv' && $method === 'POST') { // honoraires votés relevés dans les PV d'AG : {items:[{msg_id, code, ag_date, gc_ht, gc_ttc, travaux:[{res, objet, taux, ht, ttc}], link}]}
+    if ($kind === 'pv' && $method === 'POST') { // honoraires votés relevés dans les PV d'AG : {items:[{msg_id, code, ag_date, pv_date, gc_ht, gc_ttc, travaux:[{res, objet, taux, ht, ttc}], link}]}
         $n = 0;
         foreach (array_slice((array)($d['items'] ?? []), 0, 500) as $it) {
             $code = str_pad(preg_replace('/\D/', '', (string)($it['code'] ?? '')), 5, '0', STR_PAD_LEFT);
@@ -91,9 +91,10 @@ function ingest_handle(string $kind): never {
             $y = (int)substr($date, 0, 4); $m = (int)substr($date, 5, 2); $s = $m >= 4 ? $y : $y - 1;
             $tr = array_values(array_filter((array)($it['travaux'] ?? []), 'is_array'));
             $sum = array_sum(array_map(fn($t) => (float)($t['ttc'] ?? 0), $tr));
-            q('INSERT INTO pv_votes(msg_id,code,ag_date,exercice,gc_ht,gc_ttc,travaux_ttc,detail,link,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)
-               ON CONFLICT(code,ag_date) DO UPDATE SET msg_id=excluded.msg_id, gc_ht=excluded.gc_ht, gc_ttc=excluded.gc_ttc, travaux_ttc=excluded.travaux_ttc, detail=excluded.detail, link=excluded.link',
-              [$str($it['msg_id'] ?? '', 300), $code, $date, $s . '-' . ($s + 1), isset($it['gc_ht']) ? (float)$it['gc_ht'] : null, isset($it['gc_ttc']) ? (float)$it['gc_ttc'] : null, round($sum, 2), json_encode($tr, JSON_UNESCAPED_UNICODE), $str($it['link'] ?? '', 2000), time()]);
+            $pvd = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($it['pv_date'] ?? '')) ? (string)$it['pv_date'] : null; // date de diffusion / remise du PV
+            q('INSERT INTO pv_votes(msg_id,code,ag_date,exercice,gc_ht,gc_ttc,travaux_ttc,detail,link,created_at,pv_date) VALUES(?,?,?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(code,ag_date) DO UPDATE SET msg_id=excluded.msg_id, gc_ht=excluded.gc_ht, gc_ttc=excluded.gc_ttc, travaux_ttc=excluded.travaux_ttc, detail=excluded.detail, link=excluded.link, pv_date=COALESCE(excluded.pv_date, pv_votes.pv_date)',
+              [$str($it['msg_id'] ?? '', 300), $code, $date, $s . '-' . ($s + 1), isset($it['gc_ht']) ? (float)$it['gc_ht'] : null, isset($it['gc_ttc']) ? (float)$it['gc_ttc'] : null, round($sum, 2), json_encode($tr, JSON_UNESCAPED_UNICODE), $str($it['link'] ?? '', 2000), time(), $pvd]);
             $n++;
         }
         $send(['ok' => true, 'saved' => $n]);

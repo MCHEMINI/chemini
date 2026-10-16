@@ -352,6 +352,21 @@
     hs = hs.filter(function (k) { return k !== '_trav' && k !== '_pv0'; }); if (travHidden) hs.push('_pv0');
     o.push('_m1'); P.hono_order = o; P.hono_cols = hs; savePref('hono_order', o); savePref('hono_cols', hs);
   })();
+  /* « AG tenue le » et « Remise PV » : complétés d'après le PV de l'AG annuelle (celle qui vote le contrat) de l'exercice HTV en cours,
+     uniquement si la cellule est vide et si l'utilisateur peut modifier le tableau (la saisie passe par le tableau lui-même). */
+  var filled = {};
+  function fillAgDates(t) {
+    if (C.ro) return;
+    [].forEach.call(t.querySelectorAll('tbody tr'), function (tr) {
+      var code = rowCode(tr), r = code && PV[code] && PV[code][EX0]; if (!r || filled[code]) return;
+      var ag = (r.ags || []).filter(function (a) { return a.gc != null; }).pop(); if (!ag) return;
+      filled[code] = 1;
+      [['dateAG', ag.date], ['datePV', ag.pv]].forEach(function (p) {
+        var inp = tr.querySelector('input[data-k="' + p[0] + '"]'); if (!inp || !p[1] || inp.value) return;
+        inp.value = p[1]; inp.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
+  }
   function hidden() { return Array.isArray(P.hono_cols) ? P.hono_cols : []; }
   function applyHidden() { hideCss.textContent = hidden().map(function (k) { return '#immTbl [data-col="' + String(k).replace(/[^\w-]/g, '') + '"]{display:none}'; }).join('\n'); }
   var busy = false, KEYS = [], LABELS = {};
@@ -384,6 +399,7 @@
       }
       applyOrder(); markRows();
     } finally { busy = false; }
+    fillAgDates(t);
   }
   /* Ordre des colonnes : préférence propre à chaque utilisateur (hono_order) */
   function allKeys() { return KEYS.concat(EXTRA.map(function (x) { return x.k; })); }
