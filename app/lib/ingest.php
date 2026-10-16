@@ -75,6 +75,43 @@ function ingest_handle(string $kind): never {
         }
         $send(['ok' => true, 'saved' => $n]);
     }
+    if ($kind === 'buildings') {
+        $n = ['buildings' => 0, 'info' => 0, 'events' => 0];
+        if (!empty($d['buildings']) && is_array($d['buildings'])) {
+            foreach ($d['buildings'] as $r) {
+                if (!is_array($r) || !preg_match('/^[0-9A-Za-z]{1,10}$/', (string)($r['code'] ?? '')) || $str($r['label'] ?? '', 200) === '') continue;
+                q('INSERT INTO buildings(code,kind,label,addr2,cp,ville,gest,compta,assist,exercice) VALUES(?,?,?,?,?,?,?,?,?,?)
+                   ON CONFLICT(code) DO UPDATE SET kind=excluded.kind,label=excluded.label,addr2=excluded.addr2,cp=excluded.cp,ville=excluded.ville,gest=excluded.gest,compta=excluded.compta,assist=excluded.assist,exercice=excluded.exercice',
+                  [$r['code'], ($r['kind'] ?? 'syndic') === 'autre' ? 'autre' : 'syndic', $str($r['label'], 200), $str($r['addr2'] ?? '', 200) ?: null, $str($r['cp'] ?? '', 10), $str($r['ville'] ?? '', 80),
+                   $str($r['gest'] ?? '', 80) ?: null, $str($r['compta'] ?? '', 80) ?: null, $str($r['assist'] ?? '', 80) ?: null, $str($r['exercice'] ?? '', 80) ?: null]);
+                $n['buildings']++;
+            }
+            q("INSERT INTO kv(k,v,updated_at) VALUES('immopen_at',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [$str($d['immopen_date'] ?? date('Y-m-d'), 10), time()]);
+        }
+        // Informations de contact : ne complètent que les champs vides (les saisies de l'équipe priment)
+        foreach ((array)($d['info'] ?? []) as $r) {
+            if (!is_array($r) || !q('SELECT 1 FROM buildings WHERE code=?', [(string)($r['code'] ?? '')])->fetchColumn()) continue;
+            $cur = q('SELECT * FROM building_info WHERE code=?', [$r['code']])->fetch() ?: [];
+            $vals = [];
+            foreach (['president' => 120, 'president_phone' => 40, 'president_email' => 190, 'cs_members' => 2000, 'gardien' => 2000, 'acces' => 2000] as $f => $max)
+                $vals[$f] = !empty($cur[$f]) ? $cur[$f] : ($str($r[$f] ?? '', $max) ?: null);
+            if (!empty($vals['president_email']) && !filter_var($vals['president_email'], FILTER_VALIDATE_EMAIL)) $vals['president_email'] = $cur['president_email'] ?? null;
+            q('INSERT INTO building_info(code,president,president_phone,president_email,cs_members,gardien,acces,sources,updated_at) VALUES(?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(code) DO UPDATE SET president=excluded.president,president_phone=excluded.president_phone,president_email=excluded.president_email,cs_members=excluded.cs_members,gardien=excluded.gardien,acces=excluded.acces,sources=excluded.sources,updated_at=excluded.updated_at',
+              [$r['code'], $vals['president'], $vals['president_phone'], $vals['president_email'], $vals['cs_members'], $vals['gardien'], $vals['acces'], $str($r['source'] ?? 'auto', 300), time()]);
+            $n['info']++;
+        }
+        foreach ((array)($d['events'] ?? []) as $r) {
+            if (!is_array($r) || $str($r['title'] ?? '', 300) === '' || !q('SELECT 1 FROM buildings WHERE code=?', [(string)($r['code'] ?? '')])->fetchColumn()) continue;
+            $link = $str($r['link'] ?? '', 1000);
+            if ($link !== '' && !preg_match('#^https://(outlook\.office365\.com|outlook\.office\.com)/#', $link)) $link = '';
+            $kindE = in_array($r['kind'] ?? 'mail', ['mail', 'ag', 'immopen', 'finance'], true) ? $r['kind'] : 'mail';
+            $st = q('INSERT OR IGNORE INTO building_events(code,at,kind,title,detail,link,ext_id,created_at) VALUES(?,?,?,?,?,?,?,?)',
+              [$r['code'], strtotime((string)($r['date'] ?? '')) ?: time(), $kindE, $str($r['title'], 300), $str($r['detail'] ?? '', 600) ?: null, $link ?: null, $str($r['id'] ?? '', 400) ?: null, time()]);
+            $n['events'] += $st->rowCount();
+        }
+        $send(['ok' => true] + $n);
+    }
     if ($kind === 'audit') {
         $period = $str($d['period'] ?? '', 7);
         if (!preg_match('/^\d{4}-\d{2}$/', $period) || $str($d['headline'] ?? '', 300) === '') $send(['error' => 'period (AAAA-MM) et headline requis'], 400);

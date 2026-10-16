@@ -398,3 +398,7 @@
 (function(){ var f=document.querySelector('.doc-frame iframe'); if(!f) return;
   function pass(){ if(/^#[a-z]+$/.test(location.hash)) f.src = f.getAttribute('src').split('#')[0] + location.hash; }
   pass(); window.addEventListener('hashchange', pass); })();
+
+/* Lignes cliquables (annuaire des immeubles) */
+document.addEventListener('click', e => { const tr = e.target.closest('tr[data-href]'); if (!tr || e.target.closest('a,button,input,select,textarea')) return;
+  if (e.metaKey || e.ctrlKey) window.open(tr.dataset.href, '_blank'); else location.href = tr.dataset.href; });

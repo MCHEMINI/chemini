@@ -285,6 +285,21 @@ function api(string $r): never {
         case 'mail/toggle':
             q('UPDATE mail_items SET done = 1 - done, done_at = ? WHERE id=? AND user_id=?', [time(), in_int('id'), $uid]);
             json_out(['ok' => true]);
+        case 'building/save':
+            $code = in_str('code', 10);
+            if (!q('SELECT 1 FROM buildings WHERE code=?', [$code])->fetchColumn()) json_out(['error' => 'Immeuble inconnu.'], 404);
+            $email = in_str('president_email', 190);
+            if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) json_out(['error' => 'E-mail du président invalide.'], 422);
+            q('INSERT INTO building_info(code,president,president_phone,president_email,cs_members,gardien,acces,notes,updated_at,updated_by) VALUES(?,?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(code) DO UPDATE SET president=excluded.president, president_phone=excluded.president_phone, president_email=excluded.president_email,
+               cs_members=excluded.cs_members, gardien=excluded.gardien, acces=excluded.acces, notes=excluded.notes, updated_at=excluded.updated_at, updated_by=excluded.updated_by',
+              [$code, in_str('president', 120), in_str('president_phone', 40), $email, in_str('cs_members', 2000), in_str('gardien', 2000), in_str('acces', 2000), in_str('notes', 4000), time(), $uid]);
+            json_out(['ok' => true]);
+        case 'building/note':
+            $code = in_str('code', 10); $t = in_str('title', 300);
+            if ($t === '' || !q('SELECT 1 FROM buildings WHERE code=?', [$code])->fetchColumn()) json_out(['error' => 'Note vide.'], 422);
+            q('INSERT INTO building_events(code,at,kind,title,user_id,created_at) VALUES(?,?,?,?,?,?)', [$code, time(), 'note', $t, $uid, time()]);
+            json_out(['ok' => true]);
         case 'audit/read':
             q('INSERT OR IGNORE INTO audit_reads(user_id,audit_id,read_at) VALUES(?,?,?)', [$uid, in_int('id'), time()]);
             json_out(['ok' => true]);

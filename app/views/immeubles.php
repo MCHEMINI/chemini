@@ -45,12 +45,13 @@ $person = function (?string $name) use ($byName): string {
 
 <section class="imm-panel" data-panel="syndic">
   <div class="tbl imm-tbl"><table class="imm-table" data-filter-table>
-    <thead><tr><th>Code</th><th>Immeuble</th><th>Ville</th><th>Gestionnaire</th><th>Comptable</th><th>Assistant(e)</th><th>Exercice</th></tr></thead>
+    <thead><tr><?php if ($fin): ?><th title="Rentabilité estimée">€</th><?php endif; ?><th>Code</th><th>Immeuble</th><th>Ville</th><th>Gestionnaire</th><th>Comptable</th><th>Assistant(e)</th><th>Exercice</th></tr></thead>
     <tbody>
     <?php foreach ($syndic as $b): ?>
-      <tr data-gest="<?= e($b['gest']) ?>">
+      <tr data-gest="<?= e($b['gest']) ?>" data-href="/immeubles/<?= e($b['code']) ?>" class="row-link">
+        <?php if ($fin): $f = $fin[$b['code']] ?? null; ?><td><?php if ($f): ?><span class="dot-fin <?= e($f['c']) ?>" title="<?= e($f['l'] . ($f['c'] !== 'lost' ? ' · marge estimée ' . round($f['m'] * 100) . ' %' : '')) ?>"></span><?php endif; ?></td><?php endif; ?>
         <td class="mono code"><?= e($b['code']) ?></td>
-        <td><strong><?= e($b['label']) ?></strong><?php if ($b['addr2']): ?><br><span class="muted small"><?= e($b['addr2']) ?></span><?php endif; ?></td>
+        <td><a class="row-a" href="/immeubles/<?= e($b['code']) ?>"><strong><?= e($b['label']) ?></strong></a><?php if ($b['addr2']): ?><br><span class="muted small"><?= e($b['addr2']) ?></span><?php endif; ?></td>
         <td class="nowrap"><span class="mono"><?= e($b['cp']) ?></span> <?= e($b['ville']) ?></td>
         <td><?= $person($b['gest']) ?></td>
         <td><?= $person($b['compta']) ?></td>
@@ -69,7 +70,7 @@ $person = function (?string $name) use ($byName): string {
     <thead><tr><th>Code</th><th>Immeuble</th><th>Ville</th></tr></thead>
     <tbody>
     <?php foreach ($autres as $b): ?>
-      <tr><td class="mono code"><?= e($b['code']) ?></td><td><strong><?= e($b['label']) ?></strong><?php if ($b['addr2']): ?><br><span class="muted small"><?= e($b['addr2']) ?></span><?php endif; ?></td><td class="nowrap"><span class="mono"><?= e($b['cp']) ?></span> <?= e($b['ville']) ?></td></tr>
+      <tr data-href="/immeubles/<?= e($b['code']) ?>" class="row-link"><td class="mono code"><?= e($b['code']) ?></td><td><a class="row-a" href="/immeubles/<?= e($b['code']) ?>"><strong><?= e($b['label']) ?></strong></a><?php if ($b['addr2']): ?><br><span class="muted small"><?= e($b['addr2']) ?></span><?php endif; ?></td><td class="nowrap"><span class="mono"><?= e($b['cp']) ?></span> <?= e($b['ville']) ?></td></tr>
     <?php endforeach; ?>
     </tbody>
   </table></div>

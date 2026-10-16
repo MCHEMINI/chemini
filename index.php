@@ -12,6 +12,7 @@ require APP_DIR . '/lib/feeds.php';
 require APP_DIR . '/lib/graph.php';
 require APP_DIR . '/lib/mail.php';
 require APP_DIR . '/lib/ingest.php';
+require APP_DIR . '/lib/building.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -23,7 +24,7 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
-if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires)$#', $route0, $m)) ingest_handle($m[1]);
+if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 
@@ -106,6 +107,11 @@ try {
             audit((int)$u['id'], $ok ? 'microsoft_connected' : 'microsoft_failed');
             redirect($ok ? '/' : '/securite?ms=erreur');
         default:
+            if (preg_match('#^immeubles/([0-9A-Za-z]{1,10})$#', $route, $m)) {
+                $u = require_user();
+                require APP_DIR . '/pages/immeubles.php';
+                page_building($u, $m[1]);
+            }
             if (preg_match('#^voyages/(\d+)$#', $route, $m)) {
                 $u = require_user();
                 require APP_DIR . '/pages/trips.php';

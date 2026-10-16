@@ -132,6 +132,18 @@ CREATE TABLE IF NOT EXISTS audit_reads (user_id INTEGER NOT NULL, audit_id INTEG
 PRAGMA user_version = 10;
 SQL);
     }
+    if ($v < 11) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS building_info (code TEXT PRIMARY KEY, president TEXT, president_phone TEXT, president_email TEXT,
+  cs_members TEXT, gardien TEXT, acces TEXT, notes TEXT, sources TEXT, updated_at INTEGER, updated_by INTEGER);
+CREATE TABLE IF NOT EXISTS building_events (id INTEGER PRIMARY KEY, code TEXT NOT NULL, at INTEGER NOT NULL, kind TEXT NOT NULL,
+  title TEXT NOT NULL, detail TEXT, link TEXT, ext_id TEXT UNIQUE, user_id INTEGER, created_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS building_events_code ON building_events(code, at DESC);
+CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT, updated_at INTEGER);
+INSERT OR IGNORE INTO kv(k,v,updated_at) VALUES('immopen_at','2026-10-16',strftime('%s','now'));
+PRAGMA user_version = 11;
+SQL);
+    }
 }
 
 /** Dernier audit d'un type (ex. honoraires), décodé. */
