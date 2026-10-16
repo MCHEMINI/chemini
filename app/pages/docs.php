@@ -54,7 +54,8 @@ function doc_view(array $u, string $slug): never {
   var C = $cfg;
   function theme(){ var t='light'; try{ t=localStorage.getItem('gid_theme')||'light'; }catch(e){}
     if (t==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'light'); }
-  theme(); window.addEventListener('storage', function(e){ if(e.key==='gid_theme') theme(); });
+  function fs(){ var z=1; try{ z=parseFloat(localStorage.getItem('gid_fs'))||1; }catch(e){} document.documentElement.style.zoom = (z>=0.8&&z<=1.5)?z:1; }
+  theme(); fs(); window.addEventListener('storage', function(e){ if(e.key==='gid_theme') theme(); if(e.key==='gid_fs') fs(); });
   if(!C.key) return;
   var S = Storage.prototype, set = S.setItem, del = S.removeItem, t = null;
   try { if (C.state !== null) set.call(localStorage, C.key, C.state); else del.call(localStorage, C.key); } catch(e) {}

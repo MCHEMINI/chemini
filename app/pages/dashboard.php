@@ -11,7 +11,11 @@ function page_dashboard(array $u): never {
     $week = date('Y-m-d', strtotime('+7 days'));
 
     $mails = null; $mailsCount = null;
-    if (graph_enabled() && graph_connected($uid)) {
+    $auto = q('SELECT * FROM mail_items WHERE user_id=? AND done=0 ORDER BY CASE priority WHEN \'crit\' THEN 0 WHEN \'warn\' THEN 1 ELSE 2 END, received_at DESC LIMIT 6', [$uid])->fetchAll();
+    if ($auto || q('SELECT 1 FROM mail_items WHERE user_id=?', [$uid])->fetchColumn()) {
+        $mails = array_map(fn($m) => ['from' => $m['from_name'] ?: $m['from_email'], 'subject' => $m['subject'], 'preview' => $m['reason'] ?: $m['summary'], 'date' => (int)$m['received_at'], 'link' => $m['link'], 'level' => $m['priority'] === 'crit' ? 'crit' : 'warn'], $auto);
+        $mailsCount = (int)q('SELECT COUNT(*) FROM mail_items WHERE user_id=? AND done=0', [$uid])->fetchColumn();
+    } elseif (graph_enabled() && graph_connected($uid)) {
         $mails = graph_important_mails($uid) ?? [];
         $mailsCount = $_SESSION['mails_' . $uid]['n'] ?? count($mails);
     }

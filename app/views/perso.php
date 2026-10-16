@@ -7,6 +7,29 @@
 </header>
 
 <div class="grid">
+  <section class="col-12">
+    <div class="sec-h"><h2>Mails à traiter</h2><span class="muted small">Analyse automatique de votre boîte toutes les heures · cochez une fois traité</span></div>
+    <?php if (!$mails): ?>
+      <div class="empty"><strong>Rien à traiter.</strong>Les mails importants détectés dans votre boîte apparaîtront ici.</div>
+    <?php else: ?>
+    <ul class="list mail-todo">
+      <?php foreach ($mails as $m): ?>
+      <li class="<?= $m['done'] ? 'done' : '' ?>">
+        <input type="checkbox" id="m<?= (int)$m['id'] ?>" data-api="mail/toggle" data-id="<?= (int)$m['id'] ?>" <?= $m['done'] ? 'checked' : '' ?> aria-label="Marquer comme traité">
+        <label for="m<?= (int)$m['id'] ?>">
+          <div class="t"><?= e($m['subject']) ?></div>
+          <div class="d"><?= e($m['from_name'] ?: $m['from_email']) ?><?= $m['summary'] ? ' · ' . e($m['summary']) : '' ?></div>
+          <?php if ($m['reason']): ?><div class="why"><?= e($m['reason']) ?></div><?php endif; ?>
+        </label>
+        <div class="meta"><span class="chip <?= e($m['priority']) ?>"><?= $m['priority'] === 'crit' ? 'Urgent' : ($m['priority'] === 'ok' ? 'À lire' : 'À traiter') ?></span>
+          <span><?= e(ago((int)$m['received_at'])) ?></span>
+          <?php if ($m['link']): ?><a href="<?= e($m['link']) ?>" target="_blank" rel="noopener">Ouvrir</a><?php endif; ?></div>
+      </li>
+      <?php endforeach; ?>
+    </ul>
+    <?php endif; ?>
+  </section>
+
   <section class="col-7">
     <div class="sec-h"><h2>Mes tâches</h2></div>
     <div class="panel">

@@ -37,6 +37,19 @@
   }));
   markTheme();
 
+  /* ---------- Taille du texte ---------- */
+  const FS = [0.85, 0.9, 1, 1.1, 1.2, 1.3, 1.4];
+  const fsGet = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 1;
+  const fsShow = () => $$('[data-fs-val]').forEach(el => (el.textContent = Math.round(fsGet() * 100) + ' %'));
+  $$('[data-fs]').forEach(b => b.addEventListener('click', () => {
+    const cur = fsGet(), i = FS.reduce((best, v, k) => Math.abs(v - cur) < Math.abs(FS[best] - cur) ? k : best, 0);
+    const nx = FS[Math.min(FS.length - 1, Math.max(0, i + Number(b.dataset.fs)))];
+    document.documentElement.style.setProperty('--fs', nx);
+    try { localStorage.setItem('gid_fs', nx); } catch (_) {}
+    fsShow();
+  }));
+  fsShow();
+
   /* ---------- Menu latéral masquable ---------- */
   $$('[data-rail-toggle]').forEach(b => b.addEventListener('click', () => {
     const closed = document.documentElement.dataset.rail === 'closed';

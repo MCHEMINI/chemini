@@ -70,14 +70,12 @@
   </section>
 
   <section class="col-7">
-    <div class="sec-h"><h2>Mails importants</h2><?php if ($mails !== null): ?><a href="https://outlook.office.com/mail/" target="_blank" rel="noopener">Ouvrir Outlook</a><?php endif; ?></div>
+    <div class="sec-h"><h2>Mails importants</h2><?php if ($mails !== null): ?><a href="/espace">Tout traiter</a><?php endif; ?></div>
     <?php if ($mails === null): ?>
-      <div class="empty"><strong>Messagerie non connectée.</strong>
-        <?php if (graph_enabled()): ?>Connectez votre boîte Microsoft 365 pour voir ici les mails importants et signalés. <a class="btn btn-ghost mt" href="/microsoft/connexion">Connecter Outlook</a>
-        <?php else: ?>La connexion à Microsoft 365 sera activée lors de la configuration de la messagerie.<?php endif; ?>
+      <div class="empty"><strong>Analyse en cours de mise en place.</strong>Votre boîte est analysée toutes les heures : les mails importants apparaîtront ici et dans Mon espace.
       </div>
     <?php elseif (!$mails): ?>
-      <div class="empty"><strong>Boîte à jour.</strong>Aucun mail important ou signalé non lu sur les 14 derniers jours.</div>
+      <div class="empty"><strong>Boîte à jour.</strong>Aucun mail important en attente de traitement.</div>
     <?php else: ?>
     <ul class="list mail">
       <?php foreach ($mails as $m): ?>

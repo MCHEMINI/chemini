@@ -7,6 +7,7 @@ function page_perso(array $u): never {
         'title' => 'Mon espace', 'nav' => 'perso', 'u' => $u,
         'tasks' => q('SELECT * FROM tasks WHERE user_id=? AND space IS NULL ORDER BY done ASC, created_at DESC', [$uid])->fetchAll(),
         'note' => q('SELECT * FROM notes WHERE user_id=?', [$uid])->fetch() ?: null,
+        'mails' => q('SELECT * FROM mail_items WHERE user_id=? AND (done=0 OR done_at > ?) ORDER BY done ASC, CASE priority WHEN \'crit\' THEN 0 WHEN \'warn\' THEN 1 ELSE 2 END, received_at DESC LIMIT 40', [$uid, time() - 7 * 86400])->fetchAll(),
         'mine' => q("SELECT * FROM items WHERE owner_id=? AND status='open' ORDER BY CASE severity WHEN 'crit' THEN 0 WHEN 'warn' THEN 1 ELSE 2 END", [$uid])->fetchAll(),
     ]);
 }

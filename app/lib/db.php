@@ -99,6 +99,24 @@ SQL);
         seed_doc($pdo, 'honoraires', 'famille');
         $pdo->exec('PRAGMA user_version = 6');
     }
+    if ($v < 7) {
+        $pdo->exec(<<<SQL
+UPDATE docs SET space='direction' WHERE slug='honoraires';
+CREATE TABLE mail_items(
+  id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, msg_id TEXT NOT NULL,
+  from_name TEXT, from_email TEXT, subject TEXT NOT NULL, summary TEXT, reason TEXT, priority TEXT NOT NULL DEFAULT 'warn',
+  received_at INTEGER, link TEXT, done INTEGER NOT NULL DEFAULT 0, done_at INTEGER, created_at INTEGER NOT NULL,
+  UNIQUE(user_id, msg_id));
+CREATE TABLE trips(
+  id INTEGER PRIMARY KEY, space TEXT NOT NULL DEFAULT 'famille', destination TEXT NOT NULL, duration TEXT,
+  data TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+PRAGMA user_version = 7;
+SQL);
+    }
+    if ($v < 8) {
+        seed_doc($pdo, 'honoraires', 'direction'); // analyse par gestionnaire
+        $pdo->exec('PRAGMA user_version = 8');
+    }
 }
 
 /** Outil HTML chiffré dans le dépôt : mis en place (ou remplacé) en gardant les modifications de l'équipe. */
