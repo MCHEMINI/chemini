@@ -408,3 +408,15 @@ document.addEventListener('click', e => { const tr = e.target.closest('tr[data-h
   const apply = () => { const v = sel.value; document.querySelectorAll('[data-cp]').forEach(el => { el.hidden = !!v && el.dataset.cp !== v; }); try { localStorage.setItem('gid_cp', v); } catch (e) {} };
   try { const v = localStorage.getItem('gid_cp'); if (v && [...sel.options].some(o => o.value === v)) sel.value = v; } catch (e) {}
   sel.addEventListener('change', apply); apply(); })();
+
+/* Sidebar : liste des personnes ayant accès à une section */
+(function(){
+  const close = () => document.querySelectorAll('.grp-n[aria-expanded=true]').forEach(b => { b.setAttribute('aria-expanded','false'); document.getElementById('grp-' + b.dataset.grp).hidden = true; });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.grp-n');
+    if (!b) { if (!e.target.closest('.grp-pop')) close(); return; }
+    const open = b.getAttribute('aria-expanded') === 'true'; close();
+    if (!open) { b.setAttribute('aria-expanded','true'); document.getElementById('grp-' + b.dataset.grp).hidden = false; }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+})();

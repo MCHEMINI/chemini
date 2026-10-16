@@ -406,3 +406,14 @@ a.row-a:hover strong{text-decoration:underline;text-underline-offset:3px}
 .trip-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .trip-mini a{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:inherit}
 .trip-mini strong{font-family:var(--display,inherit);font-size:1.25em;font-weight:500}
+
+/* Sidebar : nombre d'accès par section + fenêtre des membres */
+.rail .group{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.grp-n{min-width:24px;height:22px;padding:0 7px;border-radius:99px;border:1px solid #2E3440;background:#1A1F28;color:#C9C4B8;font:600 11.5px/1 var(--sans,inherit);letter-spacing:0;cursor:pointer}
+.grp-n:hover,.grp-n[aria-expanded=true]{background:#C9A86A;border-color:#C9A86A;color:#121720}
+.grp-pop{margin:0 10px 10px;padding:12px;border:1px solid #2E3440;border-radius:10px;background:#1A1F28;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.grp-pop-h{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:#8D929B;margin-bottom:8px}
+.grp-pop ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.grp-pop li{display:flex;align-items:center;gap:10px}
+.grp-pop strong{display:block;color:#F1EEE7;font-size:13.5px;font-weight:600}
+.grp-pop li>div span{display:block;color:#8D929B;font-size:12px;word-break:break-all}
