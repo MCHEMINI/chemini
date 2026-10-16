@@ -132,6 +132,13 @@ try {
                 require APP_DIR . '/pages/immeubles.php';
                 page_building($u, $m[1]);
             }
+            if (preg_match('#^mes-livres(?:/(\d+)(/fichier)?)?$#', $route, $m)) {
+                $u = require_user();
+                require APP_DIR . '/pages/books.php';
+                if (empty($m[1])) page_books($u);
+                if (!empty($m[2])) book_file($u, (int)$m[1]);
+                page_book_read($u, (int)$m[1]);
+            }
             if (preg_match('#^partage/([A-Za-z0-9_-]{24,64})$#', $route, $m)) {
                 require APP_DIR . '/pages/trips.php';
                 page_trip_public($m[1]);

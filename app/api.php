@@ -156,6 +156,7 @@ function api(string $r): never {
     $uid = (int)$u['id'];
 
     if (preg_match('#^(items|deadlines|building)/#', $r) && !can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+    if (str_starts_with($r, 'books/')) { require APP_DIR . '/pages/books.php'; books_api($r, $u); }
     switch ($r) {
         case 'trust':
             if (body()['trust'] ?? false) { trust_this_device($uid); audit($uid, 'device_trusted'); }

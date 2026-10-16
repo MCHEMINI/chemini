@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=26">
+<link rel="stylesheet" href="/assets/app.css?v=27">
 </head>
 <body>
 <div id="app">
@@ -50,6 +50,7 @@
       <a class="<?= $cls('perso') ?>" href="/espace"><?= avatar($u, 'sm') ?>Mon espace</a>
       <a class="<?= $cls('tasks') ?>" href="/mes-taches"><i class="dot"></i>Mes tâches<?php $nT = (int)q('SELECT COUNT(*) FROM tasks WHERE user_id=? AND space IS NULL AND done=0', [(int)$u['id']])->fetchColumn(); if ($nT): ?> <span class="nav-n"><?= $nT ?></span><?php endif; ?></a>
       <a class="<?= $cls('notes') ?>" href="/bloc-notes"><i class="dot"></i>Bloc-notes</a>
+      <a class="<?= $cls('books') ?>" href="/mes-livres"><i class="dot"></i>Mes livres</a>
       <a href="/assistant" class="nav-ia <?= $cls('ia') ?>"><i class="dot"></i>Tâches IA<?php $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nIa): ?> <span class="nav-n"><?= $nIa ?></span><?php endif; ?></a>
     </nav>
     <div class="theme-switch" role="group" aria-label="Thème"><button type="button" data-theme-set="light">Clair</button><button type="button" data-theme-set="dark">Sombre</button><button type="button" data-theme-set="auto">Auto</button></div>
