@@ -30,6 +30,42 @@
     <?php endif; ?>
   </section>
 
+  <section class="col-12">
+    <div class="sec-h"><h2>Assistant IA</h2><span class="muted small">Consignes vérifiées et traitées toutes les heures · <span class="chip todo">À faire</span> <span class="chip warn">En cours</span> <span class="chip ok">Fait</span></span></div>
+    <div class="panel">
+      <form data-api="consignes/create" class="ia-form">
+        <label for="new-consigne" class="sr">Nouvelle consigne</label>
+        <textarea class="input" id="new-consigne" name="body" maxlength="4000" rows="3" placeholder="Décrivez ce que l'assistant doit faire…" required></textarea>
+        <div class="ia-form-row">
+          <label for="new-prio" class="small muted">Priorité</label>
+          <select class="input" id="new-prio" name="priority">
+            <?php foreach (CONSIGNE_PRIO as $k => $l): ?><option value="<?= e($k) ?>"<?= $k === 'normale' ? ' selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?>
+          </select>
+          <button class="btn btn-primary">Envoyer</button>
+        </div>
+      </form>
+      <p class="form-error" hidden></p>
+      <?php if (!$consignes): ?>
+        <p class="muted">Aucune consigne pour l'instant.</p>
+      <?php else: ?>
+      <ul class="list ia-list">
+        <?php foreach ($consignes as $c): $st = $c['status']; ?>
+        <li class="ia-<?= e($st) ?>">
+          <i class="ia-dot" aria-hidden="true"></i>
+          <div>
+            <div class="t"><?= nl2br(e($c['body'])) ?></div>
+            <div class="d">Priorité <?= e(mb_strtolower(CONSIGNE_PRIO[$c['priority']] ?? '')) ?> · déposée : <?= e(mb_strtolower(ago((int)$c['created_at']))) ?><?= $st === 'done' && $c['done_at'] ? ' · faite : ' . e(mb_strtolower(ago((int)$c['done_at']))) : '' ?></div>
+            <?php if (!empty($c['result'])): ?><div class="ia-result"><?= nl2br(e($c['result'])) ?></div><?php endif; ?>
+          </div>
+          <div class="meta"><span class="chip <?= $st === 'done' ? 'ok' : ($st === 'doing' ? 'warn' : 'todo') ?>"><?= e(CONSIGNE_STATUS[$st] ?? $st) ?></span>
+            <?php if ($st !== 'doing'): ?><button type="button" class="btn-link" data-api="consignes/delete" data-id="<?= (int)$c['id'] ?>" data-confirm="Supprimer ?">Supprimer</button><?php endif; ?></div>
+        </li>
+        <?php endforeach; ?>
+      </ul>
+      <?php endif; ?>
+    </div>
+  </section>
+
   <section class="col-7">
     <div class="sec-h"><h2>Mes tâches</h2></div>
     <div class="panel">

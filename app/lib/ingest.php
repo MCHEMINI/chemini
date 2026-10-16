@@ -11,9 +11,15 @@ function ingest_key(): string { return hash_hmac('sha256', 'chemini-ingest-v1', 
 function ingest_handle(string $kind): never {
     $send = function (array $d, int $c = 200): never { http_response_code($c); header('Content-Type: application/json'); header('Cache-Control: no-store'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; };
     $method = $_SERVER['REQUEST_METHOD'] ?? '';
-    if ($method !== 'POST' && !($method === 'GET' && $kind === 'honoraires')) $send(['error' => 'POST attendu'], 405);
+    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes'], true))) $send(['error' => 'POST attendu'], 405);
     if (ip_blocked()) $send(['error' => 'IP bloquée'], 429);
     if (!hash_equals(ingest_key(), (string)($_SERVER['HTTP_X_INGEST_KEY'] ?? ''))) { ip_fail(null, 'ingest'); $send(['error' => 'clé invalide'], 403); }
+    if ($kind === 'consignes' && $method === 'GET') { // consignes de l'assistant IA à traiter (à faire / en cours), par priorité
+        $rows = q("SELECT c.id, c.body, c.priority, c.status, c.result, c.created_at, u.email AS user_email, u.name AS user_name
+                   FROM consignes c JOIN users u ON u.id = c.user_id WHERE c.status IN ('todo','doing')
+                   ORDER BY CASE c.priority WHEN 'haute' THEN 0 WHEN 'normale' THEN 1 ELSE 2 END, c.created_at ASC LIMIT 100")->fetchAll();
+        $send(['ok' => true, 'items' => $rows]);
+    }
     if ($kind === 'honoraires') { // lecture des données actuelles du tableau des honoraires (pour l'audit mensuel)
         $st = q('SELECT json, updated_at FROM doc_state WHERE slug=?', ['honoraires'])->fetch();
         $html = (string)q('SELECT html FROM docs WHERE slug=?', ['honoraires'])->fetchColumn();
@@ -59,6 +65,19 @@ function ingest_handle(string $kind): never {
             $id = (int)db()->lastInsertId();
         }
         $send(['ok' => true, 'id' => $id, 'url' => BASE_URL . '/voyages/' . $id]);
+    }
+    if ($kind === 'consignes') { // mise à jour du statut (todo / doing / done) et du compte rendu d'une consigne
+        $id = (int)($d['id'] ?? 0);
+        $status = (string)($d['status'] ?? '');
+        if (!$id || !isset(CONSIGNE_STATUS[$status])) $send(['error' => 'id ou statut invalide'], 400);
+        $cur = q('SELECT status FROM consignes WHERE id=?', [$id])->fetchColumn();
+        if ($cur === false) $send(['error' => 'consigne introuvable (supprimée ?)'], 404);
+        $result = array_key_exists('result', $d) ? $str($d['result'], 8000) : null;
+        q('UPDATE consignes SET status=?, result=COALESCE(?, result), updated_at=?,
+             started_at=CASE WHEN ?=\'doing\' AND started_at IS NULL THEN ? ELSE started_at END,
+             done_at=CASE WHEN ?=\'done\' THEN ? ELSE NULL END WHERE id=?',
+          [$status, $result, time(), $status, time(), $status, time(), $id]);
+        $send(['ok' => true, 'id' => $id, 'status' => $status]);
     }
     if ($kind === 'veille') {
         $week = $str($d['week'] ?? date('o-\\WW'), 12);
