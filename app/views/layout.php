@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=19">
+<link rel="stylesheet" href="/assets/app.css?v=20">
 </head>
 <body>
 <div id="app">
@@ -48,6 +48,7 @@
       <?php endif; ?>
       <?= $grp('Personnel', 'perso', [$u]) ?>
       <a class="<?= $cls('perso') ?>" href="/espace"><?= avatar($u, 'sm') ?>Mon espace</a>
+      <a href="/espace#assistant" class="nav-ia"><i class="dot"></i>Assistant IA<?php $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nIa): ?> <span class="nav-n"><?= $nIa ?></span><?php endif; ?></a>
       <div class="group">Compte</div>
       <a class="<?= $cls('secu') ?>" href="/securite"><i class="dot"></i>Sécurité</a>
     </nav>

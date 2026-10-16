@@ -441,3 +441,6 @@ a.row-a:hover strong{text-decoration:underline;text-underline-offset:3px}
 .ag-flag{display:inline-block;margin:2px 6px 2px 0;padding:2px 8px;border-radius:99px;font-size:.85em;background:var(--bg-2,rgba(0,0,0,.04))}
 .ag-flag.crit{background:rgba(192,65,47,.12);color:#A3362A}.ag-flag.warn{background:rgba(208,138,30,.14);color:#8A5A10}.ag-flag.ok{color:#3F7A50}
 [data-theme=dark] .ag-flag.crit{color:#F09A8D}[data-theme=dark] .ag-flag.warn{color:#E8B866}
+
+.rail .nav-n{margin-left:auto;font-size:11px;font-weight:600;background:#E0A030;color:#16191F;border-radius:99px;padding:1px 7px}
+#assistant{scroll-margin-top:24px}
