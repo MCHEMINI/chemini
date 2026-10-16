@@ -91,7 +91,7 @@ select.input{padding-right:4px}
 #app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr);background:linear-gradient(to right,var(--rail) 248px,var(--bg) 248px)}
 .rail{background:var(--rail);color:var(--rail-fg);padding:28px 20px 28px max(20px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:32px;position:sticky;top:0;height:100vh}
 .rail nav{display:flex;flex-direction:column;gap:2px}
-.rail .group{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#6E737C;margin:18px 10px 8px}
+.rail .group{font-size:12.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#9A9FA8;margin:22px 10px 8px}
 .rail nav a{display:flex;align-items:center;gap:12px;padding:10px;border-radius:var(--r);color:#AEB2B9;font-size:14px;text-decoration:none}
 .rail nav a:hover{color:#F1EEE7;background:rgba(255,255,255,.04)}
 .rail nav a.active{color:#F1EEE7;background:rgba(201,166,107,.12)}
