@@ -5,13 +5,12 @@
     <div class="date"><?= e(date_long(time())) ?></div>
   </div>
   <div class="head-actions">
-    <a class="btn btn-ghost" href="/immeubles">Annuaire des immeubles</a>
     <?php if ($isDir): ?><a class="btn btn-primary" href="/direction">Tableau de bord Direction</a><?php endif; ?>
   </div>
 </header>
 
 <div class="summary">
-  <div><div class="n"><?= (int)$stats['syndic'] ?></div><div class="l"><a href="/immeubles">Immeubles en syndic</a></div></div>
+  <div><div class="n"><?= (int)$stats['syndic'] ?></div><div class="l"><?php if ($isDir): ?><a href="/immeubles">Immeubles en syndic</a><?php else: ?>Immeubles en syndic<?php endif; ?></div></div>
   <div><div class="n"><?= (int)$stats['staff'] ?></div><div class="l">Collaborateurs</div></div>
   <div><div class="n <?= $stats['veilleImp'] ? 'crit' : '' ?>"><?= (int)$stats['veilleImp'] ?></div><div class="l">Points de veille importants cette semaine</div></div>
   <div><div class="n"><?= (int)$stats['tasks'] ?></div><div class="l"><a href="/gid">Tâches de l'équipe en cours</a></div></div>

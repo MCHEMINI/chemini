@@ -32,11 +32,11 @@
       }; ?>
       <?= $grp('GID', 'gid', space_members('gid')) ?>
       <a class="<?= $cls('dash') ?>" href="/"><i class="dot"></i>Tableau de bord</a>
-      <a class="<?= $cls('immeubles') ?>" href="/immeubles"><i class="dot"></i>Immeubles</a>
       <a class="<?= $cls('space-gid') ?>" href="/gid"><i class="dot"></i>Espace GID</a>
       <?php if (in_array('direction', $sp, true)): ?>
       <?= $grp('Direction', 'direction', space_members('direction')) ?>
       <a class="<?= $cls('space-direction') ?>" href="/direction"><i class="dot"></i>Tableau de bord</a>
+      <a class="<?= $cls('immeubles') ?>" href="/immeubles"><i class="dot"></i>Immeubles</a>
       <a class="<?= $cls('honoraires') ?>" href="/honoraires"><i class="dot"></i>Honoraires</a>
       <a class="<?= $cls('compta') ?>" href="/comptabilite"><i class="dot"></i>Comptabilité</a>
       <?php endif; ?>

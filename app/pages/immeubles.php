@@ -1,7 +1,12 @@
 <?php
 declare(strict_types=1);
 
+function immeubles_guard(array $u): void {
+    if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Les immeubles sont réservés à la Direction.'], false); }
+}
+
 function page_immeubles(array $u): never {
+    immeubles_guard($u);
     $buildings = q("SELECT * FROM buildings ORDER BY kind DESC, code")->fetchAll();
     $staff = q('SELECT * FROM staff ORDER BY CASE role WHEN \'Gestionnaire\' THEN 0 WHEN \'Assistant(e)\' THEN 1 ELSE 2 END, name')->fetchAll();
     $count = [];
@@ -15,6 +20,7 @@ function page_immeubles(array $u): never {
 }
 
 function page_building(array $u, string $code): never {
+    immeubles_guard($u);
     $b = q('SELECT * FROM buildings WHERE code=?', [$code])->fetch();
     if (!$b) { http_response_code(404); render('notfound', ['title' => 'Immeuble introuvable'], false); }
     $staff = [];

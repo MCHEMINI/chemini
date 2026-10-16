@@ -155,7 +155,7 @@ function api(string $r): never {
     if (!$u) json_out(['error' => 'Session expirée, reconnectez-vous.'], 401);
     $uid = (int)$u['id'];
 
-    if (preg_match('#^(items|deadlines)/#', $r) && !can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+    if (preg_match('#^(items|deadlines|building)/#', $r) && !can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
     switch ($r) {
         case 'trust':
             if (body()['trust'] ?? false) { trust_this_device($uid); audit($uid, 'device_trusted'); }

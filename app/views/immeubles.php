@@ -17,7 +17,7 @@ $person = function (?string $name) use ($byName): string {
 ?>
 <header class="head imm-head">
   <div>
-    <div class="eyebrow">Espace GID · Annuaire des immeubles</div>
+    <div class="eyebrow">Direction · Annuaire des immeubles</div>
     <h1>Immeubles</h1>
     <div class="date"><?= count($syndic) ?> immeubles en syndic · <?= count($autres) ?> autres fiches · source ImmOpen, relevé du 16/10/2026</div>
   </div>
