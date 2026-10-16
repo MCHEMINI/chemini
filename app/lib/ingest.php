@@ -14,8 +14,8 @@ function ingest_handle(string $kind): never {
     if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes'], true))) $send(['error' => 'POST attendu'], 405);
     if (ip_blocked()) $send(['error' => 'IP bloquée'], 429);
     if (!hash_equals(ingest_key(), (string)($_SERVER['HTTP_X_INGEST_KEY'] ?? ''))) { ip_fail(null, 'ingest'); $send(['error' => 'clé invalide'], 403); }
-    if ($kind === 'consignes' && $method === 'GET') { // consignes de l'assistant IA à traiter (à faire / en cours), par priorité
-        $rows = q("SELECT c.id, c.body, c.priority, c.status, c.result, c.created_at, u.email AS user_email, u.name AS user_name
+    if ($kind === 'consignes' && $method === 'GET') { // consignes des Tâches IA à traiter (à faire / en cours), par priorité
+        $rows = q("SELECT c.id, c.body, c.priority, c.status, c.space, c.result, c.created_at, u.email AS user_email, u.name AS user_name
                    FROM consignes c JOIN users u ON u.id = c.user_id WHERE c.status IN ('todo','doing')
                    ORDER BY CASE c.priority WHEN 'haute' THEN 0 WHEN 'normale' THEN 1 ELSE 2 END, c.created_at ASC LIMIT 100")->fetchAll();
         $send(['ok' => true, 'items' => $rows]);

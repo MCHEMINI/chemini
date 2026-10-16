@@ -8,7 +8,7 @@
 
 <div class="grid">
   <section class="col-12" id="assistant">
-    <div class="sec-h"><h2>Assistant IA</h2><span class="muted small">Vos consignes, visibles par vous seul · vérifiées et traitées toutes les heures · nouvelle consigne : pastille en bas à droite</span></div>
+    <div class="sec-h"><h2>Tâches IA</h2><span class="muted small">Vos consignes, visibles par vous seul · vérifiées et traitées toutes les heures · nouvelle consigne : pastille en bas à droite</span></div>
     <div class="ia-board">
       <?php foreach ([['todo', 'En attente', $ia_todo], ['doing', 'En cours', $ia_doing], ['done', 'Fait', $ia_done]] as [$k, $label, $list]): ?>
       <div class="panel ia-col ia-col-<?= $k ?>">

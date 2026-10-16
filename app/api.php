@@ -297,7 +297,9 @@ function api(string $r): never {
             if ($b === '') json_out(['error' => 'Écrivez une consigne.'], 400);
             $p = in_str('priority', 10);
             if (!isset(CONSIGNE_PRIO[$p])) $p = 'normale';
-            q('INSERT INTO consignes(user_id,body,priority,status,created_at,updated_at) VALUES(?,?,?,?,?,?)', [$uid, $b, $p, 'todo', time(), time()]);
+            $sp = in_str('space', 20);
+            if (!isset(consigne_spaces($u)[$sp])) $sp = 'perso';
+            q('INSERT INTO consignes(user_id,body,priority,status,space,created_at,updated_at) VALUES(?,?,?,?,?,?,?)', [$uid, $b, $p, 'todo', $sp, time(), time()]);
             json_out(['ok' => true]);
         case 'consignes/delete':
             q('DELETE FROM consignes WHERE id=? AND user_id=?', [in_int('id'), $uid]);

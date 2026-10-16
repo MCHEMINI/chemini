@@ -169,6 +169,7 @@ li:hover .row-actions,li:focus-within .row-actions{opacity:1}
 .news{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px 24px}
 .news article{display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid var(--ink);min-width:0}
 .news h3{font-size:19px;line-height:1.3}
+.news.one{grid-template-columns:minmax(0,1fr);gap:18px}.news.one article{padding-top:12px}.news.one h3{font-size:16.5px}
 .news p{margin:0;color:var(--muted);font-size:14px}
 .news .src{font-size:12px;color:var(--muted)}
 
@@ -463,3 +464,4 @@ a.row-a:hover strong{text-decoration:underline;text-underline-offset:3px}
 .ia-fab-n{position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:var(--warn);color:#121720;font-size:11px;font-weight:700;display:grid;place-items:center}
 .ia-pop{width:min(380px,calc(100vw - 32px));box-shadow:0 12px 40px rgba(0,0,0,.25);background:var(--bg)}
 .ia-pop .ia-form-row{margin-bottom:4px}
+.chip.ia-sp{background:var(--line);color:var(--ink);font-weight:600}

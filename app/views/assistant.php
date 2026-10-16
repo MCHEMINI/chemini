@@ -1,6 +1,6 @@
 <header class="head">
   <div>
-    <div class="eyebrow"><a href="/espace#assistant">Mon espace</a> · Assistant IA</div>
+    <div class="eyebrow"><a href="/espace#assistant">Mon espace</a> · Tâches IA</div>
     <h1>Consignes faites</h1>
     <div class="date"><?= (int)$total ?> consigne<?= $total > 1 ? 's' : '' ?> traitée<?= $total > 1 ? 's' : '' ?> · visibles uniquement par <?= e($u['name']) ?></div>
   </div>

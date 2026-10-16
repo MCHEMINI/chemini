@@ -118,6 +118,9 @@ JS;
         $html = $i !== false ? substr_replace($html, $extra, $i, 0) : $html . $extra;
     }
     $html = str_replace(['dans ce navigateur', 'Effacer toutes vos modifications'], ['pour toute l\'équipe', 'Effacer les modifications de toute l\'équipe'], $html);
+    // Exercice de GID : du 1er avril au 31 mars (et non du 1er juillet au 30 juin)
+    $html = preg_replace_callback('#Exercice 01/07/(\d{4}) – 30/06/(\d{4})#u', fn($m) => 'Exercice 01/04/' . $m[1] . ' – 31/03/' . $m[2], $html);
+    $html = preg_replace_callback('#AG tenues depuis le 01/07/(\d{4})#u', fn($m) => 'AG tenues depuis le 01/04/' . $m[1], $html);
     $html = preg_match('/<head[^>]*>/i', $html) ? preg_replace('/<head[^>]*>/i', '$0' . $shim, $html, 1) : $shim . $html;
 
     header('Content-Type: text/html; charset=utf-8');

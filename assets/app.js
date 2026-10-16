@@ -323,7 +323,7 @@
     });
   });
 
-  // Pastille Assistant IA (toutes les pages)
+  // Pastille Tâches IA (toutes les pages)
   const iaFab = $('#iaFab'), iaPop = $('#iaPop');
   if (iaFab && iaPop) {
     const setIa = open => { iaPop.hidden = !open; iaFab.setAttribute('aria-expanded', String(open)); if (open) $('#iaBody')?.focus(); };

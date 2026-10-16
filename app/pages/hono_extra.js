@@ -63,10 +63,15 @@
     '.ha-tbl tfoot td{position:sticky;bottom:0;background:var(--surface-2);font-weight:600}',
     '.ha-note{font-size:12.5px;color:var(--muted);margin-top:10px}',
     '.ha-colbtn{position:relative}',
-    '.ha-pop{position:absolute;z-index:50;top:calc(100% + 6px);right:0;width:300px;max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:10px 12px;text-align:left}',
+    '.ha-pop{position:absolute;z-index:50;top:calc(100% + 6px);right:0;width:330px;max-height:70vh;overflow:auto;background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:10px 12px;text-align:left}',
     '.ha-pop label{display:flex;gap:8px;align-items:center;padding:4px 2px;font-size:13.5px;cursor:pointer;color:var(--text)}',
     '.ha-pop .r{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:6px;font-size:12.5px;color:var(--muted)}',
     '.ha-pop .r button{font:inherit;font-size:12.5px;border:0;background:none;color:var(--accent);cursor:pointer;padding:0}',
+    '.ha-row{display:flex;align-items:center;justify-content:space-between;gap:6px;border-radius:6px;padding:0 2px;cursor:grab}',
+    '.ha-row.dragging{opacity:.4}.ha-row.over{box-shadow:inset 0 2px 0 var(--accent)}',
+    '.ha-row label{flex:1;min-width:0}',
+    '.ha-row .mv{display:flex;gap:2px}.ha-row .mv button{font:inherit;font-size:13px;width:24px;height:24px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text-2);cursor:pointer;padding:0}',
+    '.ha-row .mv button:disabled{opacity:.3;cursor:default}',
     '#immTbl td[data-col="_trav"]{text-align:right;font-variant-numeric:tabular-nums;padding-right:10px}'
   ].join('\n');
   document.head.appendChild(css);
@@ -297,7 +302,32 @@
         for (var k = 0; k < n && k < f.children.length; k++) f.children[k].dataset.col = KEYS[k];
         if (withTrav) { var ft = h('td', null, EUR.format(total)); ft.dataset.col = '_trav'; f.insertBefore(ft, f.children[n] || null); }
       }
+      applyOrder();
     } finally { busy = false; }
+  }
+  /* Ordre des colonnes : préférence propre à chaque utilisateur (hono_order) */
+  function allKeys() { var k = KEYS.slice(); if (A && TRAV >= 0) k.push('_trav'); return k; }
+  function colOrder() {
+    var def = allKeys(), saved = Array.isArray(P.hono_order) ? P.hono_order.filter(function (k) { return def.indexOf(k) >= 0; }) : [];
+    if (!saved.length) return def;
+    def.forEach(function (k, i) { if (saved.indexOf(k) < 0) saved.splice(Math.min(i, saved.length), 0, k); });
+    return saved;
+  }
+  function applyOrder() {
+    var t = document.getElementById('immTbl'); if (!t) return;
+    var ord = colOrder(), want = ord.join('|');
+    t.querySelectorAll('tr').forEach(function (tr) {
+      var cells = [].filter.call(tr.children, function (c) { return c.dataset.col; });
+      if (!cells.length || cells.map(function (c) { return c.dataset.col; }).join('|') === want) return;
+      var by = {}; cells.forEach(function (c) { by[c.dataset.col] = c; });
+      var anchor = cells[cells.length - 1].nextSibling; // cellules hors colonnes (bouton de suppression) conservées en fin de ligne
+      ord.forEach(function (k) { if (by[k]) tr.insertBefore(by[k], anchor); });
+    });
+  }
+  function moveCol(k, d) {
+    var o = colOrder(), i = o.indexOf(k), j = i + d; if (i < 0 || j < 0 || j >= o.length) return;
+    o.splice(i, 1); o.splice(j, 0, k); savePref('hono_order', o);
+    busy = true; try { applyOrder(); } finally { busy = false; }
   }
   function refreshImm() { // changement d'exercice : mise à jour des cellules existantes
     busy = true;
@@ -311,20 +341,41 @@
   function colPicker() {
     var bar = document.querySelector('#tab-imm .toolbar'); if (!bar || bar.querySelector('.ha-colbtn')) return;
     var wrap = h('span', 'ha-colbtn'), btn = h('button', 'btn', 'Colonnes'); btn.type = 'button'; btn.setAttribute('aria-expanded', 'false');
-    btn.title = 'Choisir les colonnes affichées (mémorisé pour votre compte)';
-    var pop = h('div', 'ha-pop'); pop.hidden = true;
+    btn.title = 'Choisir les colonnes affichées et leur ordre (mémorisé pour votre compte)';
+    var pop = h('div', 'ha-pop'); pop.hidden = true; pop.addEventListener('click', function (e) { e.stopPropagation(); });
     function build() {
       pop.textContent = '';
-      var hd = h('div', 'r'); hd.appendChild(h('span', null, 'Colonnes affichées'));
-      var all = h('button', null, 'Tout afficher'); all.type = 'button'; all.addEventListener('click', function () { savePref('hono_cols', []); applyHidden(); build(); }); hd.appendChild(all); pop.appendChild(hd);
-      var list = KEYS.filter(function (k) { return k !== 'imm'; }).map(function (k) { return { k: k, l: LABELS[k] || k }; });
-      if (A && TRAV >= 0) list.push({ k: '_trav', l: travLabel() });
-      list.forEach(function (c) {
-        var lb = h('label'), cb = h('input'); cb.type = 'checkbox'; cb.checked = hidden().indexOf(c.k) < 0;
-        cb.addEventListener('change', function () { var hs = hidden().filter(function (x) { return x !== c.k; }); if (!cb.checked) hs.push(c.k); savePref('hono_cols', hs); applyHidden(); });
-        lb.appendChild(cb); lb.appendChild(document.createTextNode(c.l)); pop.appendChild(lb);
+      var hd = h('div', 'r'); hd.appendChild(h('span', null, 'Colonnes : affichage et ordre'));
+      var all = h('button', null, 'Réinitialiser'); all.type = 'button'; all.title = 'Toutes les colonnes, dans l\u2019ordre d\u2019origine';
+      all.addEventListener('click', function () { savePref('hono_cols', []); savePref('hono_order', []); applyHidden(); busy = true; try { applyOrder(); } finally { busy = false; } build(); }); hd.appendChild(all); pop.appendChild(hd);
+      var drag = null;
+      colOrder().forEach(function (k, i, arr) {
+        var lab = k === '_trav' ? travLabel() : (LABELS[k] || k);
+        var row = h('div', 'ha-row'); row.draggable = true; row.dataset.k = k;
+        var lb = h('label'), cb = h('input'); cb.type = 'checkbox'; cb.checked = hidden().indexOf(k) < 0;
+        if (k === 'imm') { cb.disabled = true; cb.checked = true; cb.title = 'Toujours affichée'; }
+        cb.addEventListener('change', function () { var hs = hidden().filter(function (x) { return x !== k; }); if (!cb.checked) hs.push(k); savePref('hono_cols', hs); applyHidden(); });
+        lb.appendChild(cb); lb.appendChild(document.createTextNode(lab)); row.appendChild(lb);
+        var g = h('span', 'mv');
+        [['↑', -1, 'Monter'], ['↓', 1, 'Descendre']].forEach(function (m) {
+          var b = h('button', null, m[0]); b.type = 'button'; b.setAttribute('aria-label', m[2] + ' « ' + lab + ' »');
+          if ((m[1] < 0 && i === 0) || (m[1] > 0 && i === arr.length - 1)) b.disabled = true;
+          b.addEventListener('click', function (e) { e.preventDefault(); moveCol(k, m[1]); build(); var nb = pop.querySelector('.ha-row[data-k="' + k + '"] .mv button:' + (m[1] < 0 ? 'first' : 'last') + '-child'); if (nb && !nb.disabled) nb.focus(); });
+          g.appendChild(b);
+        });
+        row.appendChild(g);
+        row.addEventListener('dragstart', function (e) { drag = k; row.classList.add('dragging'); try { e.dataTransfer.setData('text/plain', k); e.dataTransfer.effectAllowed = 'move'; } catch (x) {} });
+        row.addEventListener('dragend', function () { row.classList.remove('dragging'); drag = null; });
+        row.addEventListener('dragover', function (e) { if (drag && drag !== k) { e.preventDefault(); row.classList.add('over'); } });
+        row.addEventListener('dragleave', function () { row.classList.remove('over'); });
+        row.addEventListener('drop', function (e) {
+          e.preventDefault(); row.classList.remove('over'); if (!drag || drag === k) return;
+          var o = colOrder(), from = o.indexOf(drag); o.splice(from, 1); o.splice(o.indexOf(k) + (from <= i ? 1 : 0), 0, drag);
+          savePref('hono_order', o); busy = true; try { applyOrder(); } finally { busy = false; } build();
+        });
+        pop.appendChild(row);
       });
-      pop.appendChild(h('div', 'ha-note', 'Votre choix est enregistré pour votre compte et retrouvé à chaque connexion.'));
+      pop.appendChild(h('div', 'ha-note', 'Cochez pour afficher, glissez ou utilisez ↑ ↓ pour changer l\u2019ordre. Enregistré pour votre compte et retrouvé à chaque connexion.'));
     }
     btn.addEventListener('click', function (e) { e.stopPropagation(); var o = pop.hidden; if (o) build(); pop.hidden = !o; btn.setAttribute('aria-expanded', String(o)); });
     document.addEventListener('click', function (e) { if (!pop.hidden && !wrap.contains(e.target)) { pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); } });

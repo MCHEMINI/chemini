@@ -8,5 +8,5 @@ function page_assistant(array $u): never {
     $pages = max(1, (int)ceil($total / $per));
     $page = min($pages, max(1, (int)($_GET['p'] ?? 1)));
     $rows = q("SELECT * FROM consignes WHERE user_id=? AND status='done' ORDER BY COALESCE(done_at, updated_at) DESC LIMIT $per OFFSET " . (($page - 1) * $per), [$uid])->fetchAll();
-    render('assistant', ['title' => 'Assistant IA', 'nav' => 'perso', 'u' => $u, 'rows' => $rows, 'total' => $total, 'page' => $page, 'pages' => $pages]);
+    render('assistant', ['title' => 'Tâches IA', 'nav' => 'perso', 'u' => $u, 'rows' => $rows, 'total' => $total, 'page' => $page, 'pages' => $pages]);
 }

@@ -167,10 +167,13 @@ CREATE TABLE IF NOT EXISTS user_prefs (user_id INTEGER NOT NULL REFERENCES users
 PRAGMA user_version = 14;
 SQL);
     }
+    if ($v < 15) {
+        $pdo->exec("ALTER TABLE consignes ADD COLUMN space TEXT NOT NULL DEFAULT 'perso'; PRAGMA user_version = 15;");
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
-const PREF_KEYS = ['hono_cols', 'ha_year'];
+const PREF_KEYS = ['hono_cols', 'hono_order', 'ha_year'];
 function user_prefs(int $uid): array {
     $o = [];
     foreach (q('SELECT k, v FROM user_prefs WHERE user_id=?', [$uid])->fetchAll() as $r) $o[$r['k']] = json_decode($r['v'], true);

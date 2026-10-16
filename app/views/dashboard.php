@@ -1,6 +1,6 @@
 <header class="head">
   <div>
-    <div class="eyebrow">Espace GID · toute l'équipe</div>
+    <div class="eyebrow">Équipe · toute la société</div>
     <h1><?= greeting() ?>, <em><?= e(explode(' ', $u['name'])[0]) ?></em>.</h1>
     <div class="date"><?= e(date_long(time())) ?></div>
   </div>
@@ -46,22 +46,13 @@
     <?php endif; ?>
   </section>
 
-
   <section class="col-5">
-    <div class="sec-h"><h2>Espace GID</h2><a href="/gid">Ouvrir</a></div>
-    <div class="panel">
-      <?php if (!empty($gidNote['body'])): ?><p class="gid-note"><?= nl2br(e(mb_strimwidth($gidNote['body'], 0, 600, '…'))) ?></p><?php else: ?><p class="muted">Le bloc-notes partagé de l'équipe est vide.</p><?php endif; ?>
-      <?php if ($gidTasks): ?><ul class="check compact"><?php foreach ($gidTasks as $t): ?><li><span><?= e($t['title']) ?></span></li><?php endforeach; ?></ul><?php endif; ?>
-    </div>
-  </section>
-
-  <section class="col-12">
     <div class="sec-h"><h2>Dernières actualités</h2></div>
     <?php if (!$news): ?>
       <div class="empty"><strong>Actualités indisponibles.</strong>Les sources n'ont pas répondu. Nouvel essai automatique dans l'heure.</div>
     <?php else: ?>
-    <div class="news">
-      <?php foreach ($news as $n): ?>
+    <div class="news one">
+      <?php foreach (array_slice($news, 0, 8) as $n): ?>
       <article>
         <span class="eyebrow"><?= e($n['source']) ?></span>
         <h3><a href="<?= e($n['link']) ?>" target="_blank" rel="noopener"><?= e($n['title']) ?></a></h3>

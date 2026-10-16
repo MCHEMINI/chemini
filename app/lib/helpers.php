@@ -64,10 +64,13 @@ function avatar(array $u, string $size = ''): string {
 }
 
 /* ---------- Espaces et droits ---------- */
-/* Assistant IA (Mon espace) : priorités et statuts des consignes */
+/* Tâches IA (Mon espace) : priorités, statuts et espace concerné des consignes */
 const CONSIGNE_PRIO = ['haute' => 'Haute', 'normale' => 'Normale', 'basse' => 'Basse'];
+/** Espaces proposés pour une consigne, dans cet ordre ; seuls ceux auxquels la personne a accès sont proposés. */
+const CONSIGNE_SPACES = ['perso' => 'Perso', 'famille' => 'Famille', 'direction' => 'Direction', 'gid' => 'Équipe'];
+function consigne_spaces(array $u): array { return array_filter(CONSIGNE_SPACES, fn($k) => $k === 'perso' || can_space($u, $k), ARRAY_FILTER_USE_KEY); }
 const CONSIGNE_STATUS = ['todo' => 'À faire', 'doing' => 'En cours', 'done' => 'Fait'];
-const SPACES = ['gid' => 'GID', 'direction' => 'Direction', 'famille' => 'Famille'];
+const SPACES = ['gid' => 'Équipe', 'direction' => 'Direction', 'famille' => 'Famille'];
 
 function user_spaces(array $u): array {
     static $cache = [];
