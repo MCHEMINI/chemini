@@ -25,7 +25,9 @@ function hono_extra_cfg(): array {
     $pv = [];
     foreach (q('SELECT code, exercice, ag_date, travaux_ttc, gc_ttc, detail, link FROM pv_votes ORDER BY ag_date')->fetchAll() as $r) {
         $det = json_decode((string)$r['detail'], true) ?: [];
-        $o = &$pv[$r['code']][$r['exercice']];
+        // Exercice des honoraires travaux votés (HTV) : AG tenues du 1er juillet au 30 juin (consigne de M. Chemini)
+        $y = (int)substr($r['ag_date'], 0, 4); $sy = (int)substr($r['ag_date'], 5, 2) >= 7 ? $y : $y - 1;
+        $o = &$pv[$r['code']][$sy . '-' . ($sy + 1)];
         $o['trav'] = round(($o['trav'] ?? 0) + (float)$r['travaux_ttc'], 2);
         $o['date'] = $r['ag_date'];
         $o['ags'][] = ['date' => $r['ag_date'], 'gc' => $r['gc_ttc'] !== null ? (float)$r['gc_ttc'] : null, 'link' => preg_match('#^https://outlook\.(office365|office|live)\.com/#', (string)$r['link']) ? $r['link'] : '',

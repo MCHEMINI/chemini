@@ -302,21 +302,21 @@
   function travLabel() { return 'Hon. travaux GID ' + yShort(curYear()); }
   /* Exercice GID (1er avril → 31 mars) contenant aujourd'hui, et le précédent */
   function exOf(d) { var y = d.getFullYear(), m = d.getMonth(); var s = m >= 3 ? y : y - 1; return s + '-' + (s + 1); }
-  var EX0 = exOf(new Date()), EX1 = (function () { var s = +EX0.split('-')[0] - 1; return s + '-' + (s + 1); })();
+  function exJul(d) { var y = d.getFullYear(), s = d.getMonth() >= 6 ? y : y - 1; return s + '-' + (s + 1); }
+  var EX0 = exJul(new Date()), EX1 = (function () { var s = +EX0.split('-')[0] - 1; return s + '-' + (s + 1); })();
   var PV = C.pv || {};
   function pvSum(code, ex) { var r = PV[code] && PV[code][ex]; return r ? num(r.trav) : 0; }
   function travYear(code, ex) { if (!A || TRAV < 0 || !code) return null; var Y = A.years[ex]; if (!Y) return null; var B = Y.b || {}; return B[code] ? num(B[code][TRAV]) : 0; }
   /* HTV = honoraires travaux : montant facturé relevé dans ImmOpen (compte GID TRAVAUX) ; à défaut, total voté d'après les PV d'AG */
-  function pvFor(code, ex) { var t = travYear(code, ex); return t !== null && t !== 0 ? t : (pvSum(code, ex) || t || 0); }
-  function hasHtv(code, ex) { return !!(pvFor(code, ex) || (PV[code] && PV[code][ex])); }
+  /* HTV = honoraires du syndic sur travaux VOTÉS en AG (PV d'AG), exercice du 1er juillet au 30 juin */
+  function pvFor(code, ex) { return pvSum(code, ex); }
+  function hasHtv(code, ex) { return !!(PV[code] && PV[code][ex]); }
   function pvTitle(code, ex) { return hasHtv(code, ex) ? 'Cliquer sur i pour le détail' : ''; }
   /* Détail des honoraires travaux votés (HTV) : fenêtre ouverte par le bouton i de la cellule */
   function pvDetail(code, ex) {
     var r = (PV[code] && PV[code][ex]) || { ags: [] }, t = travYear(code, ex), Y = A && A.years[ex];
     var bd = h('div', 'ha-dlg-bd'), dl = h('div', 'ha-dlg ha-htv'); dl.setAttribute('role', 'dialog'); dl.setAttribute('aria-modal', 'true');
-    dl.appendChild(h('h3', null, 'HTV ' + ex + ' · immeuble ' + code));
-    dl.appendChild(h('div', 'ha-htv-ag', null)).appendChild(h('strong', null, 'Facturé (ImmOpen, compte GID TRAVAUX)'));
-    dl.appendChild(h('p', 'ha-htv-none', t === null ? 'Pas de relevé ImmOpen pour cet exercice.' : EUR.format(t) + (Y && Y.partial ? ' · exercice en cours, relevé au ' + fdate(Y.end) : '')));
+    dl.appendChild(h('h3', null, 'HTV ' + ex + ' · immeuble ' + code)); dl.appendChild(h('p', 'ha-htv-none', 'AG tenues du 1er juillet ' + ex.slice(0, 4) + ' au 30 juin ' + ex.slice(5) + '.'));
     dl.appendChild(h('div', 'ha-htv-ag', null)).appendChild(h('strong', null, 'Voté en AG (PV d’AG, résolutions « Honoraires syndic » adoptées)'));
     if (!r.ags || !r.ags.length) dl.appendChild(h('p', 'ha-htv-none', 'Aucun PV d’AG relevé pour cet exercice.'));
     else dl.appendChild(h('p', 'ha-htv-none', 'Total voté : ' + EUR.format(num(r.trav)) + ' TTC'));
@@ -340,8 +340,8 @@
   /* Colonnes ajoutées au tableau (calculées, non modifiables) */
   var EXTRA = [];
   if (false) EXTRA.push({ k: '_trav', label: travLabel, title: function () { return 'Honoraires de travaux facturés par GID (compte GID TRAVAUX), exercice ' + yInfo(curYear()); }, val: travFor, tip: function () { return ''; } });
-  EXTRA.push({ k: '_pv0', ex: EX0, label: function () { return 'HTV ' + yShort(EX0); }, title: function () { return 'HTV : honoraires travaux, exercice ' + EX0 + ' (facturé ImmOpen, détail des votes en AG avec le bouton i)'; }, val: function (c) { return pvFor(c, EX0); }, tip: function (c) { return pvTitle(c, EX0); } });
-  EXTRA.push({ k: '_pv1', ex: EX1, label: function () { return 'HTV ' + yShort(EX1); }, title: function () { return 'HTV : honoraires travaux, exercice ' + EX1 + ' (facturé ImmOpen, détail des votes en AG avec le bouton i)'; }, val: function (c) { return pvFor(c, EX1); }, tip: function (c) { return pvTitle(c, EX1); } });
+  EXTRA.push({ k: '_pv0', ex: EX0, label: function () { return 'HTV ' + yShort(EX0); }, title: function () { return 'HTV : honoraires du syndic sur travaux votés en AG (PV des AG du 01/07/' + EX0.slice(0, 4) + ' au 30/06/' + EX0.slice(5) + '), détail avec le bouton i'; }, val: function (c) { return pvFor(c, EX0); }, tip: function (c) { return pvTitle(c, EX0); } });
+  EXTRA.push({ k: '_pv1', ex: EX1, label: function () { return 'HTV ' + yShort(EX1); }, title: function () { return 'HTV : honoraires du syndic sur travaux votés en AG (PV des AG du 01/07/' + EX1.slice(0, 4) + ' au 30/06/' + EX1.slice(5) + '), détail avec le bouton i'; }, val: function (c) { return pvFor(c, EX1); }, tip: function (c) { return pvTitle(c, EX1); } });
   /* Fusion (oct. 2026) de « Hon. travaux GID » (_trav) dans HTV (_pv0) : on garde la position et la visibilité choisies pour la colonne qui portait les montants. Exécutée une fois (marqueur _m1). */
   (function migrateTrav() {
     var o = Array.isArray(P.hono_order) ? P.hono_order.slice() : [], hs = Array.isArray(P.hono_cols) ? P.hono_cols.slice() : [];
@@ -372,7 +372,7 @@
         if (tr.querySelector('[data-col]')) continue;
         for (var j = 0; j < n && j < tr.children.length; j++) tr.children[j].dataset.col = KEYS[j];
         var ref2 = tr.children[n] || null;
-        EXTRA.forEach(function (x) { var v = x.val(code), td = h('td', 'ro r', v ? EUR.format(v) : '–'); td.dataset.col = x.k; var tp = x.tip(code); if (tp) td.title = tp;
+        EXTRA.forEach(function (x) { var v = x.val(code), td = h('td', 'ro r', v || (x.ex && hasHtv(code, x.ex)) ? EUR.format(v) : '–'); td.dataset.col = x.k; var tp = x.tip(code); if (tp) td.title = tp;
           if (x.ex && hasHtv(code, x.ex)) { var ib = h('button', 'ha-i', 'i'); ib.type = 'button'; ib.dataset.code = code; ib.dataset.ex = x.ex; ib.setAttribute('aria-label', 'Détail des honoraires travaux votés'); td.appendChild(ib); }
           tr.insertBefore(td, ref2); });
       }
