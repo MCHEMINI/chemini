@@ -49,6 +49,12 @@ try {
             $u = require_user();
             require APP_DIR . '/pages/perso.php';
             page_perso($u);
+        case 'mes-taches':
+        case 'bloc-notes':
+            $u = require_user();
+            require APP_DIR . '/pages/perso.php';
+            if ($route === 'mes-taches') page_tasks($u);
+            page_notes($u);
         case 'assistant':
         case 'assistant/historique':
             $u = require_user();
