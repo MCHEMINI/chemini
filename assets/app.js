@@ -422,6 +422,52 @@
       t.addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; e.preventDefault(); const n = tabs[(i + d + tabs.length) % tabs.length]; n.focus(); n.click(); }); });
     s.addEventListener('change', apply); apply(); })();
 
+  /* Planning des AG : ordre et affichage des colonnes, tri par colonne (mémorisés pour chaque utilisateur) */
+  (function(){
+    const btn = document.getElementById('agColsBtn'), pop = document.getElementById('agColsPop'), tbls = $$('.ag-tbl'); if (!btn || !tbls.length) return;
+    let P = {}; try { P = JSON.parse(document.getElementById('agPrefs').textContent || '{}') || {}; } catch (e) {}
+    const save = (k, v) => { P[k] = v; api('prefs/set', { k, v }).catch(() => {}); };
+    const head = tbls[0].querySelector('thead tr'), DEF = $$('th[data-col]', head).map(th => th.dataset.col);
+    const LAB = {}; $$('th[data-col]', head).forEach(th => { LAB[th.dataset.col] = th.textContent.trim() || th.title || th.dataset.col; });
+    const order = () => { const sv = Array.isArray(P.ag_order) ? P.ag_order.filter(k => DEF.includes(k)) : []; const o = sv.length ? sv : DEF.slice(); DEF.forEach((k, i) => { if (!o.includes(k)) o.splice(Math.min(i, o.length), 0, k); }); return o; };
+    const hidden = () => Array.isArray(P.ag_cols) ? P.ag_cols : [];
+    const css = document.createElement('style'); document.head.appendChild(css);
+    const apply = () => {
+      const o = order();
+      tbls.forEach(t => t.querySelectorAll('tr').forEach(tr => { const by = {}; [...tr.children].forEach(c => { if (c.dataset.col) by[c.dataset.col] = c; }); o.forEach(k => { if (by[k]) tr.appendChild(by[k]); }); }));
+      css.textContent = hidden().map(k => `.ag-tbl [data-col="${String(k).replace(/[^\w-]/g, '')}"]{display:none}`).join('\n');
+      const so = P.ag_sort || {}; $$('.ag-tbl th[data-col]').forEach(th => { th.classList.toggle('sorted', th.dataset.col === so.k); th.dataset.dir = th.dataset.col === so.k ? (so.d < 0 ? '↓' : '↑') : ''; });
+    };
+    const sortRows = () => {
+      const so = P.ag_sort; if (!so || !so.k) return;
+      tbls.forEach(t => { const tb = t.tBodies[0]; const rows = [...tb.rows];
+        const v = tr => { const c = tr.querySelector(`[data-col="${so.k}"]`); if (!c) return ''; const x = c.dataset.v ?? c.textContent.trim(); return x; };
+        rows.sort((a, b) => { const x = v(a), y = v(b), nx = parseFloat(x), ny = parseFloat(y); const r = (!isNaN(nx) && !isNaN(ny) && /^-?[\d.]+$/.test(x) && /^-?[\d.]+$/.test(y)) ? nx - ny : String(x).localeCompare(String(y), 'fr', { numeric: true }); return r * (so.d || 1); });
+        rows.forEach(r => tb.appendChild(r)); });
+    };
+    $$('.ag-tbl th[data-col]').forEach(th => { th.style.cursor = 'pointer'; th.title = (th.title ? th.title + ' · ' : '') + 'Cliquer pour trier'; th.addEventListener('click', () => { const so = P.ag_sort || {}; save('ag_sort', { k: th.dataset.col, d: so.k === th.dataset.col ? -(so.d || 1) : 1 }); sortRows(); apply(); }); });
+    const build = () => {
+      pop.textContent = '';
+      const hd = document.createElement('div'); hd.className = 'ag-pop-h'; hd.innerHTML = '<span>Colonnes : affichage et ordre</span>';
+      const rs = document.createElement('button'); rs.type = 'button'; rs.className = 'btn-link'; rs.textContent = 'Réinitialiser'; rs.addEventListener('click', () => { save('ag_cols', []); save('ag_order', []); save('ag_sort', {}); apply(); build(); }); hd.appendChild(rs); pop.appendChild(hd);
+      const o = order();
+      o.forEach((k, i) => {
+        const row = document.createElement('div'); row.className = 'ag-pop-r';
+        const lb = document.createElement('label'); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !hidden().includes(k); if (k === 'imm') { cb.disabled = true; cb.checked = true; }
+        cb.addEventListener('change', () => { const hs = hidden().filter(x => x !== k); if (!cb.checked) hs.push(k); save('ag_cols', hs); apply(); });
+        lb.append(cb, ' ' + (k === 'fin' ? 'Rentabilité' : LAB[k])); row.appendChild(lb);
+        [['↑', -1], ['↓', 1]].forEach(([t, d]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.setAttribute('aria-label', (d < 0 ? 'Monter ' : 'Descendre ') + (LAB[k] || k)); b.disabled = (d < 0 && i === 0) || (d > 0 && i === o.length - 1);
+          b.addEventListener('click', () => { const oo = order(), j = i + d; oo.splice(i, 1); oo.splice(j, 0, k); save('ag_order', oo); apply(); build(); const nb = pop.querySelectorAll('.ag-pop-r')[j]?.querySelectorAll('button')[d < 0 ? 0 : 1]; if (nb && !nb.disabled) nb.focus(); }); row.appendChild(b); });
+        pop.appendChild(row);
+      });
+      const n = document.createElement('p'); n.className = 'muted small'; n.textContent = 'Cliquez sur un en-tête pour trier. Vos choix sont enregistrés pour votre compte.'; pop.appendChild(n);
+    };
+    pop.addEventListener('click', e => e.stopPropagation());
+    btn.addEventListener('click', e => { e.stopPropagation(); const o = pop.hidden; if (o) build(); pop.hidden = !o; btn.setAttribute('aria-expanded', String(o)); });
+    document.addEventListener('click', () => { if (!pop.hidden) { pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); } });
+    sortRows(); apply();
+  })();
+
   /* Voyages : programme en accordéon, PDF (impression) et lien de partage */
   (function(){
     $$('[data-acc]').forEach(b => b.addEventListener('click', () => $$('.trip-day').forEach(d => { d.open = b.dataset.acc === 'open'; })));

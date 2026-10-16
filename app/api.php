@@ -256,6 +256,17 @@ function api(string $r): never {
             json_out(['ok' => true]);
 
         /* Outils partagés : état commun */
+        case 'hono/archive': // suppression d'un immeuble du tableau des honoraires : archivé avant d'être retiré
+        case 'hono/unarchive':
+            require_once APP_DIR . '/pages/docs.php';
+            if (!can_space($u, 'direction') || !doc_can_edit($u, 'honoraires')) json_out(['error' => 'Lecture seule : seul Mehdi Chemini peut modifier ce tableau.'], 403);
+            if ($r === 'hono/unarchive') { q('UPDATE hono_archive SET restored_at=? WHERE id=?', [time(), in_int('id')]); audit($uid, 'hono_unarchive:' . in_int('id')); json_out(['ok' => true]); }
+            $data = body()['data'] ?? [];
+            if (!is_array($data) || strlen(json_encode($data)) > 20000) json_out(['error' => 'Données invalides'], 400);
+            q('INSERT INTO hono_archive(num,port,imm,data,created_by,created_at) VALUES(?,?,?,?,?,?)', [in_str('num', 20), in_str('port', 10), in_str('imm', 200) ?: 'Immeuble', json_encode($data, JSON_UNESCAPED_UNICODE), $uid, time()]);
+            $id = (int)db()->lastInsertId();
+            audit($uid, 'hono_archive:' . $id);
+            json_out(['ok' => true, 'item' => ['id' => $id, 'num' => in_str('num', 20), 'port' => in_str('port', 10), 'imm' => in_str('imm', 200), 'data' => $data, 'at' => time(), 'by' => $u['name']]]);
         case 'trips/share': // créer (on=1) ou désactiver (on=0) le lien de partage d'un voyage
             $t = q('SELECT id, space, share_token FROM trips WHERE id=?', [in_int('id')])->fetch();
             if (!$t || !can_space($u, $t['space'])) json_out(['error' => 'Accès refusé.'], 403);

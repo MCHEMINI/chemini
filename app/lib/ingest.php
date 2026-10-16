@@ -11,9 +11,12 @@ function ingest_key(): string { return hash_hmac('sha256', 'chemini-ingest-v1', 
 function ingest_handle(string $kind): never {
     $send = function (array $d, int $c = 200): never { http_response_code($c); header('Content-Type: application/json'); header('Cache-Control: no-store'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; };
     $method = $_SERVER['REQUEST_METHOD'] ?? '';
-    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes'], true))) $send(['error' => 'POST attendu'], 405);
+    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes', 'pv'], true))) $send(['error' => 'POST attendu'], 405);
     if (ip_blocked()) $send(['error' => 'IP bloquée'], 429);
     if (!hash_equals(ingest_key(), (string)($_SERVER['HTTP_X_INGEST_KEY'] ?? ''))) { ip_fail(null, 'ingest'); $send(['error' => 'clé invalide'], 403); }
+    if ($kind === 'pv' && $method === 'GET') { // PV déjà traités (identifiants de message) pour ne pas les relire
+        $send(['ok' => true, 'msg_ids' => q('SELECT DISTINCT msg_id FROM pv_votes')->fetchAll(PDO::FETCH_COLUMN), 'count' => (int)q('SELECT COUNT(*) FROM pv_votes')->fetchColumn()]);
+    }
     if ($kind === 'consignes' && $method === 'GET') { // consignes des Tâches IA à traiter (à faire / en cours), par priorité
         $rows = q("SELECT c.id, c.body, c.priority, c.status, c.space, c.result, c.created_at, u.email AS user_email, u.name AS user_name
                    FROM consignes c JOIN users u ON u.id = c.user_id WHERE c.status IN ('todo','doing')
@@ -78,6 +81,22 @@ function ingest_handle(string $kind): never {
              done_at=CASE WHEN ?=\'done\' THEN ? ELSE NULL END WHERE id=?',
           [$status, $result, time(), $status, time(), $status, time(), $id]);
         $send(['ok' => true, 'id' => $id, 'status' => $status]);
+    }
+    if ($kind === 'pv' && $method === 'POST') { // honoraires votés relevés dans les PV d'AG : {items:[{msg_id, code, ag_date, gc_ht, gc_ttc, travaux:[{res, objet, taux, ht, ttc}], link}]}
+        $n = 0;
+        foreach (array_slice((array)($d['items'] ?? []), 0, 500) as $it) {
+            $code = str_pad(preg_replace('/\D/', '', (string)($it['code'] ?? '')), 5, '0', STR_PAD_LEFT);
+            $date = (string)($it['ag_date'] ?? '');
+            if ($code === '00000' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) continue;
+            $y = (int)substr($date, 0, 4); $m = (int)substr($date, 5, 2); $s = $m >= 4 ? $y : $y - 1;
+            $tr = array_values(array_filter((array)($it['travaux'] ?? []), 'is_array'));
+            $sum = array_sum(array_map(fn($t) => (float)($t['ttc'] ?? 0), $tr));
+            q('INSERT INTO pv_votes(msg_id,code,ag_date,exercice,gc_ht,gc_ttc,travaux_ttc,detail,link,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(code,ag_date) DO UPDATE SET msg_id=excluded.msg_id, gc_ht=excluded.gc_ht, gc_ttc=excluded.gc_ttc, travaux_ttc=excluded.travaux_ttc, detail=excluded.detail, link=excluded.link',
+              [$str($it['msg_id'] ?? '', 300), $code, $date, $s . '-' . ($s + 1), isset($it['gc_ht']) ? (float)$it['gc_ht'] : null, isset($it['gc_ttc']) ? (float)$it['gc_ttc'] : null, round($sum, 2), json_encode($tr, JSON_UNESCAPED_UNICODE), $str($it['link'] ?? '', 2000), time()]);
+            $n++;
+        }
+        $send(['ok' => true, 'saved' => $n]);
     }
     if ($kind === 'ag') { // planning des AG relevé dans ImmOpen : {date:"AAAA-MM-JJ", rows:[{code, nom, lots, gest, compta, last, nomination, fin_mandat, debut_ex, fin_ex, ag_date, ag_heure, delai_max, conseil, limite_convoc, convoc, notification, pv}]}
         if (empty($d['rows']) || !is_array($d['rows'])) $send(['error' => 'rows manquant'], 400);

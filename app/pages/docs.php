@@ -15,6 +15,24 @@ function doc_can_edit(array $u, string $slug): bool {
     return !isset(DOC_EDITORS[$slug]) || in_array(strtolower($u['email']), DOC_EDITORS[$slug], true);
 }
 
+/** Données complémentaires du tableau des honoraires : archives, planning ImmOpen (contrôle croisé), honoraires votés d'après les PV d'AG. */
+function hono_extra_cfg(): array {
+    $arch = array_map(fn($a) => ['id' => (int)$a['id'], 'num' => $a['num'], 'port' => $a['port'], 'imm' => $a['imm'], 'data' => json_decode($a['data'], true) ?: [], 'at' => (int)$a['created_at'], 'by' => $a['by_name']],
+        q('SELECT a.*, u.name AS by_name FROM hono_archive a LEFT JOIN users u ON u.id=a.created_by WHERE a.restored_at IS NULL ORDER BY a.created_at DESC')->fetchAll());
+    immopen_sync();
+    $ag = json_decode((string)q("SELECT v FROM kv WHERE k='ag_planning'")->fetchColumn(), true) ?: [];
+    $io = array_map(fn($r) => ['code' => (string)($r['code'] ?? ''), 'nom' => (string)($r['nom'] ?? ''), 'lots' => (int)($r['lots'] ?? 0), 'gest' => trim(preg_replace('/^(M\.|Mme|Melle|Mlle)\s*/u', '', (string)($r['gest'] ?? '')))], $ag['rows'] ?? []);
+    $pv = [];
+    foreach (q('SELECT code, exercice, ag_date, travaux_ttc, gc_ttc, detail FROM pv_votes ORDER BY ag_date')->fetchAll() as $r) {
+        $det = json_decode((string)$r['detail'], true) ?: [];
+        $o = &$pv[$r['code']][$r['exercice']];
+        $o = ['trav' => round(($o['trav'] ?? 0) + (float)$r['travaux_ttc'], 2), 'gc' => $r['gc_ttc'] !== null ? (float)$r['gc_ttc'] : ($o['gc'] ?? null), 'date' => $r['ag_date'], 'n' => ($o['n'] ?? 0) + count($det),
+              'objets' => mb_substr(trim(($o['objets'] ?? '') . ' ' . implode(' ; ', array_map(fn($t) => (string)($t['objet'] ?? ''), $det))), 0, 300)];
+        unset($o);
+    }
+    return ['archive' => $arch, 'immopen' => $io, 'immopen_date' => $ag['date'] ?? null, 'pv' => $pv];
+}
+
 function doc_get(string $slug): ?array {
     return q('SELECT d.*, u.name AS by_name FROM docs d LEFT JOIN users u ON u.id=d.updated_by WHERE slug=?', [$slug])->fetch() ?: null;
 }
@@ -56,6 +74,7 @@ function doc_view(array $u, string $slug): never {
         'audit' => $slug === 'honoraires' ? (($a = audit_latest('honoraires')) ? $a['d'] + ['_at' => (int)$a['created_at']] : null) : null,
         'annexes' => $slug === 'honoraires' ? annexes_data() : null,
         'prefs' => user_prefs((int)$u['id']),
+    ] + ($slug === 'honoraires' ? hono_extra_cfg() : []) + [
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
     $shim = <<<JS
 <script>

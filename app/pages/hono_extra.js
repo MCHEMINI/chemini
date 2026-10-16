@@ -75,7 +75,19 @@
     '.ha-row label{flex:1;min-width:0}',
     '.ha-row .mv{display:flex;gap:2px}.ha-row .mv button{font:inherit;font-size:13px;width:24px;height:24px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text-2);cursor:pointer;padding:0}',
     '.ha-row .mv button:disabled{opacity:.3;cursor:default}',
-    '#immTbl td[data-col="_trav"]{text-align:right;font-variant-numeric:tabular-nums;padding-right:10px}'
+    '#immTbl td[data-col^="_"]{text-align:right;font-variant-numeric:tabular-nums;padding-right:10px;white-space:nowrap}',
+    '#immTbl td.ha-flag{box-shadow:inset 3px 0 0 #c08a2c}',
+    '.ha-check{margin:0 0 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:10px 14px}',
+    '.ha-check summary{cursor:pointer;display:flex;gap:12px;align-items:center;flex-wrap:wrap}',
+    '.ha-chip{font-size:12px;font-weight:600;border-radius:99px;padding:2px 9px}.ha-chip.warn{background:#f5e6cc;color:#7a5410}.ha-chip.ok{background:#dfeee4;color:#2d5e3d}',
+    '.ha-check-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:12px}',
+    '.ha-check-c h4{margin:0 0 6px;font-size:13.5px}.ha-check-c ul{margin:0;padding-left:18px;font-size:13px;display:grid;gap:3px;max-height:220px;overflow:auto}',
+    '.ha-dlg-bd{position:fixed;inset:0;z-index:2000;background:rgba(10,12,16,.45);display:grid;place-items:center;padding:16px}',
+    '.ha-dlg{background:var(--surface);color:var(--text);border-radius:10px;padding:22px 24px;width:min(460px,100%);box-shadow:0 20px 60px rgba(0,0,0,.3)}',
+    '.ha-dlg h3{margin:0 0 8px;font-size:1.1em}.ha-dlg p{margin:0 0 18px;color:var(--text-2)}.ha-dlg-r{display:flex;gap:10px;justify-content:flex-end}',
+    '.ha-danger{background:#a6403a!important;border-color:#a6403a!important;color:#fff!important}',
+    '.ha-arch{width:380px}.ha-arow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}',
+    '.ha-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2100;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px}'
   ].join('\n');
   document.head.appendChild(css);
   var hideCss = h('style'); document.head.appendChild(hideCss);
@@ -285,36 +297,50 @@
   function travFor(code) { if (!A || TRAV < 0 || !code) return 0; var B = (A.years[curYear()] || {}).b || {}; return B[code] ? num(B[code][TRAV]) : 0; }
   function rowCode(tr) { var a = tr.querySelector('input[data-k="num"]'); return a ? code5(a.value) : ''; }
   function travLabel() { return 'Hon. travaux GID ' + yShort(curYear()); }
+  /* Exercice GID (1er avril → 31 mars) contenant aujourd'hui, et le précédent */
+  function exOf(d) { var y = d.getFullYear(), m = d.getMonth(); var s = m >= 3 ? y : y - 1; return s + '-' + (s + 1); }
+  var EX0 = exOf(new Date()), EX1 = (function () { var s = +EX0.split('-')[0] - 1; return s + '-' + (s + 1); })();
+  var PV = C.pv || {};
+  function pvFor(code, ex) { var r = PV[code] && PV[code][ex]; return r ? num(r.trav) : 0; }
+  function pvTitle(code, ex) { var r = PV[code] && PV[code][ex]; if (!r) return 'Aucun PV d’AG reçu pour cet exercice'; return 'AG du ' + fdate(r.date) + ' · ' + (r.n || 0) + ' résolution(s) d’honoraires travaux adoptée(s)' + (r.objets ? ' : ' + r.objets : ''); }
+  /* Colonnes ajoutées au tableau (calculées, non modifiables) */
+  var EXTRA = [];
+  if (A && TRAV >= 0) EXTRA.push({ k: '_trav', label: travLabel, title: function () { return 'Honoraires de travaux facturés par GID (compte GID TRAVAUX), exercice ' + yInfo(curYear()); }, val: travFor, tip: function () { return ''; } });
+  EXTRA.push({ k: '_pv0', label: function () { return 'Hon. travaux votés AG ' + yShort(EX0); }, title: function () { return 'Honoraires du syndic sur travaux votés en AG (d’après les PV reçus), exercice ' + EX0; }, val: function (c) { return pvFor(c, EX0); }, tip: function (c) { return pvTitle(c, EX0); } });
+  EXTRA.push({ k: '_pv1', label: function () { return 'Hon. travaux votés AG ' + yShort(EX1); }, title: function () { return 'Honoraires du syndic sur travaux votés en AG (d’après les PV reçus), exercice ' + EX1; }, val: function (c) { return pvFor(c, EX1); }, tip: function (c) { return pvTitle(c, EX1); } });
   function hidden() { return Array.isArray(P.hono_cols) ? P.hono_cols : []; }
   function applyHidden() { hideCss.textContent = hidden().map(function (k) { return '#immTbl [data-col="' + String(k).replace(/[^\w-]/g, '') + '"]{display:none}'; }).join('\n'); }
-  function colKeys() { var hr = document.querySelector('#immTbl thead tr'); if (!hr) return []; return [].map.call(hr.children, function (th) { return th.dataset.k || ''; }).filter(function (k, i, a) { return k; }); }
   var busy = false, KEYS = [], LABELS = {};
   function decorate() {
     var t = document.getElementById('immTbl'); if (!t) return;
     busy = true;
     try {
-      var withTrav = !!A && TRAV >= 0, hr = t.querySelector('thead tr');
+      var hr = t.querySelector('thead tr');
       if (hr && !hr.querySelector('[data-col]')) {
         KEYS = []; [].forEach.call(hr.children, function (th) { if (th.dataset.k) { th.dataset.col = th.dataset.k; KEYS.push(th.dataset.k); LABELS[th.dataset.k] = th.textContent.replace(/[↑↓▲▼]/g, '').trim(); } });
-        if (withTrav) { var th = h('th', null, travLabel()); th.dataset.col = '_trav'; th.style.textAlign = 'right'; th.title = 'Honoraires de travaux facturés par GID (compte GID TRAVAUX), exercice ' + yInfo(curYear()); hr.insertBefore(th, hr.children[KEYS.length] || null); }
+        var ref = hr.children[KEYS.length] || null;
+        EXTRA.forEach(function (x) { var th = h('th', null, x.label()); th.dataset.col = x.k; th.style.textAlign = 'right'; th.title = x.title(); hr.insertBefore(th, ref); });
       }
-      var n = KEYS.length, trs = t.querySelectorAll('tbody tr'), total = 0;
+      var n = KEYS.length, trs = t.querySelectorAll('tbody tr'), tot = EXTRA.map(function () { return 0; });
       for (var r = 0; r < trs.length; r++) {
-        var tr = trs[r], v = withTrav ? travFor(rowCode(tr)) : 0; total += v;
+        var tr = trs[r], code = rowCode(tr);
+        EXTRA.forEach(function (x, i) { tot[i] += x.val(code); });
         if (tr.querySelector('[data-col]')) continue;
         for (var j = 0; j < n && j < tr.children.length; j++) tr.children[j].dataset.col = KEYS[j];
-        if (withTrav) { var td = h('td', 'ro r', v ? EUR.format(v) : '–'); td.dataset.col = '_trav'; tr.insertBefore(td, tr.children[n] || null); }
+        var ref2 = tr.children[n] || null;
+        EXTRA.forEach(function (x) { var v = x.val(code), td = h('td', 'ro r', v ? EUR.format(v) : '–'); td.dataset.col = x.k; var tp = x.tip(code); if (tp) td.title = tp; tr.insertBefore(td, ref2); });
       }
       var f = document.getElementById('immFoot');
       if (f && f.children.length && !f.querySelector('[data-col]')) {
         for (var k = 0; k < n && k < f.children.length; k++) f.children[k].dataset.col = KEYS[k];
-        if (withTrav) { var ft = h('td', null, EUR.format(total)); ft.dataset.col = '_trav'; f.insertBefore(ft, f.children[n] || null); }
+        var ref3 = f.children[n] || null;
+        EXTRA.forEach(function (x, i) { var ft = h('td', null, EUR.format(tot[i])); ft.dataset.col = x.k; f.insertBefore(ft, ref3); });
       }
-      applyOrder();
+      applyOrder(); markRows();
     } finally { busy = false; }
   }
   /* Ordre des colonnes : préférence propre à chaque utilisateur (hono_order) */
-  function allKeys() { var k = KEYS.slice(); if (A && TRAV >= 0) k.push('_trav'); return k; }
+  function allKeys() { return KEYS.concat(EXTRA.map(function (x) { return x.k; })); }
   function colOrder() {
     var def = allKeys(), saved = Array.isArray(P.hono_order) ? P.hono_order.filter(function (k) { return def.indexOf(k) >= 0; }) : [];
     if (!saved.length) return def;
@@ -340,11 +366,130 @@
   function refreshImm() { // changement d'exercice : mise à jour des cellules existantes
     busy = true;
     try {
-      var th = document.querySelector('#immTbl thead th[data-col="_trav"]'); if (th) th.textContent = travLabel();
-      var total = 0;
-      document.querySelectorAll('#immTbl tbody tr').forEach(function (tr) { var v = travFor(rowCode(tr)), td = tr.querySelector('td[data-col="_trav"]'); total += v; if (td) td.textContent = v ? EUR.format(v) : '–'; });
-      var ft = document.querySelector('#immFoot [data-col="_trav"]'); if (ft) ft.textContent = EUR.format(total);
+      EXTRA.forEach(function (x, i) {
+        var th = document.querySelector('#immTbl thead th[data-col="' + x.k + '"]'); if (th) { th.textContent = x.label(); th.title = x.title(); }
+        var total = 0;
+        document.querySelectorAll('#immTbl tbody tr').forEach(function (tr) { var c = rowCode(tr), v = x.val(c), td = tr.querySelector('td[data-col="' + x.k + '"]'); total += v; if (td) td.textContent = v ? EUR.format(v) : '–'; });
+        var ft = document.querySelector('#immFoot [data-col="' + x.k + '"]'); if (ft) ft.textContent = EUR.format(total);
+      });
     } finally { busy = false; }
+  }
+
+  /* ---------- Contrôle croisé avec ImmOpen (planning des AG) ---------- */
+  var IO = Array.isArray(C.immopen) ? C.immopen : [];
+  var PORT_GEST = { SR: 'RAOULT', LD: 'DIEZ', LC: 'CHATELAIN', KM: 'MALTEZ', NG: 'GADOUCHE', AG: 'GREVET', ID: 'DEBUIRE', SE: 'ESHAIBI' };
+  var ISSUES = {};
+  function tableRows() { // toutes les lignes (y compris filtrées à l'écran) : état partagé du tableau
+    var st = null;
+    try { st = JSON.parse(localStorage.getItem(C.key) || 'null'); } catch (e) {}
+    if (!st || !st.bld) { try { st = JSON.parse((document.getElementById('seed') || {}).textContent || 'null'); } catch (e) {} }
+    return ((st && st.bld) || []).map(function (b) {
+      return { code: code5(b.num), imm: String(b.imm || '').trim(), lots: num(b.lots), port: String(b.port || '').trim().toUpperCase(), lost: num(b.perdus) > 0 && num(b.h2627v) === 0 };
+    });
+  }
+  function crossCheck() {
+    var box = document.getElementById('haCheck'); if (!IO.length) { if (box) box.remove(); return; }
+    var io = {}; IO.forEach(function (r) { io[r.code] = r; });
+    var rows = tableRows(), seen = {}; ISSUES = {};
+    var missingIn = [], notIO = [], gestDiff = [], lostInIO = [];
+    rows.forEach(function (r) {
+      if (!r.code) return; seen[r.code] = 1; var o = io[r.code];
+      if (!o) { if (!r.lost) { notIO.push(r); ISSUES[r.code] = 'Absent du planning ImmOpen (immeuble sorti ?)'; } return; }
+      if (r.lost) { lostInIO.push([r, o]); ISSUES[r.code] = 'Perdu ici mais encore présent dans ImmOpen'; return; }
+      var gk = PORT_GEST[r.port]; if (gk && o.gest && String(o.gest).toUpperCase().indexOf(gk) < 0) { gestDiff.push([r, o]); ISSUES[r.code] = (ISSUES[r.code] ? ISSUES[r.code] + ' · ' : '') + 'Gestionnaire ImmOpen : ' + o.gest; }
+    });
+    IO.forEach(function (o) { if (!seen[o.code]) missingIn.push(o); });
+    if (!box) { box = h('details', 'ha-check'); box.id = 'haCheck'; var tw = document.querySelector('#tab-imm .tbl-wrap'); if (!tw) return; tw.parentNode.insertBefore(box, tw); }
+    var total = missingIn.length + notIO.length + gestDiff.length + lostInIO.length;
+    box.textContent = '';
+    var sm = h('summary'); sm.appendChild(h('strong', null, 'Contrôle avec ImmOpen')); sm.appendChild(h('span', 'ha-chip ' + (total ? 'warn' : 'ok'), total ? total + ' écart' + (total > 1 ? 's' : '') : 'Aucun écart'));
+    sm.appendChild(h('span', 'ha-note', 'Planning des AG ImmOpen relevé le ' + fdate(C.immopen_date) + ' · ' + IO.length + ' immeubles · lots non comparés (ImmOpen compte tous les lots, ce tableau les lots principaux)'));
+    box.appendChild(sm);
+    var g = h('div', 'ha-check-g');
+    function block(title, list, fmt, empty) {
+      var c = h('div', 'ha-check-c'); c.appendChild(h('h4', null, title + ' (' + list.length + ')'));
+      if (!list.length) { c.appendChild(h('p', 'ha-note', empty)); g.appendChild(c); return; }
+      var ul = h('ul'); list.slice(0, 60).forEach(function (x) { ul.appendChild(h('li', null, fmt(x))); }); if (list.length > 60) ul.appendChild(h('li', 'ha-note', '… et ' + (list.length - 60) + ' autres')); c.appendChild(ul); g.appendChild(c);
+    }
+    block('Dans ImmOpen, absents de ce tableau', missingIn, function (o) { return o.code + ' ' + o.nom + ' · ' + (o.lots || '?') + ' lots · ' + (o.gest || ''); }, 'Tous les immeubles ImmOpen figurent ici.');
+    block('Dans ce tableau, absents d’ImmOpen', notIO, function (r) { return r.code + ' ' + r.imm + ' (' + r.port + ') : à archiver ?'; }, 'Aucun.');
+    block('Perdus ici, encore dans ImmOpen', lostInIO, function (p) { return p[0].code + ' ' + p[0].imm + ' : à clôturer dans ImmOpen ou à archiver ici'; }, 'Aucun.');
+    block('Gestionnaire différent', gestDiff, function (p) { return p[0].code + ' ' + p[0].imm + ' : portefeuille ' + p[0].port + ', ImmOpen ' + p[1].gest; }, 'Aucun.');
+    box.appendChild(g);
+    markRows();
+  }
+  function markRows() {
+    document.querySelectorAll('#immTbl tbody tr').forEach(function (tr) {
+      var c = rowCode(tr), td = tr.querySelector('td[data-col="num"]'); if (!td) return;
+      var m = ISSUES[c]; td.classList.toggle('ha-flag', !!m); td.title = m || '';
+    });
+  }
+
+  /* ---------- Suppression avec confirmation et archivage ---------- */
+  var ARCH = Array.isArray(C.archive) ? C.archive : [];
+  function api(path, body) {
+    return fetch('/api/' + path, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF': C.csrf }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok || j.error) throw new Error(j.error || 'Erreur'); return j; }); });
+  }
+  function rowData(tr) { var d = {}; tr.querySelectorAll('input[data-k]').forEach(function (i) { d[i.dataset.k] = i.value; }); return d; }
+  function dialog(title, text, okLabel, onOk) {
+    var bd = h('div', 'ha-dlg-bd'), dl = h('div', 'ha-dlg'); dl.setAttribute('role', 'alertdialog'); dl.setAttribute('aria-modal', 'true');
+    dl.appendChild(h('h3', null, title)); var p = h('p', null, text); dl.appendChild(p);
+    var row = h('div', 'ha-dlg-r'), no = h('button', 'btn', 'Annuler'), ok = h('button', 'btn ha-danger', okLabel); no.type = ok.type = 'button';
+    row.appendChild(no); row.appendChild(ok); dl.appendChild(row); bd.appendChild(dl); document.body.appendChild(bd); ok.focus();
+    function close() { bd.remove(); document.removeEventListener('keydown', esc, true); }
+    function esc(e) { if (e.key === 'Escape') { e.stopPropagation(); close(); } }
+    document.addEventListener('keydown', esc, true);
+    no.addEventListener('click', close); bd.addEventListener('click', function (e) { if (e.target === bd) close(); });
+    ok.addEventListener('click', function () { ok.disabled = true; Promise.resolve(onOk()).then(close, function (e) { ok.disabled = false; p.textContent = e.message || 'Échec'; }); });
+  }
+  var bypass = false;
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('#immTbl button.del'); if (!b || bypass || C.ro) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var tr = b.closest('tr'), d = rowData(tr), name = (d.imm || 'cet immeuble').trim();
+    dialog('Supprimer « ' + name + ' » ?', 'L’immeuble est retiré du tableau et placé dans les archives, avec toutes ses données. Vous pourrez le restaurer depuis le bouton « Archives ».', 'Supprimer et archiver', function () {
+      return api('hono/archive', { num: d.num, port: d.port, imm: name, data: d }).then(function (r) {
+        ARCH.unshift(r.item); var oc = window.confirm; window.confirm = function () { return true; }; bypass = true;
+        try { b.click(); } finally { bypass = false; window.confirm = oc; }
+        updArchBtn(); toast('« ' + name + ' » archivé');
+      });
+    });
+  }, true);
+  function toast(m) { var t = h('div', 'ha-toast', m); document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3500); }
+  var archBtn;
+  function updArchBtn() { if (archBtn) archBtn.textContent = 'Archives' + (ARCH.length ? ' (' + ARCH.length + ')' : ''); }
+  function archPicker() {
+    var bar = document.querySelector('#tab-imm .toolbar'); if (!bar || bar.querySelector('.ha-archbtn')) return;
+    var wrap = h('span', 'ha-colbtn ha-archbtn'); archBtn = h('button', 'btn', 'Archives'); archBtn.type = 'button'; updArchBtn();
+    var pop = h('div', 'ha-pop ha-arch'); pop.hidden = true; pop.addEventListener('click', function (e) { e.stopPropagation(); });
+    function build() {
+      pop.textContent = ''; pop.appendChild(h('div', 'r', 'Immeubles archivés'));
+      if (!ARCH.length) { pop.appendChild(h('p', 'ha-note', 'Aucun immeuble archivé.')); return; }
+      ARCH.forEach(function (a) {
+        var it = h('div', 'ha-arow'); var tx = h('div'); tx.appendChild(h('strong', null, (a.num ? a.num + ' · ' : '') + a.imm));
+        tx.appendChild(h('div', 'ha-note', (a.port || '') + ' · archivé le ' + new Date(a.at * 1000).toLocaleDateString('fr-FR') + (a.by ? ' par ' + a.by : ''))); it.appendChild(tx);
+        if (!C.ro) { var rb = h('button', 'btn', 'Restaurer'); rb.type = 'button'; rb.addEventListener('click', function () { restore(a, rb); }); it.appendChild(rb); }
+        pop.appendChild(it);
+      });
+    }
+    archBtn.addEventListener('click', function (e) { e.stopPropagation(); var o = pop.hidden; if (o) build(); pop.hidden = !o; });
+    document.addEventListener('click', function (e) { if (!pop.hidden && !wrap.contains(e.target)) pop.hidden = true; });
+    wrap.appendChild(archBtn); wrap.appendChild(pop);
+    var sp = bar.querySelector('.spacer'); bar.insertBefore(wrap, sp || null);
+    function restore(a, rb) {
+      rb.disabled = true;
+      var add = document.getElementById('addImm'); if (!add) return;
+      ['#immSearch'].forEach(function (s) { var i = document.querySelector(s); if (i) i.value = ''; });
+      add.click();
+      setTimeout(function () {
+        var inp = document.activeElement, tr = inp && inp.closest ? inp.closest('tr') : null; if (!tr) { rb.disabled = false; return; }
+        Object.keys(a.data || {}).forEach(function (k) {
+          var i = tr.querySelector('input[data-k="' + k + '"]'); if (!i) return; i.value = a.data[k]; i.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        api('hono/unarchive', { id: a.id }).then(function () { ARCH = ARCH.filter(function (x) { return x.id !== a.id; }); updArchBtn(); build(); toast('« ' + a.imm + ' » restauré'); });
+      }, 80);
+    }
   }
   function colPicker() {
     var bar = document.querySelector('#tab-imm .toolbar'); if (!bar || bar.querySelector('.ha-colbtn')) return;
@@ -358,7 +503,7 @@
       all.addEventListener('click', function () { savePref('hono_cols', []); savePref('hono_order', []); applyHidden(); busy = true; try { applyOrder(); } finally { busy = false; } build(); }); hd.appendChild(all); pop.appendChild(hd);
       var drag = null;
       colOrder().forEach(function (k, i, arr) {
-        var lab = k === '_trav' ? travLabel() : (LABELS[k] || k);
+        var ex = EXTRA.filter(function (x) { return x.k === k; })[0], lab = ex ? ex.label() : (LABELS[k] || k);
         var row = h('div', 'ha-row'); row.draggable = true; row.dataset.k = k;
         var lb = h('label'), cb = h('input'); cb.type = 'checkbox'; cb.checked = hidden().indexOf(k) < 0;
         if (k === 'imm') { cb.disabled = true; cb.checked = true; cb.title = 'Toujours affichée'; }
@@ -393,10 +538,11 @@
   }
 
   function init() {
-    applyHidden(); colPicker(); decorate(); renderCard();
+    applyHidden(); colPicker(); archPicker(); decorate(); renderCard(); crossCheck();
     if (location.hash === '#annexes' && A) openDetail(true);
     var t = document.getElementById('immTbl');
-    if (t) new MutationObserver(function () { if (!busy) decorate(); }).observe(t, { childList: true, subtree: true });
+    var ccT = null;
+    if (t) new MutationObserver(function () { if (!busy) { decorate(); clearTimeout(ccT); ccT = setTimeout(crossCheck, 400); } }).observe(t, { childList: true, subtree: true });
     var g = document.querySelector('#tab-dash .grid.two');
     if (g) new MutationObserver(function () { if (card && !g.contains(card)) { card = null; renderCard(); } }).observe(g, { childList: true });
   }

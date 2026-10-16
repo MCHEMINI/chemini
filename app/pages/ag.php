@@ -43,5 +43,5 @@ function page_ag(array $u): never {
     $by = [];
     foreach ($rows as $r) $by[$r['gest'] ?: 'Sans gestionnaire'][] = $r;
     ksort($by);
-    render('ag', ['title' => 'Planning des AG', 'nav' => 'ag', 'u' => $u, 'wide' => true, 'by' => $by, 'alerts' => $alerts, 'date' => $raw['date'] ?? null, 'total' => count($rows)]);
+    render('ag', ['title' => 'Planning des AG', 'nav' => 'ag', 'u' => $u, 'wide' => true, 'by' => $by, 'alerts' => $alerts, 'date' => $raw['date'] ?? null, 'total' => count($rows), 'prefs' => user_prefs((int)$u['id'])]);
 }

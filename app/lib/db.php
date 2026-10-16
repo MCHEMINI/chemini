@@ -173,10 +173,20 @@ SQL);
     if ($v < 16) {
         $pdo->exec("ALTER TABLE trips ADD COLUMN share_token TEXT; CREATE UNIQUE INDEX IF NOT EXISTS trips_share ON trips(share_token); PRAGMA user_version = 16;");
     }
+    if ($v < 17) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS hono_archive (id INTEGER PRIMARY KEY, num TEXT, port TEXT, imm TEXT NOT NULL, data TEXT NOT NULL,
+  created_by INTEGER, created_at INTEGER NOT NULL, restored_at INTEGER);
+CREATE TABLE IF NOT EXISTS pv_votes (id INTEGER PRIMARY KEY, msg_id TEXT NOT NULL, code TEXT NOT NULL, ag_date TEXT NOT NULL, exercice TEXT NOT NULL,
+  gc_ht REAL, gc_ttc REAL, travaux_ttc REAL NOT NULL DEFAULT 0, detail TEXT, link TEXT, created_at INTEGER NOT NULL, UNIQUE(code, ag_date));
+CREATE INDEX IF NOT EXISTS pv_msg ON pv_votes(msg_id);
+PRAGMA user_version = 17;
+SQL);
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
-const PREF_KEYS = ['hono_cols', 'hono_order', 'ha_year'];
+const PREF_KEYS = ['hono_cols', 'hono_order', 'ha_year', 'ag_cols', 'ag_order', 'ag_sort'];
 function user_prefs(int $uid): array {
     $o = [];
     foreach (q('SELECT k, v FROM user_prefs WHERE user_id=?', [$uid])->fetchAll() as $r) $o[$r['k']] = json_decode($r['v'], true);
