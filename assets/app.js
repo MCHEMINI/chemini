@@ -429,7 +429,7 @@
     const save = (k, v) => { P[k] = v; api('prefs/set', { k, v }).catch(() => {}); };
     const head = tbls[0].querySelector('thead tr'), DEF = $$('th[data-col]', head).map(th => th.dataset.col);
     const LAB = {}; $$('th[data-col]', head).forEach(th => { LAB[th.dataset.col] = th.textContent.trim() || th.title || th.dataset.col; });
-    const order = () => { const sv = Array.isArray(P.ag_order) ? P.ag_order.filter(k => DEF.includes(k)) : []; const o = sv.length ? sv : DEF.slice(); DEF.forEach((k, i) => { if (!o.includes(k)) o.splice(Math.min(i, o.length), 0, k); }); return o; };
+    const order = () => { const sv = Array.isArray(P.ag_order) ? P.ag_order.filter(k => DEF.includes(k)) : []; const o = sv.length ? sv : DEF.slice(); DEF.forEach((k, i) => { if (o.includes(k)) return; let j = i - 1; while (j >= 0 && !o.includes(DEF[j])) j--; o.splice(j < 0 ? 0 : o.indexOf(DEF[j]) + 1, 0, k); }); return o; };
     const hidden = () => Array.isArray(P.ag_cols) ? P.ag_cols : [];
     const css = document.createElement('style'); document.head.appendChild(css);
     const apply = () => {

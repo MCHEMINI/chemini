@@ -9,6 +9,7 @@
   var MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 
   function savePref(k, v) {
+    if (k === 'hono_order' && Array.isArray(v) && v.indexOf('_m1') < 0) v = v.concat('_m1'); // marqueur : fusion des colonnes travaux déjà faite
     P[k] = v;
     try {
       fetch('/api/prefs/set', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF': C.csrf }, body: JSON.stringify({ k: k, v: v }) });
@@ -82,6 +83,8 @@
     '.ha-chip{font-size:12px;font-weight:600;border-radius:99px;padding:2px 9px}.ha-chip.warn{background:#f5e6cc;color:#7a5410}.ha-chip.ok{background:#dfeee4;color:#2d5e3d}',
     '.ha-check-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:12px}',
     '.ha-check-c h4{margin:0 0 6px;font-size:13.5px}.ha-check-c ul{margin:0;padding-left:18px;font-size:13px;display:grid;gap:3px;max-height:220px;overflow:auto}',
+    '.ha-i{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:6px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);background:none;font:italic 600 10px/1 Georgia,serif;cursor:pointer;vertical-align:1px;padding:0}.ha-i:hover{background:var(--accent);color:#fff}',
+    '.ha-htv{width:min(640px,100%);max-height:85vh;overflow:auto}.ha-htv-ag{margin:14px 0 6px}.ha-htv-none{margin:0 0 8px!important;font-size:.9em}.ha-htv-t{width:100%;border-collapse:collapse;font-size:.88em;margin-bottom:6px}.ha-htv-t th,.ha-htv-t td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left}.ha-htv-t .r{text-align:right;white-space:nowrap}',
     '.ha-dlg-bd{position:fixed;inset:0;z-index:2000;background:rgba(10,12,16,.45);display:grid;place-items:center;padding:16px}',
     '.ha-dlg{background:var(--surface);color:var(--text);border-radius:10px;padding:22px 24px;width:min(460px,100%);box-shadow:0 20px 60px rgba(0,0,0,.3)}',
     '.ha-dlg h3{margin:0 0 8px;font-size:1.1em}.ha-dlg p{margin:0 0 18px;color:var(--text-2)}.ha-dlg-r{display:flex;gap:10px;justify-content:flex-end}',
@@ -301,13 +304,54 @@
   function exOf(d) { var y = d.getFullYear(), m = d.getMonth(); var s = m >= 3 ? y : y - 1; return s + '-' + (s + 1); }
   var EX0 = exOf(new Date()), EX1 = (function () { var s = +EX0.split('-')[0] - 1; return s + '-' + (s + 1); })();
   var PV = C.pv || {};
-  function pvFor(code, ex) { var r = PV[code] && PV[code][ex]; return r ? num(r.trav) : 0; }
-  function pvTitle(code, ex) { var r = PV[code] && PV[code][ex]; if (!r) return 'Aucun PV d’AG reçu pour cet exercice'; return 'AG du ' + fdate(r.date) + ' · ' + (r.n || 0) + ' résolution(s) d’honoraires travaux adoptée(s)' + (r.objets ? ' : ' + r.objets : ''); }
+  function pvSum(code, ex) { var r = PV[code] && PV[code][ex]; return r ? num(r.trav) : 0; }
+  function travYear(code, ex) { if (!A || TRAV < 0 || !code) return null; var Y = A.years[ex]; if (!Y) return null; var B = Y.b || {}; return B[code] ? num(B[code][TRAV]) : 0; }
+  /* HTV = honoraires travaux : montant facturé relevé dans ImmOpen (compte GID TRAVAUX) ; à défaut, total voté d'après les PV d'AG */
+  function pvFor(code, ex) { var t = travYear(code, ex); return t !== null && t !== 0 ? t : (pvSum(code, ex) || t || 0); }
+  function hasHtv(code, ex) { return !!(pvFor(code, ex) || (PV[code] && PV[code][ex])); }
+  function pvTitle(code, ex) { return hasHtv(code, ex) ? 'Cliquer sur i pour le détail' : ''; }
+  /* Détail des honoraires travaux votés (HTV) : fenêtre ouverte par le bouton i de la cellule */
+  function pvDetail(code, ex) {
+    var r = (PV[code] && PV[code][ex]) || { ags: [] }, t = travYear(code, ex), Y = A && A.years[ex];
+    var bd = h('div', 'ha-dlg-bd'), dl = h('div', 'ha-dlg ha-htv'); dl.setAttribute('role', 'dialog'); dl.setAttribute('aria-modal', 'true');
+    dl.appendChild(h('h3', null, 'HTV ' + ex + ' · immeuble ' + code));
+    dl.appendChild(h('div', 'ha-htv-ag', null)).appendChild(h('strong', null, 'Facturé (ImmOpen, compte GID TRAVAUX)'));
+    dl.appendChild(h('p', 'ha-htv-none', t === null ? 'Pas de relevé ImmOpen pour cet exercice.' : EUR.format(t) + (Y && Y.partial ? ' · exercice en cours, relevé au ' + fdate(Y.end) : '')));
+    dl.appendChild(h('div', 'ha-htv-ag', null)).appendChild(h('strong', null, 'Voté en AG (PV d’AG, résolutions « Honoraires syndic » adoptées)'));
+    if (!r.ags || !r.ags.length) dl.appendChild(h('p', 'ha-htv-none', 'Aucun PV d’AG relevé pour cet exercice.'));
+    else dl.appendChild(h('p', 'ha-htv-none', 'Total voté : ' + EUR.format(num(r.trav)) + ' TTC'));
+    (r.ags || []).forEach(function (a) {
+      var hd = h('div', 'ha-htv-ag'); hd.appendChild(h('strong', null, 'AG du ' + fdate(a.date)));
+      if (a.gc) hd.appendChild(document.createTextNode(' · gestion courante votée ' + EUR.format(a.gc) + ' TTC'));
+      if (a.link) { var lk = h('a', null, 'Ouvrir le mail du PV'); lk.href = a.link; lk.target = '_blank'; lk.rel = 'noopener'; hd.appendChild(document.createTextNode(' · ')); hd.appendChild(lk); }
+      dl.appendChild(hd);
+      if (!a.items.length) { dl.appendChild(h('p', 'ha-htv-none', 'Aucun honoraire travaux voté à cette AG.')); return; }
+      var tb = h('table', 'ha-htv-t'), th = h('tr'); ['Résol.', 'Travaux', 'Taux', 'HT', 'TTC'].forEach(function (x, i) { var c = h('th', i > 2 ? 'r' : null, x); th.appendChild(c); }); tb.appendChild(th);
+      a.items.forEach(function (t) { var tr = h('tr'); [t.res, t.objet, t.taux, t.ht ? EUR.format(t.ht) : '–', t.ttc ? EUR.format(t.ttc) : '–'].forEach(function (x, i) { tr.appendChild(h('td', i > 2 ? 'r' : null, x)); }); tb.appendChild(tr); });
+      dl.appendChild(tb);
+    });
+    var row = h('div', 'ha-dlg-r'), ok = h('button', 'btn', 'Fermer'); ok.type = 'button'; row.appendChild(ok); dl.appendChild(row);
+    bd.appendChild(dl); document.body.appendChild(bd); ok.focus();
+    function close() { bd.remove(); document.removeEventListener('keydown', kd, true); }
+    function kd(e) { if (e.key === 'Escape') { e.stopPropagation(); close(); } }
+    ok.onclick = close; bd.addEventListener('click', function (e) { if (e.target === bd) close(); }); document.addEventListener('keydown', kd, true);
+  }
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('.ha-i'); if (!b) return; e.preventDefault(); e.stopPropagation(); pvDetail(b.dataset.code, b.dataset.ex); }, true);
   /* Colonnes ajoutées au tableau (calculées, non modifiables) */
   var EXTRA = [];
-  if (A && TRAV >= 0) EXTRA.push({ k: '_trav', label: travLabel, title: function () { return 'Honoraires de travaux facturés par GID (compte GID TRAVAUX), exercice ' + yInfo(curYear()); }, val: travFor, tip: function () { return ''; } });
-  EXTRA.push({ k: '_pv0', label: function () { return 'Hon. travaux votés AG ' + yShort(EX0); }, title: function () { return 'Honoraires du syndic sur travaux votés en AG (d’après les PV reçus), exercice ' + EX0; }, val: function (c) { return pvFor(c, EX0); }, tip: function (c) { return pvTitle(c, EX0); } });
-  EXTRA.push({ k: '_pv1', label: function () { return 'Hon. travaux votés AG ' + yShort(EX1); }, title: function () { return 'Honoraires du syndic sur travaux votés en AG (d’après les PV reçus), exercice ' + EX1; }, val: function (c) { return pvFor(c, EX1); }, tip: function (c) { return pvTitle(c, EX1); } });
+  if (false) EXTRA.push({ k: '_trav', label: travLabel, title: function () { return 'Honoraires de travaux facturés par GID (compte GID TRAVAUX), exercice ' + yInfo(curYear()); }, val: travFor, tip: function () { return ''; } });
+  EXTRA.push({ k: '_pv0', ex: EX0, label: function () { return 'HTV ' + yShort(EX0); }, title: function () { return 'HTV : honoraires travaux, exercice ' + EX0 + ' (facturé ImmOpen, détail des votes en AG avec le bouton i)'; }, val: function (c) { return pvFor(c, EX0); }, tip: function (c) { return pvTitle(c, EX0); } });
+  EXTRA.push({ k: '_pv1', ex: EX1, label: function () { return 'HTV ' + yShort(EX1); }, title: function () { return 'HTV : honoraires travaux, exercice ' + EX1 + ' (facturé ImmOpen, détail des votes en AG avec le bouton i)'; }, val: function (c) { return pvFor(c, EX1); }, tip: function (c) { return pvTitle(c, EX1); } });
+  /* Fusion (oct. 2026) de « Hon. travaux GID » (_trav) dans HTV (_pv0) : on garde la position et la visibilité choisies pour la colonne qui portait les montants. Exécutée une fois (marqueur _m1). */
+  (function migrateTrav() {
+    var o = Array.isArray(P.hono_order) ? P.hono_order.slice() : [], hs = Array.isArray(P.hono_cols) ? P.hono_cols.slice() : [];
+    if (o.indexOf('_m1') >= 0) return;
+    var ti = o.indexOf('_trav');
+    if (ti >= 0) { var pi = o.indexOf('_pv0'); if (pi >= 0) { o.splice(pi, 1); if (pi < ti) ti--; } o[ti] = '_pv0'; }
+    var travHidden = hs.indexOf('_trav') >= 0;
+    hs = hs.filter(function (k) { return k !== '_trav' && k !== '_pv0'; }); if (travHidden) hs.push('_pv0');
+    o.push('_m1'); P.hono_order = o; P.hono_cols = hs; savePref('hono_order', o); savePref('hono_cols', hs);
+  })();
   function hidden() { return Array.isArray(P.hono_cols) ? P.hono_cols : []; }
   function applyHidden() { hideCss.textContent = hidden().map(function (k) { return '#immTbl [data-col="' + String(k).replace(/[^\w-]/g, '') + '"]{display:none}'; }).join('\n'); }
   var busy = false, KEYS = [], LABELS = {};
@@ -328,7 +372,9 @@
         if (tr.querySelector('[data-col]')) continue;
         for (var j = 0; j < n && j < tr.children.length; j++) tr.children[j].dataset.col = KEYS[j];
         var ref2 = tr.children[n] || null;
-        EXTRA.forEach(function (x) { var v = x.val(code), td = h('td', 'ro r', v ? EUR.format(v) : '–'); td.dataset.col = x.k; var tp = x.tip(code); if (tp) td.title = tp; tr.insertBefore(td, ref2); });
+        EXTRA.forEach(function (x) { var v = x.val(code), td = h('td', 'ro r', v ? EUR.format(v) : '–'); td.dataset.col = x.k; var tp = x.tip(code); if (tp) td.title = tp;
+          if (x.ex && hasHtv(code, x.ex)) { var ib = h('button', 'ha-i', 'i'); ib.type = 'button'; ib.dataset.code = code; ib.dataset.ex = x.ex; ib.setAttribute('aria-label', 'Détail des honoraires travaux votés'); td.appendChild(ib); }
+          tr.insertBefore(td, ref2); });
       }
       var f = document.getElementById('immFoot');
       if (f && f.children.length && !f.querySelector('[data-col]')) {
@@ -344,7 +390,8 @@
   function colOrder() {
     var def = allKeys(), saved = Array.isArray(P.hono_order) ? P.hono_order.filter(function (k) { return def.indexOf(k) >= 0; }) : [];
     if (!saved.length) return def;
-    def.forEach(function (k, i) { if (saved.indexOf(k) < 0) saved.splice(Math.min(i, saved.length), 0, k); });
+    // colonnes absentes de l'ordre enregistré : placées juste après leur voisine de gauche par défaut (sans décaler celles que l'utilisateur a placées)
+    def.forEach(function (k, i) { if (saved.indexOf(k) >= 0) return; var j = i - 1; while (j >= 0 && saved.indexOf(def[j]) < 0) j--; saved.splice(j < 0 ? 0 : saved.indexOf(def[j]) + 1, 0, k); });
     return saved;
   }
   function applyOrder() {

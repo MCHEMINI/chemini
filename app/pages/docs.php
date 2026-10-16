@@ -23,11 +23,13 @@ function hono_extra_cfg(): array {
     $ag = json_decode((string)q("SELECT v FROM kv WHERE k='ag_planning'")->fetchColumn(), true) ?: [];
     $io = array_map(fn($r) => ['code' => (string)($r['code'] ?? ''), 'nom' => (string)($r['nom'] ?? ''), 'lots' => (int)($r['lots'] ?? 0), 'gest' => trim(preg_replace('/^(M\.|Mme|Melle|Mlle)\s*/u', '', (string)($r['gest'] ?? '')))], $ag['rows'] ?? []);
     $pv = [];
-    foreach (q('SELECT code, exercice, ag_date, travaux_ttc, gc_ttc, detail FROM pv_votes ORDER BY ag_date')->fetchAll() as $r) {
+    foreach (q('SELECT code, exercice, ag_date, travaux_ttc, gc_ttc, detail, link FROM pv_votes ORDER BY ag_date')->fetchAll() as $r) {
         $det = json_decode((string)$r['detail'], true) ?: [];
         $o = &$pv[$r['code']][$r['exercice']];
-        $o = ['trav' => round(($o['trav'] ?? 0) + (float)$r['travaux_ttc'], 2), 'gc' => $r['gc_ttc'] !== null ? (float)$r['gc_ttc'] : ($o['gc'] ?? null), 'date' => $r['ag_date'], 'n' => ($o['n'] ?? 0) + count($det),
-              'objets' => mb_substr(trim(($o['objets'] ?? '') . ' ' . implode(' ; ', array_map(fn($t) => (string)($t['objet'] ?? ''), $det))), 0, 300)];
+        $o['trav'] = round(($o['trav'] ?? 0) + (float)$r['travaux_ttc'], 2);
+        $o['date'] = $r['ag_date'];
+        $o['ags'][] = ['date' => $r['ag_date'], 'gc' => $r['gc_ttc'] !== null ? (float)$r['gc_ttc'] : null, 'link' => preg_match('#^https://outlook\.(office365|office|live)\.com/#', (string)$r['link']) ? $r['link'] : '',
+            'items' => array_map(fn($t) => ['res' => (string)($t['res'] ?? ''), 'objet' => (string)($t['objet'] ?? ''), 'taux' => (string)($t['taux'] ?? ''), 'ht' => (float)($t['ht'] ?? 0), 'ttc' => (float)($t['ttc'] ?? 0)], $det)];
         unset($o);
     }
     return ['archive' => $arch, 'immopen' => $io, 'immopen_date' => $ag['date'] ?? null, 'pv' => $pv];
