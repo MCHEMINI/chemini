@@ -103,6 +103,9 @@ select.input{padding-right:4px}
 .av-a{background:#C9A66B;color:#121720}
 .av-b{background:#7E8FA6;color:#121720}
 .rail .me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px;border-top:1px solid #222832;font-size:13px;min-width:0}
+.rail .me .me-id{flex:1;min-width:0;overflow:hidden}
+.rail .me-out{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;color:#7D828B}
+.rail .me-out:hover,.rail .me-out:focus-visible{color:#F2F3F5;background:#222832}
 .rail .me small{display:block;color:#7D828B;font-size:11px;overflow:hidden;text-overflow:ellipsis}
 
 main{padding:36px max(40px,env(safe-area-inset-right,0px)) 72px 40px;min-width:0}
@@ -218,7 +221,8 @@ li:hover .row-actions,li:focus-within .row-actions{opacity:1}
   .brand-foot{display:none}
   #app{grid-template-columns:minmax(0,1fr);background:var(--bg)}
   .rail{position:sticky;top:0;height:auto;z-index:10;flex-direction:row;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));overflow-x:auto}
-  .rail .mono-label,.rail .group,.rail .me,.rail .dot{display:none}
+  .rail .mono-label,.rail .group,.rail .dot,.rail .me .avatar,.rail .me .me-id{display:none}
+  .rail .me{margin:0 0 0 auto;padding:0;border:0;order:9}
   .rail .seal{width:36px;height:36px}
   .rail nav{flex-direction:row;gap:4px}
   .rail nav a{white-space:nowrap;padding:8px 10px;font-size:13px}
