@@ -117,6 +117,13 @@ SQL);
         seed_doc($pdo, 'honoraires', 'direction'); // analyse par gestionnaire
         $pdo->exec('PRAGMA user_version = 8');
     }
+    if ($v < 9) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS veille (id INTEGER PRIMARY KEY, url TEXT NOT NULL UNIQUE, title TEXT NOT NULL, source TEXT,
+  published_at INTEGER, summary TEXT NOT NULL, impact TEXT, important INTEGER NOT NULL DEFAULT 0, week TEXT NOT NULL, created_at INTEGER NOT NULL);
+PRAGMA user_version = 9;
+SQL);
+    }
 }
 
 /** Outil HTML chiffré dans le dépôt : mis en place (ou remplacé) en gardant les modifications de l'équipe. */

@@ -23,7 +23,7 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
-if (preg_match('#^ingest/(mails|trip)$#', $route0, $m)) ingest_handle($m[1]);
+if (preg_match('#^ingest/(mails|trip|veille)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 

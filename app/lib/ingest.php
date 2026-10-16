@@ -51,5 +51,20 @@ function ingest_handle(string $kind): never {
         }
         $send(['ok' => true, 'id' => $id, 'url' => BASE_URL . '/voyages/' . $id]);
     }
+    if ($kind === 'veille') {
+        $week = $str($d['week'] ?? date('o-\\WW'), 12);
+        $n = 0;
+        foreach ((array)($d['items'] ?? []) as $it) {
+            if (!is_array($it)) continue;
+            $url = $str($it['url'] ?? '', 1000);
+            if (!preg_match('#^https://[^\s"<>]+$#', $url) || $str($it['title'] ?? '', 300) === '' || $str($it['summary'] ?? '', 2000) === '') continue;
+            q('INSERT INTO veille(url,title,source,published_at,summary,impact,important,week,created_at) VALUES(?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(url) DO UPDATE SET title=excluded.title, summary=excluded.summary, impact=excluded.impact, important=excluded.important, week=excluded.week',
+              [$url, $str($it['title'], 300), $str($it['source'] ?? '', 120), strtotime((string)($it['date'] ?? '')) ?: null,
+               $str($it['summary'], 2000), $str($it['impact'] ?? '', 600), !empty($it['important']) ? 1 : 0, $week, time()]);
+            $n++;
+        }
+        $send(['ok' => true, 'saved' => $n]);
+    }
     $send(['error' => 'type inconnu'], 404);
 }

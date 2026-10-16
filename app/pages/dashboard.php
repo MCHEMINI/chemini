@@ -20,11 +20,12 @@ function page_dashboard(array $u): never {
         $mailsCount = $_SESSION['mails_' . $uid]['n'] ?? count($mails);
     }
 
+    $veille = q('SELECT * FROM veille ORDER BY week DESC, important DESC, COALESCE(published_at, created_at) DESC LIMIT 8')->fetchAll();
     render('dashboard', [
         'title' => 'Tableau de bord', 'nav' => 'dash', 'u' => $u,
         'items' => $items, 'deadlines' => $deadlines, 'overdue' => $overdue,
         'mails' => $mails, 'mailsCount' => $mailsCount,
-        'legal' => feeds_merged(LEGAL_FEEDS, 4), 'news' => feeds_merged(NEWS_FEEDS, 6),
+        'veille' => $veille, 'legal' => $veille ? [] : feeds_merged(LEGAL_FEEDS, 4), 'news' => feeds_merged(NEWS_FEEDS, 6),
         'stats' => [
             'crit' => count(array_filter($items, fn($i) => $i['severity'] === 'crit')),
             'open' => (int)q("SELECT COUNT(*) FROM items WHERE status='open'")->fetchColumn(),

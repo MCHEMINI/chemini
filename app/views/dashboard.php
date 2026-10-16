@@ -94,9 +94,21 @@
   </section>
 
   <section class="col-5">
-    <div class="sec-h"><h2>Veille juridique</h2><a href="https://www.legifrance.gouv.fr/" target="_blank" rel="noopener">Légifrance</a></div>
-    <?php if (!$legal): ?>
-      <div class="empty"><strong>Veille indisponible.</strong>Les sources n'ont pas répondu. Nouvel essai automatique dans l'heure.</div>
+    <div class="sec-h"><h2>Veille juridique</h2><?php if ($veille): ?><span class="muted small">Mise à jour chaque lundi · <?= e(date_short((int)max(array_column($veille, 'created_at')))) ?></span><?php else: ?><a href="https://www.legifrance.gouv.fr/" target="_blank" rel="noopener">Légifrance</a><?php endif; ?></div>
+    <?php if ($veille): ?>
+    <div class="law veille">
+      <?php foreach ($veille as $l): ?>
+      <article class="<?= $l['important'] ? 'imp' : '' ?>">
+        <span class="ref"><?= e($l['source'] ?: 'Veille') ?><?= $l['published_at'] ? ' · ' . e(date_short((int)$l['published_at'])) : '' ?><?php if ($l['important']): ?> <span class="chip crit">Important</span><?php endif; ?></span>
+        <h3><?= e($l['title']) ?></h3>
+        <p><?= nl2br(e($l['summary'])) ?></p>
+        <?php if ($l['impact']): ?><p class="impact"><strong>Pour GID :</strong> <?= e($l['impact']) ?></p><?php endif; ?>
+        <a class="more" href="<?= e($l['url']) ?>" target="_blank" rel="noopener">Lire l'article →</a>
+      </article>
+      <?php endforeach; ?>
+    </div>
+    <?php elseif (!$legal): ?>
+      <div class="empty"><strong>Veille indisponible.</strong>La synthèse hebdomadaire arrive lundi à 11 h.</div>
     <?php else: ?>
     <div class="law">
       <?php foreach ($legal as $l): ?>
