@@ -18,7 +18,7 @@
 
 <div class="grid">
   <section class="col-7">
-    <div class="sec-h"><h2>Veille juridique</h2><?php if ($veille): ?><span class="muted small">Mise à jour chaque lundi · <?= e(date_short((int)max(array_column($veille, 'created_at')))) ?></span><?php else: ?><a href="https://www.legifrance.gouv.fr/" target="_blank" rel="noopener">Légifrance</a><?php endif; ?></div>
+    <div class="sec-h"><h2>Veille juridique</h2><?php if ($veille): ?><span class="muted small">Mise à jour chaque lundi à 9 h · <?= e(date_short((int)max(array_column($veille, 'created_at')))) ?></span><?php else: ?><a href="https://www.legifrance.gouv.fr/" target="_blank" rel="noopener">Légifrance</a><?php endif; ?></div>
     <?php if ($veille): ?>
     <div class="law veille">
       <?php foreach ($veille as $l): ?>
@@ -32,7 +32,7 @@
       <?php endforeach; ?>
     </div>
     <?php elseif (!$legal): ?>
-      <div class="empty"><strong>Veille indisponible.</strong>La synthèse hebdomadaire arrive lundi à 11 h.</div>
+      <div class="empty"><strong>Veille indisponible.</strong>La synthèse hebdomadaire arrive lundi à 9 h.</div>
     <?php else: ?>
     <div class="law">
       <?php foreach ($legal as $l): ?>
@@ -47,7 +47,7 @@
   </section>
 
   <section class="col-5">
-    <div class="sec-h"><h2>Dernières actualités</h2></div>
+    <div class="sec-h"><h2>Dernières actualités</h2><span class="muted small">Mise à jour chaque lundi à 9 h</span></div>
     <?php if (!$news): ?>
       <div class="empty"><strong>Actualités indisponibles.</strong>Les sources n'ont pas répondu. Nouvel essai automatique dans l'heure.</div>
     <?php else: ?>

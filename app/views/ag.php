@@ -10,8 +10,6 @@ $st = ['planifiee' => ['Planifiée', 'ok'], 'aplanifier' => ['À planifier', 'wa
     <div class="date"><?= (int)$total ?> immeubles · par gestionnaire, avec le nombre de lots et la rentabilité</div>
   </div>
   <div class="head-actions">
-    <label for="agG" class="sr">Gestionnaire</label>
-    <select id="agG" class="input"><option value="">Tous les gestionnaires</option><?php foreach (array_keys($by) as $g): ?><option value="<?= e($g) ?>"><?= e($g) ?></option><?php endforeach; ?></select>
     <label for="agS" class="sr">Statut</label>
     <select id="agS" class="input"><option value="">Tous les statuts</option><option value="planifiee">Planifiées</option><option value="aplanifier">À planifier</option><option value="tenue">Tenues</option><option value="alerte">Avec alerte</option></select>
   </div>
@@ -25,6 +23,10 @@ $st = ['planifiee' => ['Planifiée', 'ok'], 'aplanifier' => ['À planifier', 'wa
   <div><div class="n <?= $alerts['mandat'] ? 'crit' : '' ?>"><?= (int)$alerts['mandat'] ?></div><div class="l">Mandats expirés ou à renouveler</div></div>
   <div><div class="n <?= $alerts['convoc'] ? 'crit' : '' ?>"><?= (int)$alerts['convoc'] ?></div><div class="l">Convocations en retard</div></div>
   <div><div class="n"><?= (int)$alerts['aplanif'] ?></div><div class="l">AG à planifier</div></div>
+</div>
+<div class="ag-tabs" role="tablist" aria-label="Gestionnaires">
+  <button type="button" role="tab" class="ag-tab" data-g="" aria-selected="true">Tous <span><?= (int)$total ?></span></button>
+  <?php foreach ($by as $g => $rows): ?><button type="button" role="tab" class="ag-tab" data-g="<?= e($g) ?>" aria-selected="false"><?= e($g) ?> <span><?= count($rows) ?></span></button><?php endforeach; ?>
 </div>
 <p class="muted small ag-legend"><span class="dot-fin green"></span> rentable <span class="dot-fin orange"></span> fragile <span class="dot-fin red"></span> non rentable <span class="dot-fin lost"></span> perdu — marge estimée, détail dans la fiche de l'immeuble.</p>
 

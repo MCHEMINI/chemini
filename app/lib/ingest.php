@@ -79,6 +79,11 @@ function ingest_handle(string $kind): never {
           [$status, $result, time(), $status, time(), $status, time(), $id]);
         $send(['ok' => true, 'id' => $id, 'status' => $status]);
     }
+    if ($kind === 'ag') { // planning des AG relevé dans ImmOpen : {date:"AAAA-MM-JJ", rows:[{code, nom, lots, gest, compta, last, nomination, fin_mandat, debut_ex, fin_ex, ag_date, ag_heure, delai_max, conseil, limite_convoc, convoc, notification, pv}]}
+        if (empty($d['rows']) || !is_array($d['rows'])) $send(['error' => 'rows manquant'], 400);
+        q("INSERT INTO kv(k,v,updated_at) VALUES('ag_planning',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode(['date' => (string)($d['date'] ?? date('Y-m-d')), 'rows' => array_values($d['rows'])], JSON_UNESCAPED_UNICODE), time()]);
+        $send(['ok' => true, 'rows' => count($d['rows'])]);
+    }
     if ($kind === 'annexes') { // relevé ImmOpen des honoraires annexes : {at, source, cats:[{acc,k,l}], years:{"2026-2027":{end, partial, b:{code:{catIndex:montant}}}}}
         $d['id'] = 'ingest-' . date('YmdHis');
         if (!annexes_store($d)) $send(['error' => 'cats / years manquants'], 400);

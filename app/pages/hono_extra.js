@@ -42,8 +42,11 @@
     '.ha-bar .p{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;font-size:12.5px}',
     '.ha-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;font-size:12.5px;color:var(--muted)}',
     '.ha-link{color:var(--accent);font-weight:600;font-size:13.5px}',
-    '.ha-ov{position:fixed;inset:0;z-index:1000;background:rgba(10,12,16,.45);display:flex;align-items:flex-start;justify-content:center;padding:3vh 16px;overflow:auto}',
-    '.ha-panel{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;width:min(1280px,100%);padding:22px 24px 28px;box-shadow:0 20px 60px rgba(0,0,0,.3)}',
+    '.ha-ov{position:fixed;inset:0;z-index:1000;background:var(--bg);overflow:auto;outline:none}',
+    'body.ha-full{overflow:hidden}',
+    '.ha-panel{color:var(--text);max-width:1400px;margin:0 auto;padding:20px 28px 40px}',
+    '.ha-back{font:inherit;font-size:14px;font-weight:600;color:var(--accent);background:none;border:1px solid var(--border-strong);border-radius:7px;padding:7px 12px;cursor:pointer;margin:0 0 18px}',
+    '.ha-back:hover{background:var(--surface)}',
     '.ha-panel h2{margin:0;font-size:1.35em}.ha-panel h3{margin:22px 0 10px;font-size:1.02em}',
     '.ha-x{font:inherit;font-size:20px;line-height:1;border:0;background:none;color:var(--text-2);cursor:pointer;padding:4px 8px}',
     '.ha-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--text-2);margin:4px 0 8px}',
@@ -161,14 +164,18 @@
 
   /* ---------- détail : graphique + tableau ---------- */
   var ov = null, sortK = 'total', sortD = -1, q = '', catF = '';
-  function openDetail() {
+  /* Détail en pleine page (et non en fenêtre) : bouton Retour + retour arrière du navigateur (#annexes) */
+  function openDetail(noPush) {
     if (ov) return;
-    ov = h('div', 'ha-ov'); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', 'Honoraires annexes par immeuble');
-    ov.addEventListener('click', function (e) { if (e.target === ov) closeDetail(); });
-    document.body.appendChild(ov); document.addEventListener('keydown', escClose); renderDetail();
+    ov = h('div', 'ha-ov'); ov.tabIndex = -1; ov.setAttribute('role', 'region'); ov.setAttribute('aria-label', 'Honoraires annexes par immeuble');
+    document.body.appendChild(ov); document.body.classList.add('ha-full'); document.addEventListener('keydown', escClose);
+    if (!noPush && location.hash !== '#annexes') { try { history.pushState({ ha: 1 }, '', '#annexes'); } catch (e) {} }
+    renderDetail(); window.scrollTo(0, 0); ov.focus();
   }
-  function escClose(e) { if (e.key === 'Escape') closeDetail(); }
-  function closeDetail() { if (ov) { ov.remove(); ov = null; document.removeEventListener('keydown', escClose); if (card) card.focus(); } }
+  function escClose(e) { if (e.key === 'Escape') back(); }
+  function back() { if (location.hash === '#annexes') { try { history.back(); return; } catch (e) {} } closeDetail(); }
+  function closeDetail() { if (ov) { ov.remove(); ov = null; document.body.classList.remove('ha-full'); document.removeEventListener('keydown', escClose); if (card) { card.scrollIntoView({ block: 'center' }); card.focus(); } } }
+  window.addEventListener('popstate', function () { if (location.hash === '#annexes') openDetail(true); else closeDetail(); });
   function renderDetail() {
     if (!ov) return;
     var scroll = ov.querySelector('.ha-tbl-wrap'), st = scroll ? scroll.scrollTop : 0;
@@ -178,8 +185,9 @@
     ht.appendChild(h('p', 'desc', 'Exercice ' + yInfo(y) + ' · crédits des comptes fournisseurs GID par immeuble'));
     hd.appendChild(ht);
     var r = h('div', 'ha-head'); r.style.alignItems = 'center'; r.appendChild(yearButtons());
-    var x = h('button', 'ha-x', '✕'); x.type = 'button'; x.setAttribute('aria-label', 'Fermer'); x.addEventListener('click', closeDetail); r.appendChild(x);
-    hd.appendChild(r); p.appendChild(hd);
+    hd.appendChild(r);
+    var bk = h('button', 'ha-back', '← Retour au tableau de bord'); bk.type = 'button'; bk.addEventListener('click', back);
+    p.appendChild(bk); p.appendChild(hd);
 
     var g = h('div', 'ha-grid2'), c1 = h('div'), c2 = h('div');
     c1.appendChild(h('h3', null, 'Par catégorie, sur les trois derniers exercices'));
@@ -386,6 +394,7 @@
 
   function init() {
     applyHidden(); colPicker(); decorate(); renderCard();
+    if (location.hash === '#annexes' && A) openDetail(true);
     var t = document.getElementById('immTbl');
     if (t) new MutationObserver(function () { if (!busy) decorate(); }).observe(t, { childList: true, subtree: true });
     var g = document.querySelector('#tab-dash .grid.two');

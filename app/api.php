@@ -256,6 +256,14 @@ function api(string $r): never {
             json_out(['ok' => true]);
 
         /* Outils partagés : état commun */
+        case 'trips/share': // créer (on=1) ou désactiver (on=0) le lien de partage d'un voyage
+            $t = q('SELECT id, space, share_token FROM trips WHERE id=?', [in_int('id')])->fetch();
+            if (!$t || !can_space($u, $t['space'])) json_out(['error' => 'Accès refusé.'], 403);
+            if (!(body()['on'] ?? false)) { q('UPDATE trips SET share_token=NULL WHERE id=?', [$t['id']]); audit($uid, 'trip_share_off:' . $t['id']); json_out(['ok' => true]); }
+            $tok = $t['share_token'] ?: rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
+            q('UPDATE trips SET share_token=? WHERE id=?', [$tok, $t['id']]);
+            audit($uid, 'trip_share_on:' . $t['id']);
+            json_out(['ok' => true, 'url' => BASE_URL . '/partage/' . $tok]);
         case 'prefs/set': // préférences d'affichage de l'utilisateur connecté uniquement
             $k = in_str('k', 40);
             if (!in_array($k, PREF_KEYS, true)) json_out(['error' => 'Préférence inconnue'], 400);

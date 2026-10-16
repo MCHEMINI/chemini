@@ -329,6 +329,7 @@
     const setIa = open => { iaPop.hidden = !open; iaFab.setAttribute('aria-expanded', String(open)); if (open) $('#iaBody')?.focus(); };
     iaFab.addEventListener('click', () => setIa(iaPop.hidden));
     $('[data-ia-close]', iaPop)?.addEventListener('click', () => setIa(false));
+    $$('[data-ia-open]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); setIa(true); }));
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !iaPop.hidden) { setIa(false); iaFab.focus(); } });
   }
   // Formulaires [data-api]
@@ -345,7 +346,7 @@
         if (btn) btn.disabled = false;
         return;
       }
-      if (f.dataset.toast && location.pathname !== '/espace') {
+      if (f.dataset.toast && location.pathname !== '/assistant') {
         f.reset(); if (btn) btn.disabled = false;
         const pop = f.closest('[role=dialog]'); if (pop) { pop.hidden = true; $('#iaFab')?.setAttribute('aria-expanded', 'false'); }
         toast(f.dataset.toast); return;
@@ -405,6 +406,41 @@
       }
     });
   }
+
+  /* Planning des AG : onglets par gestionnaire + filtre statut */
+  (function(){ const tabs = $$('.ag-tab'), s = document.getElementById('agS'); if (!tabs.length || !s) return;
+    let g = '';
+    const apply = () => {
+      tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.g === g)));
+      document.querySelectorAll('.ag-group').forEach(sec => {
+        const okG = !g || sec.dataset.g === g; let any = false;
+        sec.querySelectorAll('tbody tr').forEach(tr => { const v = s.value, ok = !v || (v === 'alerte' ? tr.dataset.a === '1' : tr.dataset.s === v); tr.hidden = !ok; any = any || ok; });
+        sec.hidden = !okG || !any; });
+      try { localStorage.setItem('gid_ag', JSON.stringify([g, s.value])); } catch (e) {} };
+    try { const v = JSON.parse(localStorage.getItem('gid_ag') || '[]'); if (v[0] && tabs.some(t => t.dataset.g === v[0])) g = v[0]; if (v[1]) s.value = v[1]; } catch (e) {}
+    tabs.forEach((t, i) => { t.addEventListener('click', () => { g = t.dataset.g; apply(); });
+      t.addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; e.preventDefault(); const n = tabs[(i + d + tabs.length) % tabs.length]; n.focus(); n.click(); }); });
+    s.addEventListener('change', apply); apply(); })();
+
+  /* Voyages : programme en accordéon, PDF (impression) et lien de partage */
+  (function(){
+    $$('[data-acc]').forEach(b => b.addEventListener('click', () => $$('.trip-day').forEach(d => { d.open = b.dataset.acc === 'open'; })));
+    let opened = null;
+    window.addEventListener('beforeprint', () => { opened = $$('.trip-day').map(d => d.open); $$('.trip-day').forEach(d => { d.open = true; }); });
+    window.addEventListener('afterprint', () => { if (opened) $$('.trip-day').forEach((d, i) => { d.open = opened[i]; }); opened = null; });
+    $$('[data-print]').forEach(b => b.addEventListener('click', () => window.print()));
+    const box = document.getElementById('tripShare'); if (!box) return;
+    const tg = $('[data-share-toggle]'), row = $('.trip-share-row', box), inp = $('#shareUrl'), on = $('[data-share-on]', box), off = $('[data-share-off]', box);
+    tg.addEventListener('click', () => { box.hidden = !box.hidden; tg.setAttribute('aria-expanded', String(!box.hidden)); if (!box.hidden && inp.value) inp.select(); });
+    on.addEventListener('click', async () => { on.disabled = true;
+      try { const r = await api('trips/share', { id: Number(box.dataset.trip), on: 1 }); inp.value = r.url; row.hidden = false; on.hidden = true; inp.select(); try { await navigator.clipboard.writeText(r.url); toast('Lien créé et copié'); } catch (e) { toast('Lien créé'); } }
+      catch (e) { toast(e.message); } on.disabled = false; });
+    $('[data-copy-share]', box).addEventListener('click', async () => { try { await navigator.clipboard.writeText(inp.value); toast('Lien copié'); } catch (e) { inp.select(); } });
+    off.addEventListener('click', async () => {
+      if (off.dataset.c !== '1') { off.dataset.c = '1'; off.textContent = 'Confirmer la désactivation'; setTimeout(() => { off.dataset.c = ''; off.textContent = 'Désactiver le lien'; }, 4000); return; }
+      try { await api('trips/share', { id: Number(box.dataset.trip), on: 0 }); inp.value = ''; row.hidden = true; on.hidden = false; off.dataset.c = ''; off.textContent = 'Désactiver le lien'; toast('Lien désactivé : il ne fonctionne plus'); }
+      catch (e) { toast(e.message); } });
+  })();
 })();
 
 /* /honoraires#opti : transmet l'onglet demandé à l'outil (changement d'ancre, sans rechargement) */
@@ -433,13 +469,3 @@ document.addEventListener('click', e => { const tr = e.target.closest('tr[data-h
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 })();
-
-/* Planning des AG : filtres gestionnaire / statut */
-(function(){ const g = document.getElementById('agG'), s = document.getElementById('agS'); if (!g) return;
-  const apply = () => { document.querySelectorAll('.ag-group').forEach(sec => {
-      const okG = !g.value || sec.dataset.g === g.value; let any = false;
-      sec.querySelectorAll('tbody tr').forEach(tr => { const v = s.value, ok = !v || (v === 'alerte' ? tr.dataset.a === '1' : tr.dataset.s === v); tr.hidden = !ok; any = any || ok; });
-      sec.hidden = !okG || !any; });
-    try { localStorage.setItem('gid_ag', JSON.stringify([g.value, s.value])); } catch (e) {} };
-  try { const v = JSON.parse(localStorage.getItem('gid_ag') || '[]'); if (v[0] && [...g.options].some(o => o.value === v[0])) g.value = v[0]; if (v[1]) s.value = v[1]; } catch (e) {}
-  g.addEventListener('change', apply); s.addEventListener('change', apply); apply(); })();

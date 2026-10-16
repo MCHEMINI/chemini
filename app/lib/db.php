@@ -170,6 +170,9 @@ SQL);
     if ($v < 15) {
         $pdo->exec("ALTER TABLE consignes ADD COLUMN space TEXT NOT NULL DEFAULT 'perso'; PRAGMA user_version = 15;");
     }
+    if ($v < 16) {
+        $pdo->exec("ALTER TABLE trips ADD COLUMN share_token TEXT; CREATE UNIQUE INDEX IF NOT EXISTS trips_share ON trips(share_token); PRAGMA user_version = 16;");
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

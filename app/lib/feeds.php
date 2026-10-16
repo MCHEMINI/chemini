@@ -14,11 +14,16 @@ function http_get(string $url, array $headers = [], int $timeout = 8): ?string {
     return ($body !== false && $code >= 200 && $code < 300) ? $body : null;
 }
 
-/** Récupère un flux RSS/Atom (cache 1 h) et renvoie [titre, lien, date, source, résumé]. */
+/** Dernier lundi 9 h (heure de Paris) passé : les actualités sont rafraîchies une fois par semaine, le lundi à 9 h. */
+function feed_monday(): int {
+    $m = strtotime('monday this week 09:00');
+    return time() < $m ? $m - 7 * 86400 : $m;
+}
+/** Récupère un flux RSS/Atom (rafraîchi chaque lundi à 9 h ; nouvel essai toutes les heures s'il est vide) et renvoie [titre, lien, date, source, résumé]. */
 function feed_items(string $url, int $limit = 6): array {
     $row = q('SELECT * FROM feed_cache WHERE url=?', [$url])->fetch();
     $body = $row['body'] ?? null;
-    if (!$row || time() - (int)$row['fetched_at'] > FEED_TTL) {
+    if (!$row || (int)$row['fetched_at'] < feed_monday() || (!$body && time() - (int)$row['fetched_at'] > FEED_TTL)) {
         $fresh = http_get($url);
         if ($fresh) {
             $body = $fresh;

@@ -4,13 +4,31 @@ $list = fn($v) => array_values(array_filter(is_array($v) ? $v : [], fn($x) => $x
 $url = fn($s) => preg_match('#^https://#', (string)$s) ? (string)$s : null;
 $txt = function ($v): string { return is_array($v) ? implode(' · ', array_map('strval', array_filter($v, 'is_scalar'))) : (string)$v; };
 ?>
+<?php $public = !empty($public); $shareUrl = !$public && !empty($t['share_token']) ? BASE_URL . '/partage/' . $t['share_token'] : ''; ?>
 <header class="head">
   <div>
-    <div class="eyebrow"><a href="/voyages">Voyages</a> · <?= e($t['duration']) ?></div>
+    <div class="eyebrow"><?php if ($public): ?>Voyage partagé<?php else: ?><a href="/voyages">Voyages</a><?php endif; ?> · <?= e($t['duration']) ?></div>
     <h1><?= e($t['destination']) ?></h1>
     <?php if (!empty($d['summary'])): ?><div class="date" style="max-width:70ch"><?= e($d['summary']) ?></div><?php endif; ?>
   </div>
+  <div class="head-actions no-print">
+    <button type="button" class="btn" data-print>Télécharger en PDF</button>
+    <?php if (!$public): ?><button type="button" class="btn btn-primary" data-share-toggle aria-expanded="false" aria-controls="tripShare">Lien de partage</button><?php endif; ?>
+  </div>
 </header>
+<?php if (!$public): ?>
+<div class="panel trip-share no-print" id="tripShare" hidden data-trip="<?= (int)$t['id'] ?>">
+  <div class="sec-h flat"><h3>Partager ce voyage</h3></div>
+  <p class="muted small">Toute personne qui a le lien peut consulter ce voyage, sans compte et en lecture seule. Vous pouvez le désactiver à tout moment.</p>
+  <div class="trip-share-row" <?= $shareUrl ? '' : 'hidden' ?>>
+    <label for="shareUrl" class="sr">Lien de partage</label>
+    <input class="input mono" id="shareUrl" readonly value="<?= e($shareUrl) ?>">
+    <button type="button" class="btn" data-copy-share>Copier</button>
+    <button type="button" class="btn-link" data-share-off>Désactiver le lien</button>
+  </div>
+  <button type="button" class="btn btn-primary" data-share-on <?= $shareUrl ? 'hidden' : '' ?>>Créer le lien</button>
+</div>
+<?php endif; ?>
 
 <div class="grid">
   <?php if (!empty($d['best_period'])): ?>
@@ -47,13 +65,15 @@ $txt = function ($v): string { return is_array($v) ? implode(' · ', array_map('
   <?php if ($days = $list($d['days'] ?? [])): ?>
   <section class="col-8">
     <div class="sec-h"><h2>Programme jour par jour</h2></div>
-    <ol class="trip-days">
+    <div class="trip-acc-tools no-print"><button type="button" class="btn-link" data-acc="open">Tout déplier</button> · <button type="button" class="btn-link" data-acc="close">Tout replier</button></div>
+    <div class="trip-days acc">
       <?php foreach ($days as $i => $day): ?>
-      <li><div class="cal"><b><?= (int)($day['day'] ?? $i + 1) ?></b><span>jour</span></div>
-        <div><div class="t"><?= e($day['title'] ?? '') ?></div>
-          <ul><?php foreach ($list($day['items'] ?? []) as $it): ?><li><?= e($txt($it)) ?></li><?php endforeach; ?></ul></div></li>
+      <details class="trip-day"<?= $i === 0 ? ' open' : '' ?>>
+        <summary><span class="cal"><b><?= (int)($day['day'] ?? $i + 1) ?></b><span>jour</span></span><span class="t"><?= e($day['title'] ?? '') ?></span><span class="chev" aria-hidden="true"></span></summary>
+        <ul><?php foreach ($list($day['items'] ?? []) as $it): ?><li><?= e($txt($it)) ?></li><?php endforeach; ?></ul>
+      </details>
       <?php endforeach; ?>
-    </ol>
+    </div>
   </section>
   <?php endif; ?>
 

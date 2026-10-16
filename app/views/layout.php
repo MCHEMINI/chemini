@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=22">
+<link rel="stylesheet" href="/assets/app.css?v=24">
 </head>
 <body>
 <div id="app">
@@ -48,7 +48,7 @@
       <?php endif; ?>
       <?= $grp('Personnel', 'perso', [$u]) ?>
       <a class="<?= $cls('perso') ?>" href="/espace"><?= avatar($u, 'sm') ?>Mon espace</a>
-      <a href="/espace#assistant" class="nav-ia"><i class="dot"></i>Tâches IA<?php $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nIa): ?> <span class="nav-n"><?= $nIa ?></span><?php endif; ?></a>
+      <a href="/assistant" class="nav-ia <?= $cls('ia') ?>"><i class="dot"></i>Tâches IA<?php $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nIa): ?> <span class="nav-n"><?= $nIa ?></span><?php endif; ?></a>
       <div class="group">Compte</div>
       <a class="<?= $cls('secu') ?>" href="/securite"><i class="dot"></i>Sécurité</a>
     </nav>
@@ -70,12 +70,12 @@
         <select class="input" id="iaSpace" name="space"><?php foreach (consigne_spaces($u) as $k => $l): ?><option value="<?= e($k) ?>"><?= e($l) ?></option><?php endforeach; ?></select>
         <button class="btn btn-primary">Envoyer</button>
       </div>
-      <p class="muted small">Visible par vous seul · <a href="/espace#assistant">voir mes consignes</a></p>
+      <p class="muted small">Visible par vous seul · <a href="/assistant">voir mes Tâches IA</a></p>
     </form>
   </div>
   <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Tâches IA : donner une consigne"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=15"></script>
+<script src="/assets/app.js?v=17"></script>
 </body>
 </html>

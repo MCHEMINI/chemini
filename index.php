@@ -24,7 +24,7 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
-if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes)$#', $route0, $m)) ingest_handle($m[1]);
+if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 
@@ -50,8 +50,10 @@ try {
             require APP_DIR . '/pages/perso.php';
             page_perso($u);
         case 'assistant':
+        case 'assistant/historique':
             $u = require_user();
             require APP_DIR . '/pages/assistant.php';
+            if ($route === 'assistant/historique') page_assistant_history($u);
             page_assistant($u);
         case 'immeubles':
             $u = require_user();
@@ -123,6 +125,10 @@ try {
                 $u = require_user();
                 require APP_DIR . '/pages/immeubles.php';
                 page_building($u, $m[1]);
+            }
+            if (preg_match('#^partage/([A-Za-z0-9_-]{24,64})$#', $route, $m)) {
+                require APP_DIR . '/pages/trips.php';
+                page_trip_public($m[1]);
             }
             if (preg_match('#^voyages/(\d+)$#', $route, $m)) {
                 $u = require_user();
