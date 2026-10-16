@@ -132,6 +132,26 @@ function ingest_handle(string $kind): never {
         $send(['ok' => true] + $n);
     }
     if ($kind === 'compta') {
+        $id = compta_store($d);
+        $send(['ok' => true, 'id' => $id, 'url' => BASE_URL . '/comptabilite']);
+    }
+    if ($kind === 'audit') {
+        $period = $str($d['period'] ?? '', 7);
+        if (!preg_match('/^\d{4}-\d{2}$/', $period) || $str($d['headline'] ?? '', 300) === '') $send(['error' => 'period (AAAA-MM) et headline requis'], 400);
+        $kindA = in_array($d['kind'] ?? 'honoraires', ['honoraires'], true) ? 'honoraires' : 'honoraires';
+        q('INSERT INTO audits(kind,period,headline,data,created_at) VALUES(?,?,?,?,?) ON CONFLICT(kind,period) DO UPDATE SET headline=excluded.headline, data=excluded.data, created_at=excluded.created_at',
+          [$kindA, $period, $str($d['headline'], 300), json_encode($d, JSON_UNESCAPED_UNICODE), time()]);
+        $id = (int)q('SELECT id FROM audits WHERE kind=? AND period=?', [$kindA, $period])->fetchColumn();
+        q('DELETE FROM audit_reads WHERE audit_id=?', [$id]);
+        $send(['ok' => true, 'id' => $id, 'url' => BASE_URL . '/honoraires#opti']);
+    }
+    $send(['error' => 'type inconnu'], 404);
+}
+
+
+/** Enregistre un contrôle comptable (données uniquement, affichées échappées). */
+function compta_store(array $d): int {
+    $str = fn($v, int $max) => mb_substr(trim((string)($v ?? '')), 0, $max);
         $period = $str($d['period'] ?? date('Y-m-d'), 40);
         $clean = function (array $rows, array $fields) use ($str): array {
             $out = [];
@@ -151,17 +171,20 @@ function ingest_handle(string $kind): never {
             'factures' => $clean((array)($d['factures'] ?? []), ['id' => 120, 'comptable' => 80, 'code' => 10, 'immeuble' => 200, 'fournisseur' => 160, 'date' => 20, 'montant' => 0, 'reference' => 80, 'source' => 200, 'detail' => 600]),
         ];
         q('INSERT INTO compta_runs(period,data,created_at) VALUES(?,?,?)', [$period, json_encode($data, JSON_UNESCAPED_UNICODE), time()]);
-        $send(['ok' => true, 'id' => (int)db()->lastInsertId(), 'url' => BASE_URL . '/comptabilite']);
-    }
-    if ($kind === 'audit') {
-        $period = $str($d['period'] ?? '', 7);
-        if (!preg_match('/^\d{4}-\d{2}$/', $period) || $str($d['headline'] ?? '', 300) === '') $send(['error' => 'period (AAAA-MM) et headline requis'], 400);
-        $kindA = in_array($d['kind'] ?? 'honoraires', ['honoraires'], true) ? 'honoraires' : 'honoraires';
-        q('INSERT INTO audits(kind,period,headline,data,created_at) VALUES(?,?,?,?,?) ON CONFLICT(kind,period) DO UPDATE SET headline=excluded.headline, data=excluded.data, created_at=excluded.created_at',
-          [$kindA, $period, $str($d['headline'], 300), json_encode($d, JSON_UNESCAPED_UNICODE), time()]);
-        $id = (int)q('SELECT id FROM audits WHERE kind=? AND period=?', [$kindA, $period])->fetchColumn();
-        q('DELETE FROM audit_reads WHERE audit_id=?', [$id]);
-        $send(['ok' => true, 'id' => $id, 'url' => BASE_URL . '/honoraires#opti']);
-    }
-    $send(['error' => 'type inconnu'], 404);
+    return (int)db()->lastInsertId();
+}
+
+/** Données ImmOpen relevées par Claude, livrées chiffrées dans le dépôt (app/seed/immopen.enc), chargées une seule fois par version. */
+function immopen_sync(): void {
+    $f = APP_DIR . '/seed/immopen.enc';
+    if (!is_file($f)) return;
+    $plain = unseal(trim((string)file_get_contents($f)));
+    if ($plain === null) return;
+    $plain = @gzdecode($plain) ?: $plain;
+    $d = json_decode($plain, true);
+    if (!is_array($d) || empty($d['id'])) return;
+    if ((string)q("SELECT v FROM kv WHERE k='immopen_seed'")->fetchColumn() === $d['id']) return;
+    if (!empty($d['compta'])) compta_store($d['compta']);
+    if (!empty($d['ag']['rows'])) q("INSERT INTO kv(k,v,updated_at) VALUES('ag_planning',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode($d['ag'], JSON_UNESCAPED_UNICODE), time()]);
+    q("INSERT INTO kv(k,v,updated_at) VALUES('immopen_seed',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [$d['id'], time()]);
 }

@@ -420,3 +420,13 @@ document.addEventListener('click', e => { const tr = e.target.closest('tr[data-h
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 })();
+
+/* Planning des AG : filtres gestionnaire / statut */
+(function(){ const g = document.getElementById('agG'), s = document.getElementById('agS'); if (!g) return;
+  const apply = () => { document.querySelectorAll('.ag-group').forEach(sec => {
+      const okG = !g.value || sec.dataset.g === g.value; let any = false;
+      sec.querySelectorAll('tbody tr').forEach(tr => { const v = s.value, ok = !v || (v === 'alerte' ? tr.dataset.a === '1' : tr.dataset.s === v); tr.hidden = !ok; any = any || ok; });
+      sec.hidden = !okG || !any; });
+    try { localStorage.setItem('gid_ag', JSON.stringify([g.value, s.value])); } catch (e) {} };
+  try { const v = JSON.parse(localStorage.getItem('gid_ag') || '[]'); if (v[0] && [...g.options].some(o => o.value === v[0])) g.value = v[0]; if (v[1]) s.value = v[1]; } catch (e) {}
+  g.addEventListener('change', apply); s.addEventListener('change', apply); apply(); })();

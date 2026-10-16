@@ -63,6 +63,10 @@ try {
             $u = require_user();
             require APP_DIR . '/pages/trips.php';
             page_trips($u);
+        case 'planning-ag':
+            $u = require_user();
+            require APP_DIR . '/pages/ag.php';
+            page_ag($u);
         case 'comptabilite':
             $u = require_user();
             require APP_DIR . '/pages/compta.php';

@@ -38,7 +38,7 @@ ksort($byC);
 <div class="summary">
   <div><div class="n <?= count($openA) ? 'crit' : '' ?>"><?= count($openA) ?></div><div class="l">Incohérences à traiter</div></div>
   <div><div class="n"><?= count($openF) ?></div><div class="l">Factures manquantes</div></div>
-  <div><div class="n"><?= $fmt0(array_sum(array_column($openF, 'montant'))) ?> €</div><div class="l">Montant des factures manquantes</div></div>
+  <div><div class="n"><?= $fmt0(array_sum(array_filter(array_column($openF, 'montant'), 'is_numeric'))) ?> €</div><div class="l">Montant des factures manquantes</div></div>
   <div><div class="n"><?= count($d['by_comptable'] ?? []) ?></div><div class="l">Comptables contrôlés</div></div>
 </div>
 <?php if (!empty($d['summary'])): ?><p class="cp-sum"><?= nl2br(e($d['summary'])) ?></p><?php endif; ?>

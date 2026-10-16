@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 function page_compta(array $u): never {
     if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'La comptabilité est réservée à la Direction.'], false); }
+    immopen_sync();
     $run = q('SELECT * FROM compta_runs ORDER BY created_at DESC LIMIT 1')->fetch() ?: null;
     $d = $run ? (json_decode($run['data'], true) ?: []) : [];
     $done = array_flip(q('SELECT k FROM compta_done')->fetchAll(PDO::FETCH_COLUMN));

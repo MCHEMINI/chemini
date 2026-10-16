@@ -428,3 +428,12 @@ a.row-a:hover strong{text-decoration:underline;text-underline-offset:3px}
 .ia-done .t{color:var(--muted)}
 .ia-result{margin-top:8px;padding:10px 12px;border-left:2px solid var(--ok);background:var(--ok-bg);border-radius:4px;font-size:14px;white-space:normal;overflow-wrap:anywhere}
 .ia-list .t{overflow-wrap:anywhere}
+
+/* Planning des AG */
+.ag-legend{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-8px 0 24px}
+.ag-group{margin-bottom:36px}
+.ag-tbl td.r,.ag-tbl th.r{text-align:right}
+.ag-tbl tr.ag-alert td:first-child{box-shadow:inset 3px 0 0 #C0412F}
+.ag-flag{display:inline-block;margin:2px 6px 2px 0;padding:2px 8px;border-radius:99px;font-size:.85em;background:var(--bg-2,rgba(0,0,0,.04))}
+.ag-flag.crit{background:rgba(192,65,47,.12);color:#A3362A}.ag-flag.warn{background:rgba(208,138,30,.14);color:#8A5A10}.ag-flag.ok{color:#3F7A50}
+[data-theme=dark] .ag-flag.crit{color:#F09A8D}[data-theme=dark] .ag-flag.warn{color:#E8B866}
