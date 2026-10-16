@@ -85,6 +85,8 @@
     '.ha-check-c h4{margin:0 0 6px;font-size:13.5px}.ha-check-c ul{margin:0;padding-left:18px;font-size:13px;display:grid;gap:3px;max-height:220px;overflow:auto}',
     '.ha-i{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:6px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);background:none;font:italic 600 10px/1 Georgia,serif;cursor:pointer;vertical-align:1px;padding:0}.ha-i:hover{background:var(--accent);color:#fff}',
     '.ha-htv{width:min(640px,100%);max-height:85vh;overflow:auto}.ha-htv-ag{margin:14px 0 6px}.ha-htv-none{margin:0 0 8px!important;font-size:.9em}.ha-htv-t{width:100%;border-collapse:collapse;font-size:.88em;margin-bottom:6px}.ha-htv-t th,.ha-htv-t td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left}.ha-htv-t .r{text-align:right;white-space:nowrap}',
+    '.tabpop{display:contents}.tabpop-btn{display:none}',
+    '@media (max-width:820px){.tabpop{display:block;position:relative;margin:6px 0 10px}.tabpop-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 14px;border:1px solid var(--line,#ddd);border-radius:10px;background:var(--surface,#fff);color:var(--text,#111);font:inherit;font-weight:600;cursor:pointer}.tabpop-btn svg{width:18px!important;height:18px!important;flex:none}.tabpop.open .tabpop-btn svg{transform:rotate(180deg)}.tabpop>nav.tabs{display:none!important}.tabpop.open>nav.tabs{display:flex!important;flex-direction:column;position:absolute;z-index:50;top:calc(100% + 6px);left:0;right:0;padding:6px;border:1px solid var(--line,#ddd);border-radius:12px;background:var(--surface,#fff);box-shadow:0 14px 40px rgba(0,0,0,.18)}.tabpop.open>nav.tabs button{text-align:left;padding:12px;border:0;border-radius:8px;font-size:15px}.tabpop.open>nav.tabs button[aria-selected=true]{background:var(--line,#eee)}}',
     '.ha-dlg-bd{position:fixed;inset:0;z-index:2000;background:rgba(10,12,16,.45);display:grid;place-items:center;padding:16px}',
     '.ha-dlg{background:var(--surface);color:var(--text);border-radius:10px;padding:22px 24px;width:min(460px,100%);box-shadow:0 20px 60px rgba(0,0,0,.3)}',
     '.ha-dlg h3{margin:0 0 8px;font-size:1.1em}.ha-dlg p{margin:0 0 18px;color:var(--text-2)}.ha-dlg-r{display:flex;gap:10px;justify-content:flex-end}',
@@ -336,6 +338,18 @@
     function kd(e) { if (e.key === 'Escape') { e.stopPropagation(); close(); } }
     ok.onclick = close; bd.addEventListener('click', function (e) { if (e.target === bd) close(); }); document.addEventListener('keydown', kd, true);
   }
+  /* Mobile : onglets du tableau regroupés dans un menu déroulant */
+  (function tabPop() {
+    var list = document.querySelector('nav.tabs'); if (!list || list.parentNode.classList.contains('tabpop')) return;
+    var wrap = h('div', 'tabpop'), btn = h('button', 'tabpop-btn'); btn.type = 'button'; btn.setAttribute('aria-haspopup', 'true');
+    list.parentNode.insertBefore(wrap, list); wrap.appendChild(btn); wrap.appendChild(list);
+    function sync() { var bs = [].slice.call(list.querySelectorAll('button')), t = bs.filter(function (b) { return b.getAttribute('aria-selected') === 'true'; })[0] || bs[0]; btn.textContent = t ? t.textContent.trim() : ''; btn.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'); }
+    btn.addEventListener('click', function (e) { e.stopPropagation(); wrap.classList.toggle('open'); });
+    list.addEventListener('click', function () { setTimeout(function () { sync(); wrap.classList.remove('open'); }, 0); });
+    document.addEventListener('click', function (e) { if (!wrap.contains(e.target)) wrap.classList.remove('open'); });
+    new MutationObserver(sync).observe(list, { subtree: true, attributes: true, attributeFilter: ['aria-selected'] });
+    sync();
+  })();
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('.ha-i'); if (!b) return; e.preventDefault(); e.stopPropagation(); pvDetail(b.dataset.code, b.dataset.ex); }, true);
   /* Colonnes ajoutées au tableau (calculées, non modifiables) */
   var EXTRA = [];

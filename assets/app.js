@@ -57,6 +57,35 @@
     try { localStorage.setItem('gid_rail', closed ? 'open' : 'closed'); } catch (_) {}
   }));
 
+  /* ---------- Mobile : menu burger ---------- */
+  const burger = $('[data-burger]');
+  if (burger) {
+    const setNav = (open) => { document.documentElement.classList.toggle('nav-open', open); burger.setAttribute('aria-expanded', open ? 'true' : 'false'); burger.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu'); };
+    burger.addEventListener('click', () => setNav(!document.documentElement.classList.contains('nav-open')));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.documentElement.classList.contains('nav-open')) setNav(false); });
+    $$('.rail nav a').forEach(a => a.addEventListener('click', () => setNav(false)));
+    matchMedia('(min-width:821px)').addEventListener('change', (m) => { if (m.matches) setNav(false); });
+  }
+
+  /* ---------- Mobile : onglets regroupés dans un menu déroulant ---------- */
+  const mqTabs = matchMedia('(max-width:820px)');
+  $$('main [role="tablist"]').forEach((list) => {
+    const tabs = () => [...list.querySelectorAll('[role="tab"]')];
+    if (tabs().length < 2) return;
+    const wrap = document.createElement('div'); wrap.className = 'tabpop';
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'tabpop-btn'; btn.setAttribute('aria-haspopup', 'true'); btn.setAttribute('aria-expanded', 'false');
+    list.parentNode.insertBefore(wrap, list); wrap.appendChild(btn); wrap.appendChild(list);
+    const isOn = (t) => t.getAttribute('aria-selected') === 'true' || t.classList.contains('on') || t.classList.contains('active');
+    const sync = () => { const t = tabs().find(isOn) || tabs()[0]; btn.textContent = ''; const l = document.createElement('span'); l.textContent = t.textContent.replace(/\s+/g, ' ').trim(); btn.appendChild(l); btn.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'); };
+    const close = () => { wrap.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); };
+    btn.addEventListener('click', (e) => { e.stopPropagation(); const o = !wrap.classList.contains('open'); wrap.classList.toggle('open', o); btn.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+    list.addEventListener('click', (e) => { if (e.target.closest('[role="tab"]')) setTimeout(() => { sync(); close(); }, 0); });
+    document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) close(); });
+    new MutationObserver(sync).observe(list, { subtree: true, attributes: true, attributeFilter: ['class', 'aria-selected'] });
+    sync();
+    mqTabs.addEventListener('change', close);
+  });
+
   /* ---------- base64url <-> ArrayBuffer ---------- */
   const b64uToBuf = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0)).buffer;
   const bufToB64u = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
