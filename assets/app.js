@@ -37,6 +37,13 @@
   }));
   markTheme();
 
+  /* ---------- Menu latéral masquable ---------- */
+  $$('[data-rail-toggle]').forEach(b => b.addEventListener('click', () => {
+    const closed = document.documentElement.dataset.rail === 'closed';
+    if (closed) delete document.documentElement.dataset.rail; else document.documentElement.dataset.rail = 'closed';
+    try { localStorage.setItem('gid_rail', closed ? 'open' : 'closed'); } catch (_) {}
+  }));
+
   /* ---------- base64url <-> ArrayBuffer ---------- */
   const b64uToBuf = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0)).buffer;
   const bufToB64u = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');

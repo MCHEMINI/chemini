@@ -95,6 +95,23 @@ PRAGMA user_version = 5;
 SQL);
         seed_from_encrypted($pdo);
     }
+    if ($v < 6) {
+        seed_doc($pdo, 'honoraires', 'famille');
+        $pdo->exec('PRAGMA user_version = 6');
+    }
+}
+
+/** Outil HTML chiffré dans le dépôt : mis en place (ou remplacé) en gardant les modifications de l'équipe. */
+function seed_doc(PDO $pdo, string $slug, string $space): void {
+    $f = APP_DIR . '/seed/' . $slug . '.enc';
+    if (!is_file($f)) return;
+    $html = unseal(trim((string)file_get_contents($f)));
+    if ($html === null) return;
+    $key = preg_match('/STORE_KEY\s*=\s*["\']([^"\']+)["\']/', $html, $m) ? $m[1] : null;
+    $title = preg_match('/<title>(.*?)<\/title>/is', $html, $m) ? trim(html_entity_decode(strip_tags($m[1]))) : $slug;
+    $pdo->prepare('INSERT INTO docs(slug,title,html,store_key,space,updated_at,updated_by) VALUES(?,?,?,?,?,?,NULL)
+       ON CONFLICT(slug) DO UPDATE SET title=excluded.title, html=excluded.html, store_key=excluded.store_key, updated_at=excluded.updated_at')
+        ->execute([$slug, $title, $html, $key, $space, time()]);
 }
 
 /**

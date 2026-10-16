@@ -1,5 +1,5 @@
 <?php $err = $_GET['erreur'] ?? null; ?>
-<header class="head doc-head">
+<?php if (!$doc): ?><header class="head doc-head">
   <div>
     <div class="eyebrow">Espace <?= e($spaceName) ?></div>
     <h1><?= e($title) ?></h1>
@@ -10,20 +10,13 @@
       <?php else: ?>Partagé avec les membres de l'espace <?= e($spaceName) ?><?php endif; ?>
     </div>
   </div>
-  <?php if ($doc): ?>
-  <div class="head-actions">
-    <a class="btn btn-ghost" href="/<?= e($slug) ?>/vue" target="_blank" rel="noopener">Plein écran</a>
-    <button class="btn btn-ghost" type="button" data-open="dlgImport">Remplacer le fichier</button>
-  </div>
-  <?php endif; ?>
-</header>
+</header><?php endif; ?>
 
 <?php if ($err): ?><p class="form-error" style="margin-bottom:16px">
   <?= $err === 'format' ? 'Ce fichier n\'est pas une page HTML.' : ($err === 'session' ? 'Session expirée, réessayez.' : 'Fichier refusé (8 Mo maximum).') ?></p><?php endif; ?>
 
 <?php if ($doc): ?>
-  <div class="doc-frame"><iframe src="/<?= e($slug) ?>/vue" title="<?= e($title) ?>"></iframe></div>
-  <p class="muted small" style="margin-top:10px">Les modifications sont enregistrées pour tous les membres de l'espace <?= e($spaceName) ?>. Si deux personnes modifient en même temps, la dernière enregistrée l'emporte.</p>
+  <div class="doc-frame full"><iframe src="/<?= e($slug) ?>/vue" title="<?= e($title) ?>"></iframe></div>
 <?php else: ?>
   <div class="empty"><strong>Aucun tableau importé.</strong>Importez le fichier HTML du tableau des honoraires : il sera visible et modifiable par les membres de l'espace <?= e($spaceName) ?>.
     <form class="import-form" method="post" action="/<?= e($slug) ?>/import" enctype="multipart/form-data">

@@ -6,13 +6,13 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="csrf" content="<?= e($_SESSION['csrf']) ?>">
 <meta name="theme-color" content="#121720">
-<script src="/assets/theme.js?v=1"></script>
+<script src="/assets/theme.js?v=2"></script>
 <title><?= e($title ?? '') ?> · <?= e(APP_NAME) ?></title>
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=6">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/app.css?v=7">
 </head>
 <body>
 <div id="login">

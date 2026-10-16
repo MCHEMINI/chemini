@@ -19,7 +19,7 @@ function page_doc(array $u, string $slug): never {
     $doc = doc_get($slug);
     if (!can_space($u, doc_space($doc))) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Cette section est réservée à un autre espace.'], false); }
     $state = $doc ? q('SELECT s.updated_at, u.name AS by_name FROM doc_state s LEFT JOIN users u ON u.id=s.updated_by WHERE slug=?', [$slug])->fetch() : null;
-    render('doc', ['title' => DOCS[$slug], 'spaceName' => SPACES[doc_space($doc)], 'nav' => $slug, 'u' => $u, 'slug' => $slug, 'doc' => $doc, 'state' => $state ?: null]);
+    render('doc', ['title' => DOCS[$slug], 'wide' => true, 'spaceName' => SPACES[doc_space($doc)], 'nav' => $slug, 'u' => $u, 'slug' => $slug, 'doc' => $doc, 'state' => $state ?: null]);
 }
 
 function doc_import(array $u, string $slug): never {
@@ -51,7 +51,11 @@ function doc_view(array $u, string $slug): never {
     $shim = <<<JS
 <script>
 (function(){
-  var C = $cfg; if(!C.key) return;
+  var C = $cfg;
+  function theme(){ var t='light'; try{ t=localStorage.getItem('gid_theme')||'light'; }catch(e){}
+    if (t==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'light'); }
+  theme(); window.addEventListener('storage', function(e){ if(e.key==='gid_theme') theme(); });
+  if(!C.key) return;
   var S = Storage.prototype, set = S.setItem, del = S.removeItem, t = null;
   try { if (C.state !== null) set.call(localStorage, C.key, C.state); else del.call(localStorage, C.key); } catch(e) {}
   function send(body){
