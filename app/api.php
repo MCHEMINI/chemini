@@ -256,6 +256,13 @@ function api(string $r): never {
             json_out(['ok' => true]);
 
         /* Outils partagés : état commun */
+        case 'prefs/set': // préférences d'affichage de l'utilisateur connecté uniquement
+            $k = in_str('k', 40);
+            if (!in_array($k, PREF_KEYS, true)) json_out(['error' => 'Préférence inconnue'], 400);
+            $v = json_encode(body()['v'] ?? null, JSON_UNESCAPED_UNICODE);
+            if (strlen($v) > 4000) json_out(['error' => 'Trop long'], 400);
+            q('INSERT INTO user_prefs(user_id,k,v,updated_at) VALUES(?,?,?,?) ON CONFLICT(user_id,k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at', [$uid, $k, $v, time()]);
+            json_out(['ok' => true]);
         case 'doc/state':
             $slug = in_str('slug', 40);
             $dsp = q('SELECT space FROM docs WHERE slug=?', [$slug])->fetchColumn();

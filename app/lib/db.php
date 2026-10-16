@@ -160,6 +160,21 @@ CREATE INDEX IF NOT EXISTS consignes_user ON consignes(user_id, status);
 PRAGMA user_version = 13;
 SQL);
     }
+    if ($v < 14) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS user_prefs (user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, k TEXT NOT NULL,
+  v TEXT NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY(user_id, k));
+PRAGMA user_version = 14;
+SQL);
+    }
+}
+
+/** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
+const PREF_KEYS = ['hono_cols', 'ha_year'];
+function user_prefs(int $uid): array {
+    $o = [];
+    foreach (q('SELECT k, v FROM user_prefs WHERE user_id=?', [$uid])->fetchAll() as $r) $o[$r['k']] = json_decode($r['v'], true);
+    return $o;
 }
 
 /** Dernier audit d'un type (ex. honoraires), décodé. */

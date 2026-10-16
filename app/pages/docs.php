@@ -54,6 +54,8 @@ function doc_view(array $u, string $slug): never {
     $cfg = json_encode([
         'slug' => $slug, 'key' => $doc['store_key'], 'state' => $state === false ? null : $state, 'csrf' => $_SESSION['csrf'], 'ro' => !doc_can_edit($u, $slug),
         'audit' => $slug === 'honoraires' ? (($a = audit_latest('honoraires')) ? $a['d'] + ['_at' => (int)$a['created_at']] : null) : null,
+        'annexes' => $slug === 'honoraires' ? annexes_data() : null,
+        'prefs' => user_prefs((int)$u['id']),
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
     $shim = <<<JS
 <script>
@@ -83,6 +85,7 @@ function doc_view(array $u, string $slug): never {
     w.appendChild(st); box.insertBefore(w, box.firstChild);
   }
   window.addEventListener('load', function(){ renderAudit(); setTimeout(goTab, 0); });
+  window.GID_C = C;
   /* Lecture seule : champs verrouillés, boutons d'édition masqués, aucun enregistrement envoyé */
   if (C.ro) {
     var css=document.createElement('style'); css.textContent='#addImm,#addContr,button.del,#menuPop [data-act=import],#menuPop [data-act=reset],#importFile,#saveState{display:none!important}#immTbl input,#contrTbl input{pointer-events:none;background:transparent!important;border-color:transparent!important}.gid-ro{margin:0 0 12px;padding:9px 14px;border:1px solid var(--line,#ddd);border-radius:8px;font-size:13px;color:var(--text-2)}';
@@ -109,6 +112,11 @@ function doc_view(array $u, string $slug): never {
 </script>
 JS;
     $html = $doc['html'];
+    if ($slug === 'honoraires') { // honoraires annexes + colonnes au choix : script exécuté après celui du document
+        $extra = '<script>' . str_replace('</', '<\\/', (string)file_get_contents(APP_DIR . '/pages/hono_extra.js')) . '</script>';
+        $i = strripos($html, '</body>');
+        $html = $i !== false ? substr_replace($html, $extra, $i, 0) : $html . $extra;
+    }
     $html = str_replace(['dans ce navigateur', 'Effacer toutes vos modifications'], ['pour toute l\'équipe', 'Effacer les modifications de toute l\'équipe'], $html);
     $html = preg_match('/<head[^>]*>/i', $html) ? preg_replace('/<head[^>]*>/i', '$0' . $shim, $html, 1) : $shim . $html;
 

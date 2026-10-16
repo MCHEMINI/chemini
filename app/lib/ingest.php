@@ -79,6 +79,11 @@ function ingest_handle(string $kind): never {
           [$status, $result, time(), $status, time(), $status, time(), $id]);
         $send(['ok' => true, 'id' => $id, 'status' => $status]);
     }
+    if ($kind === 'annexes') { // relevé ImmOpen des honoraires annexes : {at, source, cats:[{acc,k,l}], years:{"2026-2027":{end, partial, b:{code:{catIndex:montant}}}}}
+        $d['id'] = 'ingest-' . date('YmdHis');
+        if (!annexes_store($d)) $send(['error' => 'cats / years manquants'], 400);
+        $send(['ok' => true, 'years' => array_keys($d['years'])]);
+    }
     if ($kind === 'veille') {
         $week = $str($d['week'] ?? date('o-\\WW'), 12);
         $n = 0;
@@ -175,6 +180,34 @@ function compta_store(array $d): int {
 }
 
 /** Données ImmOpen relevées par Claude, livrées chiffrées dans le dépôt (app/seed/immopen.enc), chargées une seule fois par version. */
+/** Honoraires annexes (fournisseurs GID … dans ImmOpen) : crédits par immeuble et par exercice (1er avril → 31 mars). */
+function annexes_store(array $d): bool {
+    if (empty($d['cats']) || empty($d['years']) || !is_array($d['years'])) return false;
+    q("INSERT INTO kv(k,v,updated_at) VALUES('hono_annexes',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode($d, JSON_UNESCAPED_UNICODE), time()]);
+    return true;
+}
+function annexes_sync(): void {
+    $f = APP_DIR . '/seed/annexes.enc';
+    if (!is_file($f)) return;
+    $plain = unseal(trim((string)file_get_contents($f)));
+    if ($plain === null) return;
+    $d = json_decode(@gzdecode($plain) ?: $plain, true);
+    if (!is_array($d) || empty($d['id'])) return;
+    if ((string)q("SELECT v FROM kv WHERE k='annexes_seed'")->fetchColumn() === $d['id']) return;
+    $cur = json_decode((string)q("SELECT v FROM kv WHERE k='hono_annexes'")->fetchColumn(), true);
+    if (!is_array($cur) || ($cur['at'] ?? '') <= ($d['at'] ?? '')) annexes_store($d); // ne remplace jamais un relevé plus récent
+    q("INSERT INTO kv(k,v,updated_at) VALUES('annexes_seed',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [$d['id'], time()]);
+}
+function annexes_data(): ?array {
+    annexes_sync();
+    $d = json_decode((string)q("SELECT v FROM kv WHERE k='hono_annexes'")->fetchColumn(), true);
+    if (!is_array($d)) return null;
+    $names = [];
+    foreach (q('SELECT code, label FROM buildings')->fetchAll() as $b) $names[$b['code']] = $b['label'];
+    $d['names'] = $names;
+    return $d;
+}
+
 function immopen_sync(): void {
     $f = APP_DIR . '/seed/immopen.enc';
     if (!is_file($f)) return;
