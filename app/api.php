@@ -155,6 +155,7 @@ function api(string $r): never {
     if (!$u) json_out(['error' => 'Session expirée, reconnectez-vous.'], 401);
     $uid = (int)$u['id'];
 
+    if (preg_match('#^(items|deadlines)/#', $r) && !can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
     switch ($r) {
         case 'trust':
             if (body()['trust'] ?? false) { trust_this_device($uid); audit($uid, 'device_trusted'); }
@@ -260,6 +261,8 @@ function api(string $r): never {
             $dsp = q('SELECT space FROM docs WHERE slug=?', [$slug])->fetchColumn();
             if ($dsp === false) json_out(['error' => 'Document inconnu'], 404);
             if (!can_space($u, $dsp)) json_out(['error' => 'Accès refusé.'], 403);
+            require_once APP_DIR . '/pages/docs.php';
+            if (!doc_can_edit($u, $slug)) json_out(['error' => 'Lecture seule : seul Mehdi Chemini peut modifier ce tableau.'], 403);
             if (body()['reset'] ?? false) { q('DELETE FROM doc_state WHERE slug=?', [$slug]); json_out(['ok' => true]); }
             $json = (string)(body()['json'] ?? '');
             if (strlen($json) > 6_000_000 || json_decode($json) === null) json_out(['error' => 'Données invalides'], 400);

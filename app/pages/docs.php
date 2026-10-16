@@ -8,6 +8,12 @@ declare(strict_types=1);
  */
 
 const DOCS = ['honoraires' => 'Honoraires'];
+/** Seules ces personnes peuvent modifier le document ; les autres membres de l'espace le consultent en lecture seule. */
+const DOC_EDITORS = ['honoraires' => ['mchemini@gidsas.fr']];
+
+function doc_can_edit(array $u, string $slug): bool {
+    return !isset(DOC_EDITORS[$slug]) || in_array(strtolower($u['email']), DOC_EDITORS[$slug], true);
+}
 
 function doc_get(string $slug): ?array {
     return q('SELECT d.*, u.name AS by_name FROM docs d LEFT JOIN users u ON u.id=d.updated_by WHERE slug=?', [$slug])->fetch() ?: null;
@@ -23,7 +29,7 @@ function page_doc(array $u, string $slug): never {
 }
 
 function doc_import(array $u, string $slug): never {
-    if (!can_space($u, doc_space(doc_get($slug)))) { http_response_code(403); exit; }
+    if (!can_space($u, doc_space(doc_get($slug))) || !doc_can_edit($u, $slug)) { http_response_code(403); exit; }
     if (!hash_equals($_SESSION['csrf'] ?? '', (string)($_POST['csrf'] ?? ''))) redirect("/$slug?erreur=session");
     $f = $_FILES['file'] ?? null;
     if (!$f || $f['error'] !== UPLOAD_ERR_OK || $f['size'] > 8_000_000) redirect("/$slug?erreur=fichier");
@@ -46,7 +52,7 @@ function doc_view(array $u, string $slug): never {
     if (!can_space($u, doc_space($doc))) { http_response_code(403); exit; }
     $state = q('SELECT json FROM doc_state WHERE slug=?', [$slug])->fetchColumn();
     $cfg = json_encode([
-        'slug' => $slug, 'key' => $doc['store_key'], 'state' => $state === false ? null : $state, 'csrf' => $_SESSION['csrf'],
+        'slug' => $slug, 'key' => $doc['store_key'], 'state' => $state === false ? null : $state, 'csrf' => $_SESSION['csrf'], 'ro' => !doc_can_edit($u, $slug),
         'audit' => $slug === 'honoraires' ? (($a = audit_latest('honoraires')) ? $a['d'] + ['_at' => (int)$a['created_at']] : null) : null,
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
     $shim = <<<JS
@@ -77,6 +83,16 @@ function doc_view(array $u, string $slug): never {
     w.appendChild(st); box.insertBefore(w, box.firstChild);
   }
   window.addEventListener('load', function(){ renderAudit(); setTimeout(goTab, 0); });
+  /* Lecture seule : champs verrouillés, boutons d'édition masqués, aucun enregistrement envoyé */
+  if (C.ro) {
+    var css=document.createElement('style'); css.textContent='#addImm,#addContr,button.del,#menuPop [data-act=import],#menuPop [data-act=reset],#importFile,#saveState{display:none!important}#immTbl input,#contrTbl input{pointer-events:none;background:transparent!important;border-color:transparent!important}.gid-ro{margin:0 0 12px;padding:9px 14px;border:1px solid var(--line,#ddd);border-radius:8px;font-size:13px;color:var(--text-2)}';
+    document.head.appendChild(css);
+    var lock=function(){ document.querySelectorAll('#immTbl input,#contrTbl input').forEach(function(i){ i.readOnly=true; i.tabIndex=-1; }); };
+    window.addEventListener('DOMContentLoaded', function(){
+      lock(); new MutationObserver(lock).observe(document.body,{childList:true,subtree:true});
+      var t=document.querySelector('nav.tabs'); if(t){ var b=document.createElement('div'); b.className='gid-ro'; b.textContent='Lecture seule : seul Mehdi Chemini peut modifier ce tableau.'; t.parentNode.insertBefore(b,t); }
+    });
+  }
   if(!C.key) return;
   var S = Storage.prototype, set = S.setItem, del = S.removeItem, t = null;
   try { if (C.state !== null) set.call(localStorage, C.key, C.state); else del.call(localStorage, C.key); } catch(e) {}
@@ -87,8 +103,8 @@ function doc_view(array $u, string $slug): never {
       var el = document.getElementById('saveState'); if (el) { el.textContent = 'Échec de l’enregistrement partagé'; el.className = 'save-state dirty'; }
     });
   }
-  S.setItem = function(k, v){ set.call(this, k, v); if (this === localStorage && k === C.key) { clearTimeout(t); t = setTimeout(function(){ send({slug:C.slug, json:String(v)}); }, 600); } };
-  S.removeItem = function(k){ del.call(this, k); if (this === localStorage && k === C.key) send({slug:C.slug, reset:true}); };
+  S.setItem = function(k, v){ set.call(this, k, v); if (this === localStorage && k === C.key && !C.ro) { clearTimeout(t); t = setTimeout(function(){ send({slug:C.slug, json:String(v)}); }, 600); } };
+  S.removeItem = function(k){ del.call(this, k); if (this === localStorage && k === C.key && !C.ro) send({slug:C.slug, reset:true}); };
 })();
 </script>
 JS;
