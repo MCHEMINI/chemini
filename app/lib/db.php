@@ -144,6 +144,13 @@ INSERT OR IGNORE INTO kv(k,v,updated_at) VALUES('immopen_at','2026-10-16',strfti
 PRAGMA user_version = 11;
 SQL);
     }
+    if ($v < 12) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS compta_runs (id INTEGER PRIMARY KEY, period TEXT NOT NULL, data TEXT NOT NULL, created_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS compta_done (k TEXT PRIMARY KEY, user_id INTEGER, done_at INTEGER NOT NULL);
+PRAGMA user_version = 12;
+SQL);
+    }
 }
 
 /** Dernier audit d'un type (ex. honoraires), décodé. */

@@ -308,7 +308,7 @@
 
   /* ---------- Application : actions génériques ---------- */
   // Boutons / cases à cocher [data-api][data-id], confirmation en deux clics si data-confirm
-  $$('[data-api][data-id], button[data-api]:not(form [data-api])').forEach(el => {
+  $$('[data-api][data-id], [data-api][data-k], button[data-api]:not(form [data-api])').forEach(el => {
     if (el.tagName === 'FORM') return;
     const ev = el.type === 'checkbox' ? 'change' : 'click';
     el.addEventListener(ev, async () => {
@@ -318,7 +318,7 @@
         return;
       }
       el.disabled = true;
-      try { await api(el.dataset.api, { id: Number(el.dataset.id || 0) }); location.reload(); }
+      try { await api(el.dataset.api, el.dataset.k ? { k: el.dataset.k } : { id: Number(el.dataset.id || 0) }); location.reload(); }
       catch (err) { el.disabled = false; toast(err.message); }
     });
   });
@@ -402,3 +402,9 @@
 /* Lignes cliquables (annuaire des immeubles) */
 document.addEventListener('click', e => { const tr = e.target.closest('tr[data-href]'); if (!tr || e.target.closest('a,button,input,select,textarea')) return;
   if (e.metaKey || e.ctrlKey) window.open(tr.dataset.href, '_blank'); else location.href = tr.dataset.href; });
+
+/* Comptabilité : filtre par comptable */
+(function(){ const sel = document.getElementById('cpF'); if (!sel) return;
+  const apply = () => { const v = sel.value; document.querySelectorAll('[data-cp]').forEach(el => { el.hidden = !!v && el.dataset.cp !== v; }); try { localStorage.setItem('gid_cp', v); } catch (e) {} };
+  try { const v = localStorage.getItem('gid_cp'); if (v && [...sel.options].some(o => o.value === v)) sel.value = v; } catch (e) {}
+  sel.addEventListener('change', apply); apply(); })();

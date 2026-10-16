@@ -300,6 +300,12 @@ function api(string $r): never {
             if ($t === '' || !q('SELECT 1 FROM buildings WHERE code=?', [$code])->fetchColumn()) json_out(['error' => 'Note vide.'], 422);
             q('INSERT INTO building_events(code,at,kind,title,user_id,created_at) VALUES(?,?,?,?,?,?)', [$code, time(), 'note', $t, $uid, time()]);
             json_out(['ok' => true]);
+        case 'compta/done':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Accès refusé.'], 403);
+            $k = in_str('k', 64);
+            if (q('SELECT 1 FROM compta_done WHERE k=?', [$k])->fetchColumn()) q('DELETE FROM compta_done WHERE k=?', [$k]);
+            else q('INSERT INTO compta_done(k,user_id,done_at) VALUES(?,?,?)', [$k, $uid, time()]);
+            json_out(['ok' => true]);
         case 'audit/read':
             q('INSERT OR IGNORE INTO audit_reads(user_id,audit_id,read_at) VALUES(?,?,?)', [$uid, in_int('id'), time()]);
             json_out(['ok' => true]);

@@ -112,6 +112,28 @@ function ingest_handle(string $kind): never {
         }
         $send(['ok' => true] + $n);
     }
+    if ($kind === 'compta') {
+        $period = $str($d['period'] ?? date('Y-m-d'), 40);
+        $clean = function (array $rows, array $fields) use ($str): array {
+            $out = [];
+            foreach (array_slice($rows, 0, 2000) as $r) {
+                if (!is_array($r)) continue;
+                $o = [];
+                foreach ($fields as $f => $max) $o[$f] = is_numeric($r[$f] ?? null) && $max === 0 ? (float)$r[$f] : $str($r[$f] ?? '', $max ?: 40);
+                $o['k'] = hash('sha256', json_encode([$r['id'] ?? '', $o['code'] ?? '', $o['montant'] ?? '', $o['date'] ?? '', $o['piece'] ?? ($o['reference'] ?? ''), $o['fournisseur'] ?? ($o['type'] ?? '')]));
+                $out[] = $o;
+            }
+            return $out;
+        };
+        $data = [
+            'period' => $period, 'source' => $str($d['source'] ?? '', 300), 'summary' => $str($d['summary'] ?? '', 2000),
+            'by_comptable' => $clean((array)($d['by_comptable'] ?? []), ['name' => 80, 'immeubles' => 0, 'ecritures' => 0, 'anomalies' => 0, 'factures_manquantes' => 0, 'montant_manquant' => 0, 'note' => 400]),
+            'anomalies' => $clean((array)($d['anomalies'] ?? []), ['id' => 120, 'comptable' => 80, 'code' => 10, 'immeuble' => 200, 'date' => 20, 'piece' => 60, 'compte' => 40, 'montant' => 0, 'type' => 120, 'detail' => 600, 'severity' => 10]),
+            'factures' => $clean((array)($d['factures'] ?? []), ['id' => 120, 'comptable' => 80, 'code' => 10, 'immeuble' => 200, 'fournisseur' => 160, 'date' => 20, 'montant' => 0, 'reference' => 80, 'source' => 200, 'detail' => 600]),
+        ];
+        q('INSERT INTO compta_runs(period,data,created_at) VALUES(?,?,?)', [$period, json_encode($data, JSON_UNESCAPED_UNICODE), time()]);
+        $send(['ok' => true, 'id' => (int)db()->lastInsertId(), 'url' => BASE_URL . '/comptabilite']);
+    }
     if ($kind === 'audit') {
         $period = $str($d['period'] ?? '', 7);
         if (!preg_match('/^\d{4}-\d{2}$/', $period) || $str($d['headline'] ?? '', 300) === '') $send(['error' => 'period (AAAA-MM) et headline requis'], 400);

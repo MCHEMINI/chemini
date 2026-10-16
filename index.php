@@ -24,7 +24,7 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
-if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings)$#', $route0, $m)) ingest_handle($m[1]);
+if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 
@@ -63,6 +63,10 @@ try {
             $u = require_user();
             require APP_DIR . '/pages/trips.php';
             page_trips($u);
+        case 'comptabilite':
+            $u = require_user();
+            require APP_DIR . '/pages/compta.php';
+            page_compta($u);
         case 'honoraires':
         case 'honoraires/vue':
         case 'honoraires/import':

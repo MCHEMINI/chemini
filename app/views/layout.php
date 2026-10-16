@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=13">
+<link rel="stylesheet" href="/assets/app.css?v=14">
 </head>
 <body>
 <div id="app">
@@ -30,6 +30,7 @@
       <div class="group">Direction</div>
       <a class="<?= $cls('space-direction') ?>" href="/direction"><i class="dot"></i>Espace Direction</a>
       <a class="<?= $cls('honoraires') ?>" href="/honoraires"><i class="dot"></i>Honoraires</a>
+      <a class="<?= $cls('compta') ?>" href="/comptabilite"><i class="dot"></i>Comptabilité</a>
       <?php endif; ?>
       <?php if (in_array('famille', $sp, true)): ?>
       <div class="group">Famille</div>
@@ -48,6 +49,6 @@
   <main class="<?= !empty($wide) ? 'wide' : '' ?>"><div class="page-tools"><div class="fs-switch" role="group" aria-label="Taille du texte"><button type="button" data-fs="-1" aria-label="Réduire le texte">A−</button><span data-fs-val>100 %</span><button type="button" data-fs="1" aria-label="Agrandir le texte">A+</button></div></div><?= $content ?></main>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=10"></script>
+<script src="/assets/app.js?v=11"></script>
 </body>
 </html>
