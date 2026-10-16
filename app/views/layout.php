@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=20">
+<link rel="stylesheet" href="/assets/app.css?v=21">
 </head>
 <body>
 <div id="app">
@@ -57,7 +57,23 @@
   </aside>
   <main class="<?= !empty($wide) ? 'wide' : '' ?>"><div class="page-tools"><div class="fs-switch" role="group" aria-label="Taille du texte"><button type="button" data-fs="-1" aria-label="Réduire le texte">A−</button><span data-fs-val>100 %</span><button type="button" data-fs="1" aria-label="Agrandir le texte">A+</button></div></div><?= $content ?></main>
 </div>
+<div class="ia-fab-wrap">
+  <div class="ia-pop panel" id="iaPop" hidden role="dialog" aria-labelledby="iaPopT">
+    <div class="sec-h flat"><h3 id="iaPopT">Nouvelle consigne</h3><button type="button" class="btn-link" data-ia-close aria-label="Fermer">✕</button></div>
+    <form data-api="consignes/create" data-toast="Consigne envoyée : l'assistant la traitera au prochain passage horaire." class="ia-form">
+      <label for="iaBody" class="sr">Consigne</label>
+      <textarea class="input" id="iaBody" name="body" maxlength="4000" rows="4" placeholder="Décrivez ce que l'assistant doit faire…" required></textarea>
+      <div class="ia-form-row">
+        <label for="iaPrio" class="small muted">Priorité</label>
+        <select class="input" id="iaPrio" name="priority"><?php foreach (CONSIGNE_PRIO as $k => $l): ?><option value="<?= e($k) ?>"<?= $k === 'normale' ? ' selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?></select>
+        <button class="btn btn-primary">Envoyer</button>
+      </div>
+      <p class="muted small">Visible par vous seul · <a href="/espace#assistant">voir mes consignes</a></p>
+    </form>
+  </div>
+  <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Assistant IA : donner une consigne"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=13"></script>
+<script src="/assets/app.js?v=14"></script>
 </body>
 </html>

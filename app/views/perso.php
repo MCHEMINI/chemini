@@ -8,38 +8,16 @@
 
 <div class="grid">
   <section class="col-12" id="assistant">
-    <div class="sec-h"><h2>Assistant IA</h2><span class="muted small">Consignes vérifiées et traitées toutes les heures · <span class="chip todo">À faire</span> <span class="chip warn">En cours</span> <span class="chip ok">Fait</span></span></div>
-    <div class="panel">
-      <form data-api="consignes/create" class="ia-form">
-        <label for="new-consigne" class="sr">Nouvelle consigne</label>
-        <textarea class="input" id="new-consigne" name="body" maxlength="4000" rows="3" placeholder="Décrivez ce que l'assistant doit faire…" required></textarea>
-        <div class="ia-form-row">
-          <label for="new-prio" class="small muted">Priorité</label>
-          <select class="input" id="new-prio" name="priority">
-            <?php foreach (CONSIGNE_PRIO as $k => $l): ?><option value="<?= e($k) ?>"<?= $k === 'normale' ? ' selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?>
-          </select>
-          <button class="btn btn-primary">Envoyer</button>
-        </div>
-      </form>
-      <p class="form-error" hidden></p>
-      <?php if (!$consignes): ?>
-        <p class="muted">Aucune consigne pour l'instant.</p>
-      <?php else: ?>
-      <ul class="list ia-list">
-        <?php foreach ($consignes as $c): $st = $c['status']; ?>
-        <li class="ia-<?= e($st) ?>">
-          <i class="ia-dot" aria-hidden="true"></i>
-          <div>
-            <div class="t"><?= nl2br(e($c['body'])) ?></div>
-            <div class="d">Priorité <?= e(mb_strtolower(CONSIGNE_PRIO[$c['priority']] ?? '')) ?> · déposée : <?= e(mb_strtolower(ago((int)$c['created_at']))) ?><?= $st === 'done' && $c['done_at'] ? ' · faite : ' . e(mb_strtolower(ago((int)$c['done_at']))) : '' ?></div>
-            <?php if (!empty($c['result'])): ?><div class="ia-result"><?= nl2br(e($c['result'])) ?></div><?php endif; ?>
-          </div>
-          <div class="meta"><span class="chip <?= $st === 'done' ? 'ok' : ($st === 'doing' ? 'warn' : 'todo') ?>"><?= e(CONSIGNE_STATUS[$st] ?? $st) ?></span>
-            <?php if ($st !== 'doing'): ?><button type="button" class="btn-link" data-api="consignes/delete" data-id="<?= (int)$c['id'] ?>" data-confirm="Supprimer ?">Supprimer</button><?php endif; ?></div>
-        </li>
-        <?php endforeach; ?>
-      </ul>
-      <?php endif; ?>
+    <div class="sec-h"><h2>Assistant IA</h2><span class="muted small">Vos consignes, visibles par vous seul · vérifiées et traitées toutes les heures · nouvelle consigne : pastille en bas à droite</span></div>
+    <div class="ia-board">
+      <?php foreach ([['todo', 'En attente', $ia_todo], ['doing', 'En cours', $ia_doing], ['done', 'Fait', $ia_done]] as [$k, $label, $list]): ?>
+      <div class="panel ia-col ia-col-<?= $k ?>">
+        <div class="sec-h flat"><h3><i class="ia-pt" aria-hidden="true"></i><?= $label ?></h3><span class="chip <?= $k === 'done' ? 'ok' : ($k === 'doing' ? 'warn' : 'todo') ?>"><?= $k === 'done' ? $ia_done_n : count($list) ?></span></div>
+        <?php if (!$list): ?><p class="muted small"><?= $k === 'todo' ? 'Aucune consigne en attente.' : ($k === 'doing' ? 'Rien en cours.' : 'Aucune consigne faite.') ?></p>
+        <?php else: ?><ul class="list ia-list"><?php foreach ($list as $c) include __DIR__ . '/_ia_item.php'; ?></ul><?php endif; ?>
+        <?php if ($k === 'done' && $ia_done_n > 10): ?><a class="btn-link ia-more" href="/assistant">Voir plus (<?= $ia_done_n - 10 ?> plus anciennes) →</a><?php endif; ?>
+      </div>
+      <?php endforeach; ?>
     </div>
   </section>
 

@@ -323,6 +323,14 @@
     });
   });
 
+  // Pastille Assistant IA (toutes les pages)
+  const iaFab = $('#iaFab'), iaPop = $('#iaPop');
+  if (iaFab && iaPop) {
+    const setIa = open => { iaPop.hidden = !open; iaFab.setAttribute('aria-expanded', String(open)); if (open) $('#iaBody')?.focus(); };
+    iaFab.addEventListener('click', () => setIa(iaPop.hidden));
+    $('[data-ia-close]', iaPop)?.addEventListener('click', () => setIa(false));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !iaPop.hidden) { setIa(false); iaFab.focus(); } });
+  }
   // Formulaires [data-api]
   $$('form[data-api]').forEach(f => f.addEventListener('submit', async e => {
     e.preventDefault();
@@ -336,6 +344,11 @@
         const box = $('.invite-link', f); box.hidden = false; $('#iv-link').value = r.link;
         if (btn) btn.disabled = false;
         return;
+      }
+      if (f.dataset.toast && location.pathname !== '/espace') {
+        f.reset(); if (btn) btn.disabled = false;
+        const pop = f.closest('[role=dialog]'); if (pop) { pop.hidden = true; $('#iaFab')?.setAttribute('aria-expanded', 'false'); }
+        toast(f.dataset.toast); return;
       }
       location.reload();
     } catch (err) {

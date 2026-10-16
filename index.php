@@ -49,6 +49,10 @@ try {
             $u = require_user();
             require APP_DIR . '/pages/perso.php';
             page_perso($u);
+        case 'assistant':
+            $u = require_user();
+            require APP_DIR . '/pages/assistant.php';
+            page_assistant($u);
         case 'immeubles':
             $u = require_user();
             require APP_DIR . '/pages/immeubles.php';
