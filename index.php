@@ -22,6 +22,7 @@ require APP_DIR . '/lib/president.php';
 require APP_DIR . '/lib/guides.php';
 require APP_DIR . '/lib/wp.php';
 require APP_DIR . '/lib/stats.php';
+require APP_DIR . '/lib/news.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -68,6 +69,14 @@ try {
         case 'installer':
             $u = require_user();
             render('install', ['title' => 'Installer sur iPhone', 'nav' => 'install', 'u' => $u]);
+        case 'actualites':
+        case 'actualites/syndic':
+        case 'actualites/copro':
+        case 'actualites/transaction':
+        case 'actualites/locatif':
+        case 'actualites/archives':
+            $u = require_user();
+            page_news($u, (string)substr($route, 11));
         case 'tableau-de-bord':
             $u = require_user();
             require APP_DIR . '/pages/dashboard.php';

@@ -392,6 +392,14 @@ SQL);
         foreach ($seed as $i => $g) if ($g[0] === 'immopen-nouveau-tiers') $pdo->prepare('INSERT OR IGNORE INTO guides(slug,cat,icon,title,summary,duration,level,body,pos,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)')->execute([$g[0], $g[1], $g[2], $g[3], $g[4], $g[5], $g[6], $g[7], $i, time(), time()]);
         $pdo->exec('PRAGMA user_version = 49;');
     }
+    if ($v < 50) { // Actualités par rubrique (syndic, copropriété, achat-vente, gestion locative), 30 jours puis archives
+        $pdo->exec("CREATE TABLE IF NOT EXISTS news_items(id INTEGER PRIMARY KEY, url TEXT NOT NULL UNIQUE, title TEXT NOT NULL, source TEXT, date TEXT NOT NULL, summary TEXT, why TEXT, cat TEXT NOT NULL, important INTEGER NOT NULL DEFAULT 0, origin TEXT, created_at INTEGER NOT NULL);
+                    CREATE INDEX IF NOT EXISTS news_cat_date ON news_items(cat, date)");
+        $dg = json_decode((string)$pdo->query("SELECT v FROM kv WHERE k='news_digest'")->fetchColumn(), true);
+        $ins = $pdo->prepare('INSERT OR IGNORE INTO news_items(url,title,source,date,summary,why,cat,important,origin,created_at) VALUES(?,?,?,?,?,?,?,0,?,?)');
+        foreach ((array)($dg['items'] ?? []) as $i) if (!empty($i['url']) && !empty($i['title'])) $ins->execute([$i['url'], $i['title'], $i['source'] ?? '', preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($i['date'] ?? '')) ? $i['date'] : date('Y-m-d'), $i['summary'] ?? '', $i['why'] ?? '', news_guess_cat($i['title'] . ' ' . ($i['summary'] ?? '')), 'digest', time()]);
+        $pdo->exec('PRAGMA user_version = 50;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

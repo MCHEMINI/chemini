@@ -99,8 +99,9 @@ $svg = fn($n) => '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" st
       <?php if ($pw = $D['pw']): ?><b class="hm-t"><?= e($pw['title']) ?></b><span class="hm-s"><?= e(pw_month_label($pw['month'])) ?></span><?php else: ?><span class="hm-s">Premier mot le 1er novembre</span><?php endif; ?></a>
     <a class="hm-card" href="/gid"><span class="hm-ic"><?= $svg('news') ?></span><span class="hm-l">Informations</span>
       <?php if ($D['board']): ?><ul class="hm-mini"><?php foreach ($D['board'] as $b): ?><li><?= e(mb_strimwidth((string)$b['title'], 0, 60, '…')) ?></li><?php endforeach; ?></ul><?php else: ?><span class="hm-s">Aucune information</span><?php endif; ?></a>
-    <a class="hm-card hm-wide" href="/tableau-de-bord"><span class="hm-ic"><?= $svg('news') ?></span><span class="hm-l">Actualités du métier<?= !empty($D['digest']['date']) ? ' · ' . e(date('d/m', strtotime($D['digest']['date']))) : '' ?></span>
-      <?php if (!empty($D['digest']['items'])): ?><ul class="hm-mini"><?php foreach (array_slice($D['digest']['items'], 0, 3) as $n): ?><li><?= e(mb_strimwidth((string)$n['title'], 0, 90, '…')) ?> <small><?= e((string)$n['source']) ?></small></li><?php endforeach; ?></ul><?php else: ?><span class="hm-s">Synthèse chaque matin de semaine</span><?php endif; ?></a>
+    <?php $nb = news_blocks(); $nImp = array_sum(array_column($nb, 'imp')); ?>
+    <a class="hm-card hm-wide" href="/actualites"><span class="hm-ic"><?= $svg('news') ?></span><span class="hm-l">Actualités du métier<?= $nImp ? ' · <span class="nw-imp"><i></i>' . $nImp . ' important' . ($nImp > 1 ? 's' : '') . '</span>' : '' ?></span>
+      <span class="hm-news"><?php foreach (NEWS_CATS as $k => $c): ?><span><b><?= (int)$nb[$k]['n'] ?></b><?= e($c[0]) ?><?= $nb[$k]['imp'] ? ' <i class="nw-dot" aria-label="Important"></i>' : '' ?></span><?php endforeach; ?></span></a>
   </div>
 </section>
 

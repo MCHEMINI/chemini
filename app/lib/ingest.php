@@ -172,15 +172,17 @@ function ingest_handle(string $kind): never {
         if (count($rows) < 5) $send(['error' => 'liste incomplète (moins de 5 personnes) : rien n\'est archivé'], 400);
         $send(['ok' => true] + staff_sync($rows));
     }
-    if ($kind === 'news') { // synthèse quotidienne des actualités : {date:"AAAA-MM-JJ", items:[{title, source, url, date, summary, why}]}
+    if ($kind === 'news') { // synthèse quotidienne : {date:"AAAA-MM-JJ", items:[{title, source, url, date, summary, why, cat:"syndic|copro|transaction|locatif", important:true|false}]}
         $items = [];
-        foreach (array_slice((array)($d['items'] ?? []), 0, 12) as $i) {
+        foreach (array_slice((array)($d['items'] ?? []), 0, 40) as $i) {
             $url = (string)($i['url'] ?? '');
             if (!preg_match('#^https?://#', $url) || trim((string)($i['title'] ?? '')) === '') continue;
             $items[] = ['title' => mb_substr((string)$i['title'], 0, 220), 'source' => mb_substr((string)($i['source'] ?? ''), 0, 80), 'url' => $url,
-                        'date' => mb_substr((string)($i['date'] ?? ''), 0, 10), 'summary' => mb_substr((string)($i['summary'] ?? ''), 0, 900), 'why' => mb_substr((string)($i['why'] ?? ''), 0, 400)];
+                        'date' => mb_substr((string)($i['date'] ?? ''), 0, 10), 'summary' => mb_substr((string)($i['summary'] ?? ''), 0, 900), 'why' => mb_substr((string)($i['why'] ?? ''), 0, 400),
+                        'cat' => (string)($i['cat'] ?? ''), 'important' => !empty($i['important'])];
         }
         if (!$items) $send(['error' => 'aucun article'], 400);
+        $stored = news_store($items, 'digest'); // rubriques : syndic, copro, transaction, locatif ; important : true/false
         q("INSERT INTO kv(k,v,updated_at) VALUES('news_digest',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode(['date' => (string)($d['date'] ?? date('Y-m-d')), 'at' => time(), 'items' => $items], JSON_UNESCAPED_UNICODE), time()]);
         $send(['ok' => true, 'n' => count($items)]);
     }

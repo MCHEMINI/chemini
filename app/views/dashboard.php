@@ -77,34 +77,9 @@
   </section>
 
   <section class="col-5">
-    <?php $dg = $digest && !empty($digest['items']) ? $digest : null; ?>
-    <div class="sec-h"><h2>Dernières actualités</h2><span class="muted small">Synthèse du lundi au vendredi à 8 h<?= $dg ? ' · ' . e(date_short(strtotime($dg['date']))) : '' ?></span></div>
-    <?php if ($dg): ?>
-    <div class="nd">
-      <?php foreach (array_slice($dg['items'], 0, 8) as $n): ?>
-      <article>
-        <span class="eyebrow"><?= e($n['source']) ?><?= $n['date'] ? ' · ' . e(date_short(strtotime($n['date']))) : '' ?></span>
-        <h3><?= e($n['title']) ?></h3>
-        <?php if ($n['summary']): ?><p><?= e($n['summary']) ?></p><?php endif; ?>
-        <?php if ($n['why']): ?><p class="nd-why"><strong>Pour GID :</strong> <?= e($n['why']) ?></p><?php endif; ?>
-        <a class="more" href="<?= e($n['url']) ?>" target="_blank" rel="noopener">Lire sur <?= e($n['source'] ?: 'le site') ?> →</a>
-      </article>
-      <?php endforeach; ?>
-    </div>
-    <?php elseif (!$news): ?>
-      <div class="empty"><strong>Actualités indisponibles.</strong>La synthèse arrive du lundi au vendredi à 8 h.</div>
-    <?php else: ?>
-    <div class="news one">
-      <?php foreach (array_slice($news, 0, 8) as $n): ?>
-      <article>
-        <span class="eyebrow"><?= e($n['source']) ?></span>
-        <h3><a href="<?= e($n['link']) ?>" target="_blank" rel="noopener"><?= e($n['title']) ?></a></h3>
-        <?php if ($n['summary']): ?><p><?= e($n['summary']) ?></p><?php endif; ?>
-        <span class="src"><?= $n['date'] ? e(ago($n['date'])) : '' ?></span>
-      </article>
-      <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
+    <div class="sec-h"><h2>Actualités du métier</h2><a href="/actualites">Toutes les actualités</a></div>
+    <div class="nw-col"><?php $cur = null; $blocks = news_blocks(); require __DIR__ . '/_news_blocks.php'; ?></div>
+    <p class="muted small">Synthèse du lundi au vendredi à 8 h · articles des 30 derniers jours · <a href="/actualites/archives">archives</a></p>
   </section>
 
 </div>
