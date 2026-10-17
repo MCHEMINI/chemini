@@ -684,15 +684,15 @@ function fabBurst(el) { const r = el.getBoundingClientRect(), box = document.cre
       f.querySelector('#fabT').value = ''; b.disabled = false; toast(nm === 'Moi' ? '✅ Tâche ajoutée à votre liste' : '🚀 Tâche affectée à ' + nm); }
     catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });
 })();
-/* Barre latérale : sections repliables (mémorisé) */
-(function(){ const nav = document.getElementById('railNav'); if (!nav) return; let st = {}; try { st = JSON.parse(localStorage.getItem('railGroups') || '{}'); } catch (e) {}
+/* Barre latérale : sections repliables (mémorisé) ; par défaut seule Perso est ouverte */
+(function(){ const nav = document.getElementById('railNav'); if (!nav) return; let st = {}; try { st = JSON.parse(localStorage.getItem('railGroups2') || '{}'); } catch (e) {}
   nav.querySelectorAll('.group').forEach(g => { const id = (g.querySelector('[data-grp]') || {}).dataset?.grp || g.textContent.trim(); const items = [];
     let n = g.nextElementSibling; while (n && !n.classList.contains('group')) { if (n.tagName === 'A') items.push(n); n = n.nextElementSibling; }
     const lbl = g.querySelector('span'); lbl.setAttribute('role', 'button'); lbl.tabIndex = 0; lbl.classList.add('grp-t');
     const hasActive = items.some(a => a.classList.contains('active'));
     const set = c => { g.classList.toggle('closed', c); items.forEach(a => a.classList.toggle('grp-hide', c)); lbl.setAttribute('aria-expanded', String(!c)); };
-    set(!!st[id] && !hasActive);
-    const tog = () => { const c = !g.classList.contains('closed'); set(c); st[id] = c; try { localStorage.setItem('railGroups', JSON.stringify(st)); } catch (e) {} };
+    set((id in st ? st[id] : id !== 'perso') && !hasActive);
+    const tog = () => { const c = !g.classList.contains('closed'); set(c); st[id] = c; try { localStorage.setItem('railGroups2', JSON.stringify(st)); } catch (e) {} };
     lbl.addEventListener('click', tog); lbl.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
   });
 })();

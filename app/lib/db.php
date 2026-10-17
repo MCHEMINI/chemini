@@ -326,6 +326,17 @@ SQL);
         }
         $pdo->exec('PRAGMA user_version = 38;');
     }
+    if ($v < 39) { // Guides : 6 procédures ImmOpen de plus (aide intégrée) + balance fournisseurs et synthèse factures corrigées, sans écraser une version modifiée
+        $seed = is_file(APP_DIR . '/seed/guides.php') ? require APP_DIR . '/seed/guides.php' : [];
+        $up = $pdo->prepare('UPDATE guides SET title=?, summary=?, duration=?, level=?, body=?, updated_at=? WHERE slug=? AND updated_by IS NULL');
+        $ins = $pdo->prepare('INSERT OR IGNORE INTO guides(slug,cat,icon,title,summary,duration,level,body,pos,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+        foreach ($seed as $i => [$slug, $cat, $icon, $title, $sum, $dur, $lvl, $body]) {
+            if (!in_array($slug, ['immopen-balance-fournisseurs', 'immopen-synthese-factures', 'immopen-preparer-reglements', 'immopen-recherche-montant', 'immopen-recherche-piece', 'immopen-consulter-compte', 'immopen-contrats', 'immopen-recherche-impayes'], true)) continue;
+            $up->execute([$title, $sum, $dur, $lvl, $body, time(), $slug]);
+            $ins->execute([$slug, $cat, $icon, $title, $sum, $dur, $lvl, $body, $i, time(), time()]);
+        }
+        $pdo->exec('PRAGMA user_version = 39;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
