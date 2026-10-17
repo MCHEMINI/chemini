@@ -82,6 +82,7 @@ function hono_changes(int $since = 0, int $limit = 3000): array {
  * AG tenue le, Remise PV, Hon. 26-27 voté. Ne remplace jamais une valeur saisie.
  */
 function hono_autofill(?array $extra = null): array {
+    hono_split_ags(); // reprise unique AGO / AG spéciales avant de compléter le tableau
     $st = hono_state(); if (!$st || empty($st['bld'])) return ['ok' => false, 'error' => 'tableau vide'];
     $old = $st;
     $y = (int)date('Y'); $sy = (int)date('n') >= 7 ? $y : $y - 1; $from = $sy . '-07-01'; $to = ($sy + 1) . '-06-30';
