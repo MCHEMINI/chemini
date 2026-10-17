@@ -24,7 +24,7 @@ $bar = function (array $rows, string $cls = '') { $max = max($rows ?: [1]) ?: 1;
     <?php $pd = in_array((int)($_GET['p'] ?? 30), [7, 30, 90], true) ? (int)($_GET['p'] ?? 30) : 30; $R = stats_report($pd); $snip = '<script defer src="' . BASE_URL . '/t.js"></script>'; ?>
     <div class="sec-h"><h2>Fréquentation</h2><span class="ws-per"><?php foreach ([7 => '7 jours', 30 => '30 jours', 90 => '90 jours'] as $k => $l): ?><a href="?p=<?= $k ?>#frequentation" class="<?= $pd === $k ? 'on' : '' ?>"><?= $l ?></a><?php endforeach; ?></span></div>
     <?php if (!$R['total']): ?>
-      <p class="muted">La mesure d'audience de Chemini n'est pas encore installée sur le site. Elle fonctionne <b>sans cookie ni service extérieur</b> (aucun bandeau de consentement supplémentaire) : visiteurs, pages et annonces vues, provenance, appareils, appels, e-mails et formulaires envoyés.</p>
+      <p class="muted">La mesure d'audience de Dashboard n'est pas encore installée sur le site. Elle fonctionne <b>sans cookie ni service extérieur</b> (aucun bandeau de consentement supplémentaire) : visiteurs, pages et annonces vues, provenance, appareils, appels, e-mails et formulaires envoyés.</p>
       <ol class="ws-how-l">
         <li>Dans WordPress : <b>Elementor › Code personnalisé › Ajouter</b>, emplacement « &lt;head&gt; », puis collez cette ligne et publiez :</li>
       </ol>
@@ -45,7 +45,7 @@ $bar = function (array $rows, string $cls = '') { $max = max($rows ?: [1]) ?: 1;
         <div><h3>Appareils</h3><?= $bar($R['devices']) ?>
           <?php if ($R['last']): ?><h3>Derniers contacts</h3><ul class="ws-last"><?php foreach ($R['last'] as $l): ?><li><span class="chip neutral"><?= e(STATS_KINDS[$l['kind']] ?? $l['kind']) ?></span> <?= e(date('d/m H:i', (int)$l['ts'])) ?> · <?= e($l['path']) ?></li><?php endforeach; ?></ul><?php endif; ?></div>
       </div>
-      <p class="muted small">Mesure Chemini, sans cookie · dernière visite enregistrée le <?= e(date('d/m/Y à H:i', $R['last_hit'])) ?> · <a href="#" data-copy="<?= e($snip) ?>">copier le code de mesure</a></p>
+      <p class="muted small">Mesure Dashboard, sans cookie · dernière visite enregistrée le <?= e(date('d/m/Y à H:i', $R['last_hit'])) ?> · <a href="#" data-copy="<?= e($snip) ?>">copier le code de mesure</a></p>
     <?php endif; ?>
   </section>
 </div>

@@ -2,7 +2,7 @@
 $val = qa($A, 'valeurs') ?: ['Rigueur', 'Confiance', 'Transparence'];
 $sv = array_merge(($t = qa($A, 'tenue')) ? ['Tenue : ' . $t[0]] : [], qa($A, 'relation'), qa($A, 'vie'));
 $org = array_merge(($h = qa($A, 'horaires')) ? ['Horaires : ' . implode(', ', $h)] : [], ($t = qa($A, 'teletravail')) ? ['Télétravail : ' . implode(', ', $t)] : [], qa($A, 'rituels'));
-$tools = qa($A, 'outils') ?: ['ImmOpen', 'Outlook / Microsoft 365', 'Chemini', 'Immoscope (espace client)'];
+$tools = qa($A, 'outils') ?: ['ImmOpen', 'Outlook / Microsoft 365', 'Dashboard', 'Immoscope (espace client)'];
 $hist = qa($A, 'histoire');
 $slides = [];
 $slides[] = ['cover', ''];
@@ -85,7 +85,7 @@ $n = count($slides);
     <?php break; case 'fin': ?>
       <div class="sl-logo">G</div>
       <p class="sl-sub">Bienvenue dans l'équipe.</p>
-      <p class="sl-foot">Retrouvez l'organigramme, les informations générales et vos tâches dans Chemini.</p>
+      <p class="sl-foot">Retrouvez l'organigramme, les informations générales et vos tâches dans Dashboard.</p>
     <?php break; endswitch; ?>
   </section>
   <?php endforeach; ?>

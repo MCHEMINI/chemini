@@ -1,4 +1,4 @@
-/* Chemini · Honoraires : bloc « Honoraires annexes » (tableau de bord + détail), colonne « Hon. travaux GID »
+/* Dashboard · Honoraires : bloc « Honoraires annexes » (tableau de bord + détail), colonne « Hon. travaux GID »
    dans l'onglet Immeubles, choix des colonnes affichées mémorisé pour chaque utilisateur.
    Exercice comptable : du 1er avril au 31 mars. Le script du document étant encapsulé, on travaille sur le tableau rendu. */
 (function () {

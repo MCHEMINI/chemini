@@ -12,7 +12,7 @@ $radio = function (string $name, array $vals, string $cur = '') { $o = '<div cla
   </div>
 </header>
 <?php if (!$conn): ?>
-<div class="panel ws-empty"><h2>Le site n'est pas encore relié à Chemini</h2><p class="muted">L'administrateur doit d'abord relier le site WordPress (Site Web › Connexion).</p></div>
+<div class="panel ws-empty"><h2>Le site n'est pas encore relié à Dashboard</h2><p class="muted">L'administrateur doit d'abord relier le site WordPress (Site Web › Connexion).</p></div>
 <?php else: ?>
 <form id="naF" class="na-form" novalidate>
   <section class="panel na-sec">

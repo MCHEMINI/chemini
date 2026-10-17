@@ -6,7 +6,7 @@ function http_get(string $url, array $headers = [], int $timeout = 8): ?string {
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 3,
         CURLOPT_TIMEOUT => $timeout, CURLOPT_CONNECTTIMEOUT => 4,
-        CURLOPT_USERAGENT => 'GID-Chemini/1.0 (+' . BASE_URL . ')', CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_USERAGENT => 'GID-Dashboard/1.0 (+' . BASE_URL . ')', CURLOPT_HTTPHEADER => $headers,
     ]);
     $body = curl_exec($ch);
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);

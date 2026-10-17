@@ -22,7 +22,7 @@
   <a class="aa-brand" href="/annonces/" data-go="list"><span class="seal">G</span><span>Annonces</span></a>
   <span class="aa-net" id="aaNet" title="État de la connexion"><i></i><b>En ligne</b></span>
   <button type="button" class="aa-btn" id="aaInstall" hidden>Installer</button>
-  <a class="aa-btn ghost" href="/site-web/annonces" title="Revenir à Chemini">Chemini</a>
+  <a class="aa-btn ghost" href="/site-web/annonces" title="Revenir à Dashboard">Dashboard</a>
 </header>
 <main class="aa-main">
   <div class="aa-banner" id="aaQueue" hidden></div>

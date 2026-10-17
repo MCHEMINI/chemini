@@ -65,7 +65,7 @@ function smtp_send(string $to, string $subj, string $body, array $headers): bool
 function mail_template(string $title, string $intro, string $button, string $link): array {
     $l = htmlspecialchars($link, ENT_QUOTES);
     $html = "<div style=\"font-family:Georgia,serif;max-width:480px;margin:0 auto;padding:32px;color:#151A22\">"
-          . "<p style=\"font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8A6A3B\">GID SAS · Chemini</p>"
+          . "<p style=\"font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8A6A3B\">GID SAS · Dashboard</p>"
           . "<h1 style=\"font-weight:400;font-size:26px\">" . htmlspecialchars($title) . "</h1>"
           . "<p style=\"font-family:Arial,sans-serif;font-size:15px;color:#52514e\">" . htmlspecialchars($intro) . "</p>"
           . "<p><a href=\"$l\" style=\"display:inline-block;background:#151A22;color:#F3F3F0;padding:14px 22px;border-radius:6px;text-decoration:none;font-family:Arial,sans-serif;font-weight:bold\">" . htmlspecialchars($button) . "</a></p>"
@@ -85,6 +85,6 @@ function send_reset_link(array $user, string $link): bool {
 }
 
 function send_invite(string $email, string $name, string $link): bool {
-    [$text, $html] = mail_template('Bienvenue sur Chemini, ' . explode(' ', $name)[0], 'Chemini est la plateforme interne de GID : vos tâches, les informations du cabinet, l\'organigramme. Créez votre accès avec ce lien personnel, valable 30 jours.', 'Créer mon accès', $link);
-    return send_mail($email, 'Votre accès à Chemini · GID', $text, $html);
+    [$text, $html] = mail_template('Bienvenue sur Dashboard, ' . explode(' ', $name)[0], 'Dashboard est la plateforme interne de GID : vos tâches, les informations du cabinet, l\'organigramme. Créez votre accès avec ce lien personnel, valable 30 jours.', 'Créer mon accès', $link);
+    return send_mail($email, 'Votre accès à Dashboard · GID', $text, $html);
 }

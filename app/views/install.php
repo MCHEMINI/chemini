@@ -1,8 +1,8 @@
 <header class="head">
   <div>
     <div class="eyebrow">Perso · application</div>
-    <h1>Chemini sur votre iPhone</h1>
-    <div class="date">Chemini s'installe comme une application : icône sur l'écran d'accueil, plein écran, connexion Face ID, pastille du nombre de tâches. Aucune boutique d'applications : 30 secondes suffisent.</div>
+    <h1>Dashboard sur votre iPhone</h1>
+    <div class="date">Dashboard s'installe comme une application : icône sur l'écran d'accueil, plein écran, connexion Face ID, pastille du nombre de tâches. Aucune boutique d'applications : 30 secondes suffisent.</div>
   </div>
 </header>
 <section class="ins-grid">
@@ -12,8 +12,8 @@
       <li><b>Ouvrez dashboard.gidsas.fr dans Safari</b><span>Pas dans Chrome ni dans Gmail : seul Safari permet l'installation sur iPhone.</span></li>
       <li><b>Touchez le bouton Partager</b><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> en bas de l'écran (en haut sur iPad).</span></li>
       <li><b>Choisissez « Sur l'écran d'accueil »</b><span>Faites défiler la liste si besoin.</span></li>
-      <li><b>Touchez « Ajouter »</b><span>L'icône Chemini apparaît sur votre écran d'accueil.</span></li>
-      <li><b>Ouvrez Chemini depuis l'icône</b><span>Connectez-vous une fois, puis activez Face ID dans Sécurité pour les fois suivantes.</span></li>
+      <li><b>Touchez « Ajouter »</b><span>L'icône Dashboard apparaît sur votre écran d'accueil.</span></li>
+      <li><b>Ouvrez Dashboard depuis l'icône</b><span>Connectez-vous une fois, puis activez Face ID dans Sécurité pour les fois suivantes.</span></li>
     </ol>
   </article>
   <article class="panel ins-card">

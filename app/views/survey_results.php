@@ -16,7 +16,7 @@ $eff = ['', 'rapide', 'moyen', 'important'];
 <div class="sv-part">
   <div class="sv-gauge"><i style="width:<?= $staff ? round($n / $staff * 100) : 0 ?>%"></i></div>
   <span><b><?= $staff ? round($n / $staff * 100) : 0 ?> %</b> de participation</span>
-  <?php if ($pending): ?><details class="sv-pend"><summary><?= count($pending) ?> en attente</summary><p class="muted small"><?= e(implode(', ', array_map(fn($k) => $people[$k]['name'] ?? $k, $pending))) ?></p><p class="muted small">Chacun a la tâche « <?= e(SURVEY_TASK) ?> » dans Collaborateurs. Les collaborateurs sans compte Chemini doivent d'abord être invités (Sécurité › Équipe).</p></details><?php endif; ?>
+  <?php if ($pending): ?><details class="sv-pend"><summary><?= count($pending) ?> en attente</summary><p class="muted small"><?= e(implode(', ', array_map(fn($k) => $people[$k]['name'] ?? $k, $pending))) ?></p><p class="muted small">Chacun a la tâche « <?= e(SURVEY_TASK) ?> » dans Collaborateurs. Les collaborateurs sans compte Dashboard doivent d'abord être invités (Sécurité › Équipe).</p></details><?php endif; ?>
 </div>
 
 <section class="pl-sec">

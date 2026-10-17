@@ -45,7 +45,7 @@ function wp_req(string $method, string $path, array $query = [], ?array $body = 
         CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => false, CURLOPT_TIMEOUT => 15, CURLOPT_CONNECTTIMEOUT => 5,
         CURLOPT_CUSTOMREQUEST => $method, CURLOPT_USERPWD => $c['user'] . ':' . str_replace(' ', '', $c['pass']),
         CURLOPT_HTTPHEADER => ['Accept: application/json', 'Content-Type: application/json'],
-        CURLOPT_USERAGENT => 'GID-Chemini/1.0 (+' . BASE_URL . ')',
+        CURLOPT_USERAGENT => 'GID-Dashboard/1.0 (+' . BASE_URL . ')',
         CURLOPT_HEADERFUNCTION => function ($ch, $h) use (&$hdr) { $p = explode(':', $h, 2); if (count($p) === 2) $hdr[strtolower(trim($p[0]))] = trim($p[1]); return strlen($h); },
     ]);
     if ($body !== null) curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body, JSON_UNESCAPED_UNICODE));
@@ -207,11 +207,11 @@ function wp_ann_legal_html(array $d): string {
 }
 
 
-/* ---------- Fiches d'annonces saisies depuis Chemini (pour les rouvrir et les modifier) ---------- */
+/* ---------- Fiches d'annonces saisies depuis Dashboard (pour les rouvrir et les modifier) ---------- */
 function wp_ann_src(int $id): ?array { $r = q('SELECT data FROM wp_annonces WHERE wp_id=?', [$id])->fetchColumn(); return $r ? (json_decode((string)$r, true) ?: null) : null; }
 function wp_ann_src_save(int $id, array $d, int $uid): void { unset($d['photos']); q('INSERT INTO wp_annonces(wp_id,data,updated_at,updated_by) VALUES(?,?,?,?) ON CONFLICT(wp_id) DO UPDATE SET data=excluded.data, updated_at=excluded.updated_at, updated_by=excluded.updated_by', [$id, json_encode($d, JSON_UNESCAPED_UNICODE), time(), $uid]); }
 
-/** Fiche d'une annonce pour le formulaire : la saisie Chemini si elle existe, sinon ce que WordPress fournit (titre, texte, taxonomies, photo). */
+/** Fiche d'une annonce pour le formulaire : la saisie Dashboard si elle existe, sinon ce que WordPress fournit (titre, texte, taxonomies, photo). */
 function wp_ann_get(int $id): array {
     $r = wp_req('GET', 'wp/v2/annonces/' . $id, ['context' => 'edit', '_fields' => 'id,status,title,content,statuts,types,emplacement,featured_media,link,meta']);
     if ($r['code'] !== 200) return ['error' => $r['error'] ?? ('Annonce introuvable (' . $r['code'] . ')')];

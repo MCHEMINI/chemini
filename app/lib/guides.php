@@ -39,7 +39,7 @@ function guide_inline(string $s): string {
     $s = e($s);
     $s = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $s);
     $s = preg_replace('/`(.+?)`/', '<code>$1</code>', $s);
-    // [[Libellé|/adresse]] : bouton vers une page de Chemini (adresses internes uniquement)
+    // [[Libellé|/adresse]] : bouton vers une page de Dashboard (adresses internes uniquement)
     $s = preg_replace_callback('/\[\[([^|\]]{1,80})\|(\/[a-z0-9\/_#-]{0,80})\]\]/', function ($m) {
         if (preg_match('#^/guides/([a-z0-9-]+)$#', $m[2], $g) && !guide_can_open($g[1])) return ''; // guide réservé à un autre rôle : pas de bouton
         return '<a class="gd-btn" href="' . $m[2] . '">' . $m[1] . ' <span aria-hidden="true">→</span></a>';

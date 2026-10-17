@@ -52,7 +52,7 @@ MD],
 
 ! Sur un poste partagé, notez les filtres d'origine avant de les changer et remettez-les à la fin.
 
-> Astuce : Chemini reprend ce planning chaque mois (Direction › Planning des AG) avec des filtres rapides et l'agenda sur iPhone.
+> Astuce : Dashboard reprend ce planning chaque mois (Direction › Planning des AG) avec des filtres rapides et l'agenda sur iPhone.
 MD],
 ['immopen-fiche-immeuble', 'ImmOpen', '🏢', 'Gérer la fiche d\'un immeuble', 'Rechercher un immeuble, consulter ses informations, lots, clés de répartition, charges, digicodes et bips.', '6 min', 'Débutant', <<<'MD'
 ## Trouver l'immeuble
@@ -91,7 +91,7 @@ MD],
 - Une ligne par immeuble et par fournisseur ; la colonne **Crédit** donne le montant facturé.
 - Les comptes d'honoraires GID : Travaux 400067, Mutations 400002, Relances 400009, Procédures 400044, Sinistres 400016, Vacations AG/CS 400076, Vacations 400012, Comptabilité 400176, Photocopies 400011, Location de salles 400113.
 
-> Astuce : Chemini publie ces totaux par immeuble dans Honoraires › annexes, mis à jour le 1er du mois.
+> Astuce : Dashboard publie ces totaux par immeuble dans Honoraires › annexes, mis à jour le 1er du mois.
 MD],
 ['immopen-synthese-factures', 'ImmOpen', '🔎', 'Suivre les factures en cours', 'Voir où en est chaque facture fournisseur, de la numérisation à la comptabilisation.', '5 min', 'Intermédiaire', <<<'MD'
 ## Afficher les factures
@@ -221,7 +221,7 @@ MD],
 
 > Astuce : les relances facturées sont suivies dans Honoraires (compte 400009).
 MD],
-['chemini-demarrer', 'Chemini · Démarrer', '🧭', 'Chemini selon votre rôle', 'Le point de départ : ce que vous voyez dans Chemini selon votre rôle, et le bon guide pour chaque besoin.', '3 min', 'Débutant', <<<'MD'
+['chemini-demarrer', 'Dashboard · Démarrer', '🧭', 'Dashboard selon votre rôle', 'Le point de départ : ce que vous voyez dans Dashboard selon votre rôle, et le bon guide pour chaque besoin.', '3 min', 'Débutant', <<<'MD'
 ## Ce que vous voyez selon votre rôle
 - **Toute l'équipe :** les sections **Perso** (votre espace privé) et **Équipe** (la vie du cabinet).
 - **Direction :** en plus, la section **Direction** (immeubles, honoraires, comptabilité, pilotage, signatures).
@@ -229,7 +229,7 @@ MD],
 - Les pictos en bas du menu (sécurité, nouveautés, installation, thème) sont pour tout le monde.
 
 ## Par où commencer
-1. **Installez Chemini sur votre iPhone** pour l'ouvrir comme une application. [[Installer sur iPhone|/installer]]
+1. **Installez Dashboard sur votre iPhone** pour l'ouvrir comme une application. [[Installer sur iPhone|/installer]]
 2. **Faites le tour du menu et de la bulle.** [[Guide : se repérer|/guides/chemini-se-reperer]]
 3. **Sécurisez votre connexion** (Face ID, appareils de confiance). [[Guide : connexion et sécurité|/guides/chemini-connexion-securite]]
 4. **Découvrez votre espace Perso.** [[Guide : mon espace Perso|/guides/chemini-perso]]
@@ -243,9 +243,9 @@ MD],
 
 > Astuce : la barre de recherche de la page Guides retrouve un guide par n'importe quel mot (« AG », « facture », « signature »…).
 MD, 'tous'],
-['chemini-se-reperer', 'Chemini · Démarrer', '🗺️', 'Se repérer : menu, onglets et bulle', 'Le menu latéral, les onglets en haut des pages, la bulle de création rapide et les réglages d\'affichage.', '3 min', 'Débutant', <<<'MD'
+['chemini-se-reperer', 'Dashboard · Démarrer', '🗺️', 'Se repérer : menu, onglets et bulle', 'Le menu latéral, les onglets en haut des pages, la bulle de création rapide et les réglages d\'affichage.', '3 min', 'Débutant', <<<'MD'
 ## Le menu
-1. **Les sections se replient.** Touchez le titre d'une section (Perso, Direction, Équipe, Famille) pour l'ouvrir ou la fermer ; Chemini s'en souvient.
+1. **Les sections se replient.** Touchez le titre d'une section (Perso, Direction, Équipe, Famille) pour l'ouvrir ou la fermer ; Dashboard s'en souvient.
 2. **Par défaut, seule Perso est ouverte**, ainsi que la section de la page affichée.
 3. **Le chiffre à droite d'une section** indique combien de personnes y ont accès : touchez-le pour voir la liste.
 4. **Sur iPhone**, le menu s'ouvre avec le bouton ☰ en haut à droite.
@@ -265,7 +265,7 @@ MD, 'tous'],
 
 [[Installer sur iPhone|/installer]] [[Voir les nouveautés|/versioning]]
 MD, 'tous'],
-['chemini-connexion-securite', 'Chemini · Démarrer', '🔐', 'Connexion et sécurité', 'Se connecter, reconnaître ses appareils, utiliser Face ID et se déconnecter proprement.', '4 min', 'Débutant', <<<'MD'
+['chemini-connexion-securite', 'Dashboard · Démarrer', '🔐', 'Connexion et sécurité', 'Se connecter, reconnaître ses appareils, utiliser Face ID et se déconnecter proprement.', '4 min', 'Débutant', <<<'MD'
 ## Se connecter
 1. **Saisissez votre e-mail GID** sur la page de connexion.
 2. **Choisissez votre méthode :** mot de passe puis code à 6 chiffres, Face ID (clé d'accès) ou lien de connexion reçu par e-mail.
@@ -284,9 +284,9 @@ MD, 'tous'],
 
 > Astuce : après plusieurs essais erronés, l'adresse est bloquée 30 minutes ; patientez ou demandez à la Direction.
 MD, 'tous'],
-['chemini-perso', 'Chemini · Perso', '🏠', 'Mon espace Perso', 'Votre tableau de bord, vos mails à traiter, le Mot du Président, vos tâches, vos notes et vos livres.', '4 min', 'Débutant', <<<'MD'
+['chemini-perso', 'Dashboard · Perso', '🏠', 'Mon espace Perso', 'Votre tableau de bord, vos mails à traiter, le Mot du Président, vos tâches, vos notes et vos livres.', '4 min', 'Débutant', <<<'MD'
 ## Tableau de bord
-1. **C'est la page d'accueil de Chemini.** Elle s'adapte à votre rôle et affiche vos compteurs du jour (tâches, mails, AG…).
+1. **C'est la page d'accueil de Dashboard.** Elle s'adapte à votre rôle et affiche vos compteurs du jour (tâches, mails, AG…).
 2. **Chaque bloc mène au détail** : touchez-le pour ouvrir la page correspondante. [[Ouvrir mon tableau de bord|/]]
 
 ## Mails à traiter
@@ -306,7 +306,7 @@ MD, 'tous'],
 
 > Astuce : tout ce qui est dans Perso est privé ; rien n'est visible par vos collègues sauf une tâche que vous choisissez de partager.
 MD, 'tous'],
-['chemini-taches-ia', 'Chemini · Perso', '🤖', 'Confier une tâche à l\'IA', 'Une recherche, un courrier, un tableau : décrivez le besoin, l\'assistant s\'en charge et vous suivez l\'avancement.', '2 min', 'Débutant', <<<'MD'
+['chemini-taches-ia', 'Dashboard · Perso', '🤖', 'Confier une tâche à l\'IA', 'Une recherche, un courrier, un tableau : décrivez le besoin, l\'assistant s\'en charge et vous suivez l\'avancement.', '2 min', 'Débutant', <<<'MD'
 ## Confier la tâche
 1. **Touchez la bulle** en bas à droite puis **« Tâche IA »**.
 2. **Décrivez le résultat attendu** : le sujet, le format (courrier, tableau, synthèse) et l'échéance éventuelle.
@@ -318,7 +318,7 @@ MD, 'tous'],
 
 ! N'indiquez jamais de mot de passe ni de coordonnées bancaires dans une consigne.
 MD, 'tous'],
-['chemini-equipe', 'Chemini · Équipe', '👥', 'La section Équipe', 'Le tableau de bord de l\'équipe, les informations générales, les collaborateurs, l\'accueil, les guides et le questionnaire.', '4 min', 'Débutant', <<<'MD'
+['chemini-equipe', 'Dashboard · Équipe', '👥', 'La section Équipe', 'Le tableau de bord de l\'équipe, les informations générales, les collaborateurs, l\'accueil, les guides et le questionnaire.', '4 min', 'Débutant', <<<'MD'
 ## Tableau de bord Équipe
 - **Les prochaines AG, la veille juridique et les dernières actualités** du secteur. [[Ouvrir le tableau de bord Équipe|/tableau-de-bord]]
 
@@ -331,10 +331,10 @@ MD, 'tous'],
 2. **La fiche d'une personne** donne sa ligne directe, son raccourci (4 derniers chiffres) et un lien e-mail qui ouvre Outlook.
 
 ## Guides et questionnaire
-- **Guides** : les procédures ImmOpen et Chemini, à cocher étape par étape. [[Tous les guides|/guides]]
+- **Guides** : les procédures ImmOpen et Dashboard, à cocher étape par étape. [[Tous les guides|/guides]]
 - **Questionnaire** : 10 minutes pour dire vos tâches récurrentes et ce que vous aimeriez automatiser. [[Répondre au questionnaire|/enquete]]
 MD, 'tous'],
-['chemini-utiliser-guides', 'Chemini · Équipe', '📘', 'Utiliser et enrichir les guides', 'Suivre un guide en cochant les étapes ; pour la Direction, créer et modifier les guides.', '3 min', 'Débutant', <<<'MD'
+['chemini-utiliser-guides', 'Dashboard · Équipe', '📘', 'Utiliser et enrichir les guides', 'Suivre un guide en cochant les étapes ; pour la Direction, créer et modifier les guides.', '3 min', 'Débutant', <<<'MD'
 ## Suivre un guide
 1. **Ouvrez un guide** depuis la page Guides ou la recherche. [[Tous les guides|/guides]]
 2. **Cochez chaque étape** au fur et à mesure : la barre de progression avance et votre avancement est gardé sur cet appareil.
@@ -347,7 +347,7 @@ MD, 'tous'],
 3. **Mise en forme :** « ## » pour une partie, « 1. » pour une étape à cocher, « - » pour une liste, « > Astuce : » et « ! » pour un avertissement.
 4. **Bouton vers une page :** écrivez `[[Libellé|/adresse]]`, par exemple `[[Ouvrir Mes tâches|/mes-taches]]`.
 MD, 'tous'],
-['chemini-direction', 'Chemini · Direction', '🏛️', 'Vue d\'ensemble Direction', 'Les outils réservés à la Direction et le bon réflexe pour chacun.', '4 min', 'Débutant', <<<'MD'
+['chemini-direction', 'Dashboard · Direction', '🏛️', 'Vue d\'ensemble Direction', 'Les outils réservés à la Direction et le bon réflexe pour chacun.', '4 min', 'Débutant', <<<'MD'
 ## Tableau de bord Direction
 - **Les indicateurs du cabinet** et les alertes du jour. [[Ouvrir le tableau de bord Direction|/direction]]
 
@@ -369,7 +369,7 @@ MD, 'tous'],
 
 ! Ces données sont confidentielles : ne les copiez pas dans l'espace Équipe.
 MD, 'direction'],
-['chemini-honoraires', 'Chemini · Direction', '💶', 'Honoraires : suivre et mettre à jour', 'Lire le tableau des honoraires par immeuble, filtrer, ouvrir une fiche et exporter, sur ordinateur et sur iPhone.', '5 min', 'Intermédiaire', <<<'MD'
+['chemini-honoraires', 'Dashboard · Direction', '💶', 'Honoraires : suivre et mettre à jour', 'Lire le tableau des honoraires par immeuble, filtrer, ouvrir une fiche et exporter, sur ordinateur et sur iPhone.', '5 min', 'Intermédiaire', <<<'MD'
 ## Ouvrir le tableau
 1. **Menu Direction › Honoraires**, puis l'onglet **Immeubles** du document. [[Ouvrir Honoraires|/honoraires]]
 2. **Choisissez une vue** : Essentiel, AG et prestations, Budgets, Travaux votés ou Tout. Votre choix est mémorisé.
@@ -390,7 +390,7 @@ MD, 'direction'],
 
 > Astuce : la modification des montants est réservée à Mehdi Chemini ; les autres membres de la Direction consultent.
 MD, 'direction'],
-['chemini-pilotage', 'Chemini · Direction', '🧭', 'Pilotage et préparation des AG', 'Le tableau de pilotage, la préparation des AG et les registres du cabinet.', '4 min', 'Intermédiaire', <<<'MD'
+['chemini-pilotage', 'Dashboard · Direction', '🧭', 'Pilotage et préparation des AG', 'Le tableau de pilotage, la préparation des AG et les registres du cabinet.', '4 min', 'Intermédiaire', <<<'MD'
 ## Le tableau de pilotage
 1. **Menu Direction › Pilotage.** Chaque bloc (finances et équipes, assemblées générales, registres) mène au détail. [[Ouvrir Pilotage|/pilotage]]
 2. **Renouvellements de mandat, charge des gestionnaires, prévision d'encaissement** : un bloc chacun.
@@ -404,7 +404,7 @@ MD, 'direction'],
 ## Enquête
 - **Les réponses au questionnaire** de l'équipe, avec impression. [[Voir l'enquête|/enquete/resultats]]
 MD, 'direction'],
-['chemini-signatures', 'Chemini · Direction', '✉️', 'Signatures e-mail : programmer les visuels', 'Ajouter un visuel, choisir quand il s\'affiche et vérifier qu\'Exclaimer est bien relié.', '5 min', 'Intermédiaire', <<<'MD'
+['chemini-signatures', 'Dashboard · Direction', '✉️', 'Signatures e-mail : programmer les visuels', 'Ajouter un visuel, choisir quand il s\'affiche et vérifier qu\'Exclaimer est bien relié.', '5 min', 'Intermédiaire', <<<'MD'
 ## Ajouter un visuel
 1. **Menu Direction › Signatures**, puis « Ajouter un visuel ». [[Ouvrir Signatures|/signatures]]
 2. **Image au format 600 × 200** (PNG ou JPEG) ; elle est recadrée au centre si besoin.
@@ -423,14 +423,14 @@ MD, 'direction'],
 ## Vérifier Exclaimer
 - **L'indicateur « relié »** passe au vert dès qu'Exclaimer ou une messagerie lit le bandeau.
 
-! Changer les réglages d'Exclaimer se fait dans Exclaimer lui-même ; Chemini ne fournit que l'image du moment.
+! Changer les réglages d'Exclaimer se fait dans Exclaimer lui-même ; Dashboard ne fournit que l'image du moment.
 MD, 'direction'],
-['chemini-site-web', 'Chemini · Direction', '🌐', 'Site Web : statistiques et annonces', 'Suivre le site gidsas.fr, publier et gérer les annonces immobilières depuis Chemini ou le téléphone, sans ouvrir WordPress.', '5 min', 'Débutant', <<<'MD'
+['chemini-site-web', 'Dashboard · Direction', '🌐', 'Site Web : statistiques et annonces', 'Suivre le site gidsas.fr, publier et gérer les annonces immobilières depuis Dashboard ou le téléphone, sans ouvrir WordPress.', '5 min', 'Débutant', <<<'MD'
 ## Relier le site (une seule fois, administrateur)
-1. **Dans WordPress, Comptes › Profil**, section « Mots de passe d'application » : nommez-le « Chemini » et cliquez sur Ajouter. [[Ouvrir la page Connexion|/site-web/connexion]]
+1. **Dans WordPress, Comptes › Profil**, section « Mots de passe d'application » : nommez-le « Dashboard » et cliquez sur Ajouter. [[Ouvrir la page Connexion|/site-web/connexion]]
 2. **Copiez la clé** (24 caractères) et collez-la dans Site Web › Connexion avec votre identifiant WordPress, puis « Tester et relier ».
 
-! Cette clé se révoque à tout moment depuis le profil WordPress ; elle est chiffrée dans Chemini et n'est jamais réaffichée.
+! Cette clé se révoque à tout moment depuis le profil WordPress ; elle est chiffrée dans Dashboard et n'est jamais réaffichée.
 
 ## Statistiques
 - **Annonces en ligne, à vendre, sous promesse, vendues**, par secteur et par mois de publication. [[Voir les statistiques|/site-web]]
@@ -456,7 +456,7 @@ MD, 'direction'],
 ## Pages et SEO
 - **Titre et description affichés dans Google** pour chaque page, avec la longueur idéale (120 à 160 caractères). [[Voir les pages|/site-web/pages]]
 MD, 'annonceurs'],
-['chemini-mot-president', 'Chemini · Président', '🖋️', 'Mot du Président : relire, publier, partager', 'Le cycle mensuel du Mot du Président, de la rédaction automatique au partage par lien.', '3 min', 'Débutant', <<<'MD'
+['chemini-mot-president', 'Dashboard · Président', '🖋️', 'Mot du Président : relire, publier, partager', 'Le cycle mensuel du Mot du Président, de la rédaction automatique au partage par lien.', '3 min', 'Débutant', <<<'MD'
 ## Chaque mois
 1. **Le 25, un brouillon est rédigé** d'après les actualités du mois ; une alerte apparaît sur votre tableau de bord. [[Ouvrir le Mot du Président|/mot-du-president]]
 2. **Relisez et modifiez** avec « Modifier » : l'article garde sa mise en page, la barre d'outils propose intertitre, paragraphe, gras et liste.
@@ -470,7 +470,7 @@ MD, 'annonceurs'],
 
 ! Un lien créé sur un brouillon montre la version actuelle, avant publication.
 MD, 'president'],
-['chemini-famille', 'Chemini · Famille', '🧳', 'Espace Famille et voyages', 'Le tableau de bord Famille et les guides de voyage préparés par Claude.', '2 min', 'Débutant', <<<'MD'
+['chemini-famille', 'Dashboard · Famille', '🧳', 'Espace Famille et voyages', 'Le tableau de bord Famille et les guides de voyage préparés par Claude.', '2 min', 'Débutant', <<<'MD'
 ## L'espace Famille
 1. **Menu Famille › Tableau de bord** : les voyages, les tâches partagées et le bloc-notes commun. [[Ouvrir l'espace Famille|/famille]]
 
@@ -478,7 +478,7 @@ MD, 'president'],
 1. **Menu Famille › Voyages** : chaque guide donne la meilleure période, les vols Air France ou Transavia, la météo, les préparatifs et le programme jour par jour. [[Ouvrir Voyages|/voyages]]
 2. **Partager un voyage** : depuis sa fiche, créez un lien en lecture seule ; il se désactive à tout moment.
 MD, 'famille'],
-['chemini-taches', 'Chemini · Perso', '🤝', 'Créer une tâche pour vous ou un collègue', 'La bulle en bas à droite : une tâche en trois touches, depuis l\'ordinateur ou l\'iPhone.', '1 min', 'Débutant', <<<'MD'
+['chemini-taches', 'Dashboard · Perso', '🤝', 'Créer une tâche pour vous ou un collègue', 'La bulle en bas à droite : une tâche en trois touches, depuis l\'ordinateur ou l\'iPhone.', '1 min', 'Débutant', <<<'MD'
 ## Créer la tâche
 1. **Touchez la bulle** en bas à droite de n'importe quelle page.
 2. **Choisissez « Tâche équipe ».**

@@ -10,8 +10,8 @@ $sections = [
         ($b = qa($A, 'binomes')) ? ['Équipes : ' . implode(', ', $b)] : [])],
     ['Savoir-vivre', array_merge(($t = qa($A, 'tenue')) ? ['Tenue : ' . implode(', ', $t)] : [], qa($A, 'relation'), qa($A, 'vie'))],
     ['Vie du cabinet', array_merge(qa($A, 'rituels'), ($d = qa($A, 'dejeuner')) ? ['Déjeuner : ' . implode(', ', $d)] : [])],
-    ['Vos outils', qa($A, 'outils') ?: ['ImmOpen : gestion des immeubles et de la comptabilité', 'Outlook / Microsoft 365 : messagerie et agenda', 'Chemini : tâches, informations, organigramme']],
-    ['Vos premiers jours', array_merge(['Recevoir votre accès à Chemini (lien d\'invitation) et activer Face ID ou le code à 6 chiffres', 'Découvrir votre équipe dans l\'organigramme', 'Lire les informations générales'], qa($A, 'integration'))],
+    ['Vos outils', qa($A, 'outils') ?: ['ImmOpen : gestion des immeubles et de la comptabilité', 'Outlook / Microsoft 365 : messagerie et agenda', 'Dashboard : tâches, informations, organigramme']],
+    ['Vos premiers jours', array_merge(['Recevoir votre accès à Dashboard (lien d\'invitation) et activer Face ID ou le code à 6 chiffres', 'Découvrir votre équipe dans l\'organigramme', 'Lire les informations générales'], qa($A, 'integration'))],
     ['Contacts utiles', qa($A, 'contacts')],
 ];
 $nAns = count($A); $nQ = count($Q);

@@ -12,9 +12,9 @@ $err = $snap['_error'] ?? ($snap['_stale'] ?? null);
 </header>
 <?php if (!$conn): ?>
 <div class="panel ws-empty">
-  <h2>Le site n'est pas encore relié à Chemini</h2>
-  <p class="muted">Chemini lit et met à jour le site WordPress avec un <b>mot de passe d'application</b> : une clé dédiée, que l'on peut retirer à tout moment sans toucher au mot de passe de connexion.</p>
-  <?php if ($admin): ?><a class="btn btn-primary" href="/site-web/connexion">Relier le site</a><?php else: ?><p class="muted small">La liaison est faite par l'administrateur de Chemini.</p><?php endif; ?>
+  <h2>Le site n'est pas encore relié à Dashboard</h2>
+  <p class="muted">Dashboard lit et met à jour le site WordPress avec un <b>mot de passe d'application</b> : une clé dédiée, que l'on peut retirer à tout moment sans toucher au mot de passe de connexion.</p>
+  <?php if ($admin): ?><a class="btn btn-primary" href="/site-web/connexion">Relier le site</a><?php else: ?><p class="muted small">La liaison est faite par l'administrateur de Dashboard.</p><?php endif; ?>
 </div>
 <?php elseif ($err): ?>
 <div class="pw-alert"><b>Le site n'a pas répondu :</b> <?= e((string)$err) ?>. <?= isset($snap['_stale']) ? 'Les dernières données connues sont affichées.' : '' ?> <?php if ($admin): ?><a href="/site-web/connexion">Vérifier la connexion</a><?php endif; ?></div>

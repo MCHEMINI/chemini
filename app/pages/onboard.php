@@ -16,7 +16,7 @@ const ACCUEIL_QCM = [
     'vie' => ['Savoir-vivre', 'Vie au bureau', 'check', ['Ponctualité aux AG (arrivée 30 min avant)', 'Bureau rangé en fin de journée', 'Confidentialité des dossiers', 'Prévenir son binôme en cas d\'absence', 'Cuisine / espace commun à laisser propre']],
     'rituels' => ['Vie du cabinet', 'Rituels d\'équipe', 'check', ['Réunion d\'équipe hebdomadaire', 'Point mensuel avec la Direction', 'Séminaire annuel', 'Repas / afterwork d\'équipe', 'Galette / fêtes de fin d\'année']],
     'dejeuner' => ['Vie du cabinet', 'Déjeuner', 'radio', ['Tickets restaurant / carte déjeuner', 'Pause d\'une heure, libre', 'Cuisine équipée sur place']],
-    'outils' => ['Outils', 'Outils utilisés au quotidien', 'check', ['ImmOpen (gestion)', 'Outlook / Microsoft 365', 'Teams', 'Immoscope (espace client)', 'Chemini (cette plateforme)', 'Signature électronique', 'Vote électronique en AG']],
+    'outils' => ['Outils', 'Outils utilisés au quotidien', 'check', ['ImmOpen (gestion)', 'Outlook / Microsoft 365', 'Teams', 'Immoscope (espace client)', 'Dashboard (cette plateforme)', 'Signature électronique', 'Vote électronique en AG']],
     'integration' => ['Intégration', 'Accueil d\'un nouvel arrivant', 'check', ['Un tuteur désigné', 'Formation ImmOpen la première semaine', 'Présentation aux équipes', 'Point d\'étonnement à 1 mois', 'Formation ALUR (loi : 42 h sur 3 ans)']],
     'contacts' => ['Intégration', 'Contacts utiles à indiquer (informatique, RH, paie, clés, badge, fournitures)', 'text', []],
 ];

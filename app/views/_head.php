@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Chemini">
+<meta name="apple-mobile-web-app-title" content="Dashboard">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@
 <body>
 <div id="login">
   <aside class="brand-panel">
-    <div class="monogram"><span class="seal">G</span><span class="mono-label">GID SAS · Chemini</span></div>
+    <div class="monogram"><span class="seal">G</span><span class="mono-label">GID SAS · Dashboard</span></div>
     <div class="brand-quote">
       <h1>Le cabinet,<br><em>en un regard.</em></h1>
       <p>Copropriétés, échéances, courriers et veille juridique réunis dans un espace privé, réservé à l'équipe.</p>

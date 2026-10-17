@@ -5,7 +5,7 @@ function page_guides(array $u, ?string $slug = null): never {
     $ed = guide_editor($u);
     if ($slug === null) {
         $all = array_values(array_filter(q('SELECT * FROM guides ORDER BY cat, pos, title')->fetchAll(), fn($g) => guide_visible($u, $g['audience'] ?? 'tous')));
-        $rank = fn($c) => array_search($c, ['Chemini · Démarrer', 'Chemini · Perso', 'Chemini · Équipe', 'Chemini · Direction', 'Chemini · Président', 'Chemini · Famille', 'ImmOpen'], true);
+        $rank = fn($c) => array_search($c, ['Dashboard · Démarrer', 'Dashboard · Perso', 'Dashboard · Équipe', 'Dashboard · Direction', 'Dashboard · Président', 'Dashboard · Famille', 'ImmOpen'], true);
         usort($all, fn($a, $b) => [$rank($a['cat']) === false ? 99 : $rank($a['cat']), $a['pos'], $a['title']] <=> [$rank($b['cat']) === false ? 99 : $rank($b['cat']), $b['pos'], $b['title']]);
         render('guides', ['title' => 'Guides', 'nav' => 'guides', 'u' => $u, 'ed' => $ed, 'all' => $all]);
     }

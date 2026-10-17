@@ -1,6 +1,6 @@
 <?php
 /*
- * Configuration de la plateforme Chemini.
+ * Configuration de la plateforme Dashboard.
  *
  * Les secrets (clé de chiffrement, jeton d'activation, identifiants Microsoft) ne sont PAS
  * dans ce dépôt. Sur le serveur, ils sont lus dans un fichier privé situé HORS du dossier
@@ -16,7 +16,7 @@ if (is_file($privateConfig) && realpath($privateConfig) !== realpath(__FILE__)) 
 $set = static function (string $name, $value): void { if (!defined($name)) define($name, $value); };
 
 // Valeurs par défaut (développement local) — remplacées par le fichier privé en production.
-$set('APP_NAME', 'GID Chemini');
+$set('APP_NAME', 'GID Dashboard');
 $set('BASE_URL', getenv('CHEMINI_BASE_URL') ?: 'https://chemini.gidsas.fr');
 // Adresses publiques de la plateforme : dashboard.gidsas.fr (communiquée aux équipes) et chemini.gidsas.fr pointent au même endroit
 $set('APP_HOSTS', ['dashboard.gidsas.fr', 'chemini.gidsas.fr']);

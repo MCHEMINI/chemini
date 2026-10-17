@@ -122,7 +122,7 @@ function ical_feed(string $tok): never {
     $u = $uid ? q('SELECT * FROM users WHERE id=?', [$uid])->fetch() : null;
     if (!$u || !can_space($u, 'direction')) { http_response_code(404); exit; }
     $B = pilot_blds(); $esc = fn($s) => str_replace(["\\", ';', ',', "\n"], ["\\\\", '\;', '\\,', '\\n'], (string)$s);
-    $out = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//GID//Chemini//FR", "CALSCALE:GREGORIAN", "X-WR-CALNAME:AG GID", "X-WR-TIMEZONE:Europe/Paris"];
+    $out = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//GID//Dashboard//FR", "CALSCALE:GREGORIAN", "X-WR-CALNAME:AG GID", "X-WR-TIMEZONE:Europe/Paris"];
     foreach (ag_rows()['rows'] as $r) {
         $d = (string)($r['ag_date'] ?? ''); if (!$d || $d < date('Y-m-d', strtotime('-30 days'))) continue;
         $h = preg_match('/(\d{1,2})[:h](\d{2})/', (string)($r['ag_heure'] ?? ''), $m) ? sprintf('%02d%02d00', $m[1], $m[2]) : '180000';

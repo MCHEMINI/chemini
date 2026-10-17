@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Chemini">
+<meta name="apple-mobile-web-app-title" content="Dashboard">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +24,7 @@
 <div id="app">
   <button type="button" class="rail-open" data-rail-toggle aria-label="Afficher le menu" title="Afficher le menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M13 10l2 2-2 2"/></svg></button>
   <aside class="rail">
-    <div class="rail-top"><a class="monogram" href="/"><span class="seal">G</span><span class="mono-label">Chemini</span></a>
+    <div class="rail-top"><a class="monogram" href="/"><span class="seal">G</span><span class="mono-label">Dashboard</span></a>
       <button type="button" class="rail-toggle" data-rail-toggle aria-label="Masquer le menu" title="Masquer le menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 10l-2 2 2 2"/></svg></button>
       <button type="button" class="burger" data-burger aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="railNav"><span></span><span></span><span></span></button></div>
     <nav id="railNav">

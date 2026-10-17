@@ -724,7 +724,7 @@ function fabBurst(el) { const r = el.getBoundingClientRect(), box = document.cre
   let seen = null; try { seen = localStorage.getItem('installHint'); } catch (e) {}
   if (!ios || standalone || seen || !document.getElementById('app')) return;
   const d = document.createElement('div'); d.className = 'ios-hint'; d.setAttribute('role', 'dialog');
-  d.innerHTML = '<img src="/assets/apple-touch-icon.png" alt=""><div><b>Installer Chemini sur votre iPhone</b><span>Touchez <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-label="Partager"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> puis « Sur l\'écran d\'accueil ».</span><a href="/installer">Voir le guide</a></div><button type="button" aria-label="Fermer">✕</button>';
+  d.innerHTML = '<img src="/assets/apple-touch-icon.png" alt=""><div><b>Installer Dashboard sur votre iPhone</b><span>Touchez <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-label="Partager"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> puis « Sur l\'écran d\'accueil ».</span><a href="/installer">Voir le guide</a></div><button type="button" aria-label="Fermer">✕</button>';
   d.querySelector('button').addEventListener('click', () => { d.remove(); try { localStorage.setItem('installHint', '1'); } catch (e) {} });
   document.body.appendChild(d);
 })();

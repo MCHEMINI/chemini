@@ -1,4 +1,4 @@
-/* Appli « Annonces » de Chemini : créer, voir, modifier et supprimer les annonces du site, même sans réseau.
+/* Appli « Annonces » de Dashboard : créer, voir, modifier et supprimer les annonces du site, même sans réseau.
    Les modifications faites hors connexion sont gardées sur le téléphone (IndexedDB) et envoyées dès que le réseau revient. */
 (() => {
   'use strict';
@@ -22,7 +22,7 @@
     const fresh = res.headers.get('X-CSRF-Token'); if (fresh) csrf = fresh;
     let j = {}; try { j = await res.json(); } catch (_) {}
     if (res.status === 403 && /Session expirée/.test(j.error || '')) { if (await refreshCsrf()) return api(path, data); }
-    if (res.status === 401) { const e = new Error('Session expirée : reconnectez-vous à Chemini.'); e.auth = true; throw e; }
+    if (res.status === 401) { const e = new Error('Session expirée : reconnectez-vous à Dashboard.'); e.auth = true; throw e; }
     if (!res.ok || j.error) throw new Error(j.error || 'Erreur ' + res.status);
     return j;
   }

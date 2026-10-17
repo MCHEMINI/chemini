@@ -3,7 +3,7 @@
   <div>
     <div class="eyebrow"><a href="/gid">Informations</a> · questionnaire</div>
     <h1>Comment travaillez-vous ?</h1>
-    <div class="date">10 minutes pour nous dire vos tâches récurrentes, les demandes des copropriétaires, vos recherches dans ImmOpen et ce que vous aimeriez automatiser. Vos réponses servent à choisir les prochains outils de Chemini.</div>
+    <div class="date">10 minutes pour nous dire vos tâches récurrentes, les demandes des copropriétaires, vos recherches dans ImmOpen et ce que vous aimeriez automatiser. Vos réponses servent à choisir les prochains outils de Dashboard.</div>
   </div>
 </header>
 <?php if ($sub): ?><p class="tm-note"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Merci, votre questionnaire a été envoyé le <?= e(date('d/m/Y', (int)$row['submitted_at'])) ?>. Vous pouvez encore modifier vos réponses.</p><?php endif; ?>

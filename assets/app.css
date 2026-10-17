@@ -1,4 +1,4 @@
-/* GID Chemini — rail latéral sobre + colonne de travail en grille 12 ; filets fins, un seul métal (bronze) */
+/* GID Dashboard — rail latéral sobre + colonne de travail en grille 12 ; filets fins, un seul métal (bronze) */
 :root{
   --bg:#F3F3F0; --surface:#FBFBF9; --ink:#151A22; --muted:#6B7079; --line:#DEDDD7;
   --bronze:#8A6A3B; --bronze-soft:#EFE7DA; --rail:#121720; --rail-fg:#D9D6CE;
@@ -1585,7 +1585,7 @@ body.aa{background:var(--bg);color:var(--ink);min-height:100vh}
 .aa #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50}
 .toast{border-radius:16px;text-align:center}
 
-/* Fréquentation (mesure Chemini) */
+/* Fréquentation (mesure Dashboard) */
 .ws-per{display:inline-flex;gap:4px}.ws-per a{font-size:12.5px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted);text-decoration:none}.ws-per a.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .ws-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:4px 0 14px}
 .ws-kpis>div{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:12px;background:var(--bg)}

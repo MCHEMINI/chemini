@@ -36,7 +36,7 @@ const SURVEY = [
     ]],
     ['Vos outils', [
         'note_immopen' => ['ImmOpen vous convient-il ?', 'radio', ['Très bien', 'Bien', 'Moyennement', 'Pas du tout']],
-        'note_chemini' => ['Chemini vous est-il utile ?', 'radio', ['Très utile', 'Utile', 'Peu utile', 'Je ne l\'utilise pas encore']],
+        'note_chemini' => ['Dashboard vous est-il utile ?', 'radio', ['Très utile', 'Utile', 'Peu utile', 'Je ne l\'utilise pas encore']],
         'remarque' => ['Une remarque, une idée ?', 'text', []],
     ]],
     ['Vos remarques et suggestions', [

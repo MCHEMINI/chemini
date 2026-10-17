@@ -228,7 +228,7 @@ SQL);
     }
     if ($v < 23) {
         $t = time(); $ins = $pdo->prepare('INSERT INTO board_posts(title,body,cat,pinned,link,author,created_at) VALUES(?,?,?,?,NULL,NULL,?)');
-        $ins->execute(['Bienvenue sur Chemini', "La plateforme interne de GID réunit les informations générales du cabinet, vos tâches, l'organigramme et la page Accueil des nouveaux arrivants.\nPour vous connecter : Face ID ou mot de passe et code à 6 chiffres.", 'outils', 1, $t]);
+        $ins->execute(['Bienvenue sur Dashboard', "La plateforme interne de GID réunit les informations générales du cabinet, vos tâches, l'organigramme et la page Accueil des nouveaux arrivants.\nPour vous connecter : Face ID ou mot de passe et code à 6 chiffres.", 'outils', 1, $t]);
         $ins->execute(['Organigramme et page Accueil', "Retrouvez qui travaille avec qui (gestionnaire, assistante, comptables de chaque pôle) dans Organigramme, et la présentation de la société dans Accueil.", 'organisation', 0, $t + 1]);
         $ins->execute(['Tâches d\'équipe', "Dans Collaborateurs, chacun peut affecter une tâche à un collègue, avec ou sans échéance. La personne la coche une fois faite : la date de traitement est enregistrée.", 'outils', 0, $t + 2]);
         $pdo->exec('PRAGMA user_version = 23;');
@@ -347,7 +347,7 @@ SQL);
         if (!in_array('ag_type', $cols, true)) $pdo->exec("ALTER TABLE pv_votes ADD COLUMN ag_type TEXT; UPDATE pv_votes SET ag_type='AGO' WHERE gc_ttc IS NOT NULL;");
         $pdo->exec('PRAGMA user_version = 41;');
     }
-    if ($v < 42) { // Guides : public visé (toute l'équipe, Direction, Président, Famille) + guides du fonctionnement de Chemini par rôle
+    if ($v < 42) { // Guides : public visé (toute l'équipe, Direction, Président, Famille) + guides du fonctionnement de Dashboard par rôle
         $cols = array_column($pdo->query('PRAGMA table_info(guides)')->fetchAll(), 'name');
         if (!in_array('audience', $cols, true)) $pdo->exec("ALTER TABLE guides ADD COLUMN audience TEXT NOT NULL DEFAULT 'tous'");
         $seed = is_file(APP_DIR . '/seed/guides.php') ? require APP_DIR . '/seed/guides.php' : [];
@@ -375,7 +375,7 @@ SQL);
         foreach ($seed as $g) if ($g[0] === 'chemini-site-web') $pdo->prepare('UPDATE guides SET summary=?, duration=?, body=?, audience=?, updated_at=? WHERE slug=? AND updated_by IS NULL')->execute([$g[4], $g[5], $g[7], $g[8], time(), $g[0]]);
         $pdo->exec('PRAGMA user_version = 45;');
     }
-    if ($v < 46) { // Site Web : fiches d'annonces saisies depuis Chemini (pour les rouvrir et les modifier, y compris hors ligne)
+    if ($v < 46) { // Site Web : fiches d'annonces saisies depuis Dashboard (pour les rouvrir et les modifier, y compris hors ligne)
         $pdo->exec('CREATE TABLE IF NOT EXISTS wp_annonces(wp_id INTEGER PRIMARY KEY, data TEXT NOT NULL, updated_at INTEGER NOT NULL, updated_by INTEGER); PRAGMA user_version = 46;');
     }
     if ($v < 47) { // Guide Site Web : appli Annonces (installable, hors ligne)
@@ -410,6 +410,14 @@ SQL);
             $ins->execute(['book', (string)$b['id'], $b['title'], $t, (int)$b['user_id'], '/mes-livres/' . (int)$b['id'], $b['kind'] === 'pdf' ? 1 : 0, time()]);
         }
         $pdo->exec('PRAGMA user_version = 51;');
+    }
+    if ($v < 52) { // La plateforme s'appelle désormais « Dashboard » (les noms de personnes restent inchangés)
+        $rn = fn($t) => preg_replace('/(?<!Mehdi )(?<!Céline )(?<!M\. )(?<!Mme )\bChemini\b/u', 'Dashboard', (string)$t);
+        $up = $pdo->prepare('UPDATE guides SET cat=?, title=?, summary=?, body=? WHERE id=?');
+        foreach ($pdo->query("SELECT id, cat, title, summary, body FROM guides WHERE cat||title||COALESCE(summary,'')||body LIKE '%Chemini%'")->fetchAll() as $g) $up->execute([$rn($g['cat']), $rn($g['title']), $rn($g['summary']), $rn($g['body']), $g['id']]);
+        $up = $pdo->prepare('UPDATE board_posts SET title=?, body=? WHERE id=?');
+        foreach ($pdo->query("SELECT id, title, body FROM board_posts WHERE title||body LIKE '%Chemini%'")->fetchAll() as $b) $up->execute([$rn($b['title']), $rn($b['body']), $b['id']]);
+        $pdo->exec('PRAGMA user_version = 52;');
     }
 }
 
