@@ -1171,3 +1171,4 @@ a.tp-c:hover{border-color:var(--bronze)}a.tp-c:hover b{color:var(--bronze)}
 .sg-card.on{border-color:var(--ok)}
 .chip.muted{background:var(--line);color:var(--muted)}
 @media (max-width:980px){.sg-work,.sg-today{grid-template-columns:1fr}}
+.sg-edit{display:flex;flex-direction:column;gap:12px;padding-top:12px;border-top:1px solid var(--line)}.sg-edit .off{opacity:.5}

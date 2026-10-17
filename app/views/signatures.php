@@ -19,7 +19,7 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
 <section class="sg-now">
   <div class="panel sg-today">
     <div class="sg-today-h"><div class="eyebrow">Envoyé aujourd'hui</div>
-      <span class="chip <?= $linked ? 'ok' : 'warn' ?>" title="<?= $linked ? 'Dernière lecture par Exclaimer ou une messagerie le ' . e(date('d/m/Y à H:i', (int)$hits['ext'])) : 'Exclaimer n\'a pas encore lu le bandeau' ?>"><?= $linked ? 'Exclaimer relié' : 'Exclaimer pas encore relié' ?></span></div>
+      <span class="chip <?= $linked ? 'ok' : 'warn' ?>" title="<?= $linked ? 'Dernière lecture par Exclaimer ou une messagerie le ' . e(date('d/m/Y à H:i', (int)$hits['ext'])) : 'Exclaimer n\'a pas encore lu le bandeau' ?>"><?= $linked ? 'Exclaimer relié · lu le ' . e(date('d/m à H:i', (int)$hits['ext'])) : 'Exclaimer pas encore relié' ?></span></div>
     <div class="sg-ban"><?php if ($cur): ?><img src="/signature/banniere?v=<?= (int)$cur['id'] ?>-<?= date('Ymd') ?>" alt="<?= e($cur['title']) ?>" width="600" height="200"><?php else: ?><div class="empty"><strong>Aucun bandeau.</strong>Ajoutez un premier visuel : il deviendra le bandeau par défaut.</div><?php endif; ?></div>
     <?php if ($cur): ?><p class="small"><b><?= e($cur['title']) ?></b> · <?= $cur['is_default'] && !$cur['start'] ? 'bandeau par défaut' : 'jusqu\'au ' . e($fd($cur['end'])) . ($def && (int)$def['id'] !== (int)$cur['id'] ? ', puis retour à « ' . e($def['title']) . ' »' : '') ?></p><?php endif; ?>
     <details class="sg-tech"><summary>Réglage Exclaimer (une seule fois)</summary>
@@ -79,9 +79,19 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
       <div class="sg-meta"><b><?= e($b['title']) ?></b><span class="chip <?= $c ?>"><?= e($st) ?></span></div>
       <p class="muted small"><?= $isPer ? 'Du ' . $fd($b['start']) . ' au ' . $fd($b['end']) : ($b['is_default'] ? 'Bandeau par défaut, hors périodes' : 'Sans période') ?></p>
       <div class="sg-act">
+        <button type="button" class="btn-link" data-sg-edit="<?= (int)$b['id'] ?>">Modifier</button>
         <?php if (!$b['is_default'] && !$isPer): ?><button type="button" class="btn-link" data-api="sig/default" data-id="<?= (int)$b['id'] ?>">Définir par défaut</button><?php endif; ?>
-        <?php if (!$b['is_default']): ?><button type="button" class="btn-link" data-api="sig/delete" data-id="<?= (int)$b['id'] ?>" data-confirm="Supprimer ?">Supprimer</button><?php else: ?><span class="muted small">Toujours un bandeau par défaut : définissez-en un autre pour supprimer celui-ci.</span><?php endif; ?>
+        <?php if (!$b['is_default']): ?><button type="button" class="btn-link" data-api="sig/delete" data-id="<?= (int)$b['id'] ?>" data-confirm="Supprimer ?">Supprimer</button><?php endif; ?>
       </div>
+      <form class="sg-edit" data-sg-form="<?= (int)$b['id'] ?>" hidden>
+        <div class="field"><label for="se-t<?= (int)$b['id'] ?>">Nom</label><input class="input" id="se-t<?= (int)$b['id'] ?>" name="title" maxlength="120" value="<?= e($b['title']) ?>"></div>
+        <label class="bd-pin"><input type="checkbox" name="is_default" value="1" data-sg-def<?= $b['is_default'] ? ' checked' : '' ?>> Bandeau par défaut (hors périodes programmées)</label>
+        <div class="sg-dates" data-sg-per><div class="field"><label for="se-s<?= (int)$b['id'] ?>">Du</label><input class="input" id="se-s<?= (int)$b['id'] ?>" name="start" type="date" value="<?= e((string)$b['start']) ?>"></div>
+          <div class="field"><label for="se-e<?= (int)$b['id'] ?>">Au</label><input class="input" id="se-e<?= (int)$b['id'] ?>" name="end" type="date" value="<?= e((string)$b['end']) ?>"></div></div>
+        <div class="field"><label for="se-i<?= (int)$b['id'] ?>">Remplacer l'image (facultatif)</label><input class="input" id="se-i<?= (int)$b['id'] ?>" type="file" accept="image/png,image/jpeg,image/gif"></div>
+        <p class="form-error" hidden></p>
+        <div class="sg-mk-a"><button class="btn btn-primary">Enregistrer</button><button type="button" class="btn btn-ghost" data-sg-cancel>Annuler</button></div>
+      </form>
     </article>
     <?php endforeach; ?>
   </div>

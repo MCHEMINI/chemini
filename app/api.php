@@ -357,28 +357,38 @@ function api(string $r): never {
             q($r === 'tasks/toggle' ? 'UPDATE tasks SET done = 1 - done WHERE id=?' : 'DELETE FROM tasks WHERE id=?', [$task['id']]);
             json_out(['ok' => true]);
         case 'sig/add':
+        case 'sig/edit':
             if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
-            if (!preg_match('#^data:(image/(png|jpeg|gif));base64,(.+)$#s', (string)(body()['data'] ?? ''), $m)) json_out(['error' => 'Choisissez l\'image générée (PNG, JPG ou GIF).'], 400);
-            $bin = base64_decode($m[3], true); if ($bin === false || strlen($bin) > 2 * 1048576) json_out(['error' => 'Image trop lourde (2 Mo au plus).'], 400);
-            $info = @getimagesizefromstring($bin); if (!$info || !in_array($info['mime'], ['image/png', 'image/jpeg', 'image/gif'], true)) json_out(['error' => 'Image illisible.'], 400);
+            $old = null;
+            if ($r === 'sig/edit') { $old = q('SELECT * FROM banners WHERE id=?', [in_int('id')])->fetch(); if (!$old) json_out(['error' => 'Bandeau introuvable.'], 404); }
+            $raw = (string)(body()['data'] ?? ''); $info = null; $bin = null;
+            if ($raw !== '' || !$old) {
+                if (!preg_match('#^data:(image/(png|jpeg|gif));base64,(.+)$#s', $raw, $m)) json_out(['error' => 'Choisissez l\'image générée (PNG, JPG ou GIF).'], 400);
+                $bin = base64_decode($m[3], true); if ($bin === false || strlen($bin) > 2 * 1048576) json_out(['error' => 'Image trop lourde (2 Mo au plus).'], 400);
+                $info = @getimagesizefromstring($bin); if (!$info || !in_array($info['mime'], ['image/png', 'image/jpeg', 'image/gif'], true)) json_out(['error' => 'Image illisible.'], 400);
+            }
             $re = '/^\d{4}-\d{2}-\d{2}$/'; $st = in_str('start', 10); $en = in_str('end', 10);
             $st = preg_match($re, $st) ? $st : null; $en = preg_match($re, $en) ? $en : null;
             $def = in_str('is_default', 2) ? 1 : 0;
-            $hasDef = (bool)q('SELECT 1 FROM banners WHERE is_default=1')->fetchColumn();
-            if ($def) { $st = $en = null; } // le bandeau par défaut vaut hors périodes
+            $otherDef = (bool)q('SELECT 1 FROM banners WHERE is_default=1 AND id<>?', [$old['id'] ?? 0])->fetchColumn();
+            if ($def) { $st = $en = null; }
             else {
                 if (!$st || !$en) json_out(['error' => 'Indiquez la période (du… au…) ou cochez « Bandeau par défaut ».'], 400);
                 if ($en < $st) json_out(['error' => 'La date de fin est avant la date de début.'], 400);
-                if ($en < date('Y-m-d')) json_out(['error' => 'Cette période est déjà passée.'], 400);
-                if (!$hasDef) json_out(['error' => 'Il faut toujours un bandeau par défaut : ajoutez d\'abord celui qui s\'affichera hors périodes.'], 400);
+                if ($en < date('Y-m-d') && (!$old || $en !== $old['end'])) json_out(['error' => 'Cette période est déjà passée.'], 400);
+                if (!$otherDef) json_out(['error' => $old && $old['is_default'] ? 'Il faut toujours un bandeau par défaut : définissez-en un autre avant de programmer celui-ci sur une période.' : 'Il faut toujours un bandeau par défaut : ajoutez d\'abord celui qui s\'affichera hors périodes.'], 400);
             }
             $t = in_str('title', 120);
-            if ($t === '') $t = $def ? 'Bandeau par défaut du ' . date('d/m/Y') : 'Bandeau du ' . date('d/m', strtotime($st)) . ' au ' . date('d/m/Y', strtotime($en));
-            $file = bin2hex(random_bytes(8)) . '.' . ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif'][$info['mime']];
-            file_put_contents(sig_dir() . '/' . $file, $bin);
-            $link = SIG_LINK;
+            if ($t === '') $t = $old['title'] ?? ($def ? 'Bandeau par défaut du ' . date('d/m/Y') : 'Bandeau du ' . date('d/m', strtotime($st)) . ' au ' . date('d/m/Y', strtotime($en)));
+            $file = $old['file'] ?? null; $mime = $old['mime'] ?? null; $w = $old['w'] ?? 0; $h = $old['h'] ?? 0;
+            if ($bin !== null) {
+                $file = bin2hex(random_bytes(8)) . '.' . ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif'][$info['mime']];
+                file_put_contents(sig_dir() . '/' . $file, $bin); $mime = $info['mime']; $w = $info[0]; $h = $info[1];
+                if ($old) foreach (glob(sig_dir() . '/' . basename($old['file']) . '*') ?: [] as $f) @unlink($f);
+            }
             if ($def) q('UPDATE banners SET is_default=0');
-            q('INSERT INTO banners(title,file,mime,w,h,link,start,end,is_default,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)', [$t, $file, $info['mime'], $info[0], $info[1], $link ?: null, $st, $en, $def, $uid, time()]);
+            if ($old) q('UPDATE banners SET title=?, file=?, mime=?, w=?, h=?, link=?, start=?, end=?, is_default=? WHERE id=?', [$t, $file, $mime, $w, $h, SIG_LINK, $st, $en, $def, $old['id']]);
+            else q('INSERT INTO banners(title,file,mime,w,h,link,start,end,is_default,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)', [$t, $file, $mime, $w, $h, SIG_LINK, $st, $en, $def, $uid, time()]);
             json_out(['ok' => true]);
         case 'sig/default':
         case 'sig/delete':

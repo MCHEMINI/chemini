@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 /* Bandeau des signatures e-mail : seul le bandeau change, servi à une adresse fixe utilisée par Exclaimer. */
 
+const SIG_LINK = 'https://www.gidsas.fr/'; // lien au clic de tous les bandeaux
+
 function sig_dir(): string { $d = DATA_DIR . '/banners'; if (!is_dir($d)) @mkdir($d, 0700, true); return $d; }
 
 function sig_all(): array { return q('SELECT b.*, u.name AS by_name FROM banners b LEFT JOIN users u ON u.id=b.created_by ORDER BY COALESCE(b.start, \'0000\') DESC, b.created_at DESC')->fetchAll(); }
@@ -27,11 +29,13 @@ function sig_state(array $b): array {
 /** Image publique (adresse fixe pour Exclaimer). */
 /** Mémorise qui lit le bandeau : prouve qu'Exclaimer (ou les messageries des destinataires) est bien relié à Chemini. */
 function sig_track(): void {
-    $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
-    $ext = $ua === '' || preg_match('/exclaimer|microsoft office|outlook|ms-office|googleimageproxy|yahoomailproxy|apple ?mail|thunderbird|proxy|bot/i', $ua);
-    $h = json_decode((string)q("SELECT v FROM kv WHERE k='sig_hits'")->fetchColumn(), true) ?: ['n' => 0];
-    $h['n'] = (int)$h['n'] + 1; $h['last'] = time();
-    if ($ext) { $h['ext'] = time(); $h['ext_ua'] = mb_substr($ua ?: 'service sans nom', 0, 120); $h['ext_n'] = (int)($h['ext_n'] ?? 0) + 1; }
+    if (isset($_GET['v'])) return; // aperçu affiché dans Chemini : ne compte pas
+    $ua = mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 160); $ref = mb_substr((string)($_SERVER['HTTP_REFERER'] ?? ''), 0, 160);
+    $h = json_decode((string)q("SELECT v FROM kv WHERE k='sig_hits'")->fetchColumn(), true) ?: [];
+    // Toute lecture de l'adresse publique hors de Chemini = Exclaimer (éditeur, serveurs d'envoi) ou messagerie d'un destinataire
+    $h['ext'] = time(); $h['ext_n'] = (int)($h['ext_n'] ?? 0) + 1; $h['ext_ua'] = $ua ?: 'service sans nom';
+    if (stripos($ref . $ua, 'exclaimer') !== false) $h['exclaimer'] = time();
+    $h['log'] = array_slice(array_merge([[time(), $ua, $ref]], (array)($h['log'] ?? [])), 0, 10);
     q("INSERT INTO kv(k,v,updated_at) VALUES('sig_hits',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode($h, JSON_UNESCAPED_UNICODE), time()]);
 }
 function sig_serve_image(): never {
@@ -44,7 +48,6 @@ function sig_serve_image(): never {
 }
 /** Version au format exact de la signature (600 × 200, recadrée au centre si le ratio diffère) : Exclaimer affiche l'image liée à sa taille réelle. */
 const SIG_W = 600, SIG_H = 200;
-const SIG_LINK = 'https://www.gidsas.fr/';
 function sig_fit(string $f, string $mime): string {
     if (!is_file($f) || !function_exists('imagecreatefromstring')) return $f;
     $out = $f . '.' . SIG_W . 'x' . SIG_H . ($mime === 'image/jpeg' ? '.jpg' : '.png');

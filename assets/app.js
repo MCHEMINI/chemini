@@ -681,6 +681,20 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
     try { await api('sig/add', o); location.reload(); } catch (x) { btn.disabled = false; err.hidden = false; err.textContent = x.message; } });
 })();
 
+/* Signatures : modifier un bandeau (nom, période ou défaut, image) */
+(function(){ document.querySelectorAll('[data-sg-form]').forEach(f => { const id = f.dataset.sgForm, card = f.closest('.sg-card'), btn = card.querySelector('[data-sg-edit]');
+  const d = f.querySelector('[data-sg-def]'), per = f.querySelector('[data-sg-per]'), dates = per.querySelectorAll('input'), file = f.querySelector('input[type=file]'); let data = '';
+  const sync = () => per.classList.toggle('off', d.checked);
+  d.addEventListener('change', () => { if (d.checked) dates.forEach(x => x.value = ''); sync(); });
+  dates.forEach(x => x.addEventListener('input', () => { if (x.value) { d.checked = false; sync(); } }));
+  file.addEventListener('change', () => { const fl = file.files[0]; if (!fl) return; const r = new FileReader(); r.onload = () => { data = r.result; card.querySelector('.sg-thumb img').src = data; }; r.readAsDataURL(fl); });
+  btn.addEventListener('click', () => { f.hidden = !f.hidden; btn.textContent = f.hidden ? 'Modifier' : 'Fermer'; sync(); });
+  f.querySelector('[data-sg-cancel]').addEventListener('click', () => location.reload());
+  f.addEventListener('submit', async ev => { ev.preventDefault(); const err = f.querySelector('.form-error'), b = f.querySelector('.btn-primary'); err.hidden = true;
+    const o = Object.fromEntries(new FormData(f).entries()); o.id = Number(id); o.data = data; b.disabled = true;
+    try { await api('sig/edit', o); location.reload(); } catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });
+}); })();
+
 /* Signatures : prompt Gemini pour générer un bandeau */
 (function(){ const t = document.getElementById('sgTheme'), sub = document.getElementById('sgSub'), out = document.getElementById('sgPrompt'); if (!t || !out) return;
   const build = () => { const m = t.value.trim() || 'GID, administrateur de biens à Paris'; const s2 = (sub && sub.value.trim()) || '';
