@@ -58,7 +58,7 @@
     <div class="field"><label for="sg-s">Diffusé à partir du</label><input class="input" id="sg-s" name="start" type="date"></div>
     <div class="field"><label for="sg-e">Jusqu'au</label><input class="input" id="sg-e" name="end" type="date"></div>
     <div class="field pl-wide"><label for="sg-i">Image</label><input class="input" id="sg-i" type="file" accept="image/png,image/jpeg,image/gif" required></div>
-    <label class="bd-pin"><input type="checkbox" name="is_default" value="1"> Bandeau par défaut (hors périodes programmées)</label>
+    <label class="bd-pin"><input type="checkbox" name="is_default" value="1" checked> Bandeau par défaut (hors périodes programmées)</label>
     <div class="sg-prev" id="sgPrev" hidden><img alt=""></div>
     <p class="form-error" hidden></p>
     <div class="pl-act"><button class="btn btn-primary">Enregistrer</button></div>
