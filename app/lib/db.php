@@ -370,6 +370,11 @@ SQL);
         foreach ($seed as $i => $g) if ($g[0] === 'chemini-site-web') $pdo->prepare('INSERT OR IGNORE INTO guides(slug,cat,icon,title,summary,duration,level,body,audience,pos,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)')->execute([$g[0], $g[1], $g[2], $g[3], $g[4], $g[5], $g[6], $g[7], $g[8], $i, time(), time()]);
         $pdo->exec('PRAGMA user_version = 44;');
     }
+    if ($v < 45) { // Guide Site Web : publication d'annonces depuis le téléphone, visible des annonceurs
+        $seed = is_file(APP_DIR . '/seed/guides.php') ? require APP_DIR . '/seed/guides.php' : [];
+        foreach ($seed as $g) if ($g[0] === 'chemini-site-web') $pdo->prepare('UPDATE guides SET summary=?, duration=?, body=?, audience=?, updated_at=? WHERE slug=? AND updated_by IS NULL')->execute([$g[4], $g[5], $g[7], $g[8], time(), $g[0]]);
+        $pdo->exec('PRAGMA user_version = 45;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

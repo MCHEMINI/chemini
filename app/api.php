@@ -383,7 +383,7 @@ function api(string $r): never {
                 q('INSERT INTO guides(cat,icon,title,summary,duration,level,body,audience,updated_by,updated_at,slug,pos,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,99,?)', array_merge($vals, [$slug, time()])); }
             json_out(['ok' => true, 'go' => '/guides/' . $slug]);
         case 'site/annonce': // Site Web : statut commercial (terme « statuts ») et/ou mise en ligne d'une annonce
-            if (!wp_viewer($u)) json_out(['error' => 'Réservé à la Direction.'], 403);
+            if (!wp_poster($u)) json_out(['error' => 'Réservé aux annonceurs.'], 403);
             $id = in_int('id'); $b = [];
             if (($st = in_int('statut')) > 0) $b['statuts'] = [$st];
             $pub = in_str('status', 10); if (in_array($pub, ['publish', 'draft'], true)) $b['status'] = $pub;
@@ -392,6 +392,42 @@ function api(string $r): never {
             if ($res['code'] !== 200) json_out(['error' => 'WordPress : ' . ($res['error'] ?? 'erreur ' . $res['code'])], 502);
             audit($uid, 'wp_annonce:' . $id . ':' . json_encode($b)); wp_cache_clear();
             json_out(['ok' => true, 'status' => $res['json']['status'] ?? null, 'statuts' => $res['json']['statuts'] ?? []]);
+        case 'site/annonce-create': // nouvelle annonce depuis le formulaire mobile : photos, champs techniques, mentions légales
+            if (!wp_poster($u)) json_out(['error' => 'Réservé aux annonceurs.'], 403);
+            $d = body(); foreach ($d as $k => $v) if (is_string($v)) $d[$k] = mb_substr(trim($v), 0, $k === 'description' ? 8000 : 300);
+            $d['tx'] = ($d['tx'] ?? '') === 'location' ? 'location' : 'vente';
+            $photos = array_slice(array_values(array_filter((array)($d['photos'] ?? []), 'is_string')), 0, 15); $d['photos'] = $photos;
+            if ($miss = wp_ann_check($d)) json_out(['error' => 'Champs obligatoires manquants : ' . implode(', ', $miss) . '.'], 400);
+            $snap = wp_snapshot(); $tax = $snap['tax'] ?? [];
+            $term = function (string $tx, $want) use ($tax) { foreach ($tax[$tx] ?? [] as $id => $nm) if ((string)$id === (string)$want || mb_strtolower($nm) === mb_strtolower((string)$want)) return (int)$id; return 0; };
+            $stName = $d['tx'] === 'location' ? 'A louer' : 'En vente'; $stId = $term('statuts', $stName) ?: $term('statuts', $d['tx'] === 'location' ? 'À louer' : 'En vente');
+            $ids = []; $title = in_str('title', 160);
+            foreach ($photos as $i => $p) {
+                if (!preg_match('#^data:(image/(?:jpeg|png|webp));base64,(.+)$#', $p, $m)) json_out(['error' => 'Photo ' . ($i + 1) . ' : format non reconnu (JPEG, PNG ou WebP).'], 400);
+                $bin = base64_decode($m[2], true); if ($bin === false || strlen($bin) > 8 * 1024 * 1024 || !@getimagesizefromstring($bin)) json_out(['error' => 'Photo ' . ($i + 1) . ' illisible ou trop lourde.'], 400);
+                $up = wp_upload_media($bin, $m[1], guide_slug($title) . '-' . ($i + 1) . ($m[1] === 'image/png' ? '.png' : ($m[1] === 'image/webp' ? '.webp' : '.jpg')), $title);
+                if (isset($up['error'])) json_out(['error' => 'Photo ' . ($i + 1) . ' : ' . $up['error']], 502);
+                $ids[] = $up['id'];
+            }
+            $desc = ''; foreach (preg_split('/\R{2,}/', (string)($d['description'] ?? '')) as $para) if (trim($para) !== '') $desc .= '<p>' . nl2br(e(trim($para))) . '</p>';
+            $feat = []; foreach (['balcon', 'parking', 'jardin', 'terrasse', 'cave', 'ascenseur', 'garage', 'box', 'piscine', 'gardien', 'wc'] as $f) $feat[$f] = in_array($f, (array)($d['features'] ?? []), true) ? 'true' : 'false';
+            $num = fn($k) => (string)(float)str_replace([' ', ','], ['', '.'], (string)($d[$k] ?? ''));
+            $meta = ['address' => in_str('address', 200), 'price' => $d['tx'] === 'location' ? $num('loyer') : $num('prix'), 'property-size' => $num('surface'),
+                     'energy_balance' => ($d['dpe_cas'] ?? 'dpe') === 'dpe' ? (string)($d['dpe'] ?? '') : '', 'consommation' => (string)($d['conso'] ?? ''), 'gaz' => (string)($d['emission'] ?? ''),
+                     'pieces' => (string)($d['pieces'] ?? ''), 'bedrooms' => (string)($d['chambres'] ?? ''), 'bathsrooms' => (string)($d['sdb'] ?? ''), 'floor' => (string)($d['etage'] ?? ''),
+                     'features' => $feat, 'gallery' => implode(',', array_slice($ids, 1))];
+            $post = ['title' => $title, 'content' => $desc . wp_ann_legal_html($d), 'status' => ($d['publier'] ?? '') === '1' ? 'publish' : 'draft',
+                     'statuts' => $stId ? [$stId] : [], 'types' => array_filter([$term('types', $d['type'] ?? '')]), 'emplacement' => array_filter([$term('emplacement', $d['emplacement'] ?? '')]),
+                     'featured_media' => $ids[0] ?? 0, 'meta' => $meta];
+            $res = wp_req('POST', 'wp/v2/annonces', ['context' => 'edit', '_fields' => 'id,status,link,meta'], $post);
+            if (!in_array($res['code'], [200, 201], true)) json_out(['error' => 'WordPress : ' . ($res['error'] ?? 'erreur ' . $res['code'])], 502);
+            $metaOk = !empty($res['json']['meta']['price'] ?? null);
+            audit($uid, 'wp_annonce_create:' . ($res['json']['id'] ?? 0)); wp_cache_clear();
+            json_out(['ok' => true, 'id' => $res['json']['id'], 'status' => $res['json']['status'], 'link' => $res['json']['link'], 'edit' => wp_edit_link((int)$res['json']['id']), 'meta_ok' => $metaOk, 'photos' => count($ids)]);
+        case 'site/posters': // annonceurs (administrateur)
+            if (!wp_admin($u)) json_out(['error' => 'Réservé à l\'administrateur.'], 403);
+            $ids = array_values(array_filter(array_map('intval', (array)(body()['ids'] ?? []))));
+            wp_posters_save($ids); audit($uid, 'wp_posters:' . implode(',', $ids)); json_out(['ok' => true]);
         case 'site/conn': // relier le site (administrateur) : test des identifiants avant enregistrement
             if (!wp_admin($u)) json_out(['error' => 'Réservé à l\'administrateur.'], 403);
             $url = wp_normalize_url(in_str('url', 200)); $wu = in_str('user', 120); $wpw = trim((string)(body()['pass'] ?? ''));

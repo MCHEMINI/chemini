@@ -403,7 +403,7 @@ MD, 'direction'],
 
 ! Changer les réglages d'Exclaimer se fait dans Exclaimer lui-même ; Chemini ne fournit que l'image du moment.
 MD, 'direction'],
-['chemini-site-web', 'Chemini · Direction', '🌐', 'Site Web : statistiques et annonces', 'Suivre le site gidsas.fr et gérer les annonces immobilières depuis Chemini, sans ouvrir WordPress.', '4 min', 'Débutant', <<<'MD'
+['chemini-site-web', 'Chemini · Direction', '🌐', 'Site Web : statistiques et annonces', 'Suivre le site gidsas.fr, publier et gérer les annonces immobilières depuis Chemini ou le téléphone, sans ouvrir WordPress.', '5 min', 'Débutant', <<<'MD'
 ## Relier le site (une seule fois, administrateur)
 1. **Dans WordPress, Comptes › Profil**, section « Mots de passe d'application » : nommez-le « Chemini » et cliquez sur Ajouter. [[Ouvrir la page Connexion|/site-web/connexion]]
 2. **Copiez la clé** (24 caractères) et collez-la dans Site Web › Connexion avec votre identifiant WordPress, puis « Tester et relier ».
@@ -422,9 +422,18 @@ MD, 'direction'],
 3. **« Retirer du site »** repasse l'annonce en brouillon ; **« Mettre en ligne »** la republie.
 4. **Texte, photos et prix** : « Modifier dans WordPress » ouvre l'annonce dans WordPress.
 
+## Publier une annonce depuis le téléphone
+1. **Site Web › Nouvelle annonce** (ou le bouton « + Nouvelle annonce »). [[Nouvelle annonce|/site-web/annonces/nouvelle]]
+2. **Choisissez Vente ou Location**, le type de bien, le secteur, l'adresse et le titre.
+3. **Prenez les photos** directement avec le téléphone : la première est la photo principale.
+4. **Remplissez les champs marqués d'un astérisque** : ils correspondent aux mentions obligatoires (prix et honoraires ou loyer, charges, dépôt de garantie, encadrement des loyers, copropriété, DPE et dépenses d'énergie).
+5. **Vérifiez le récapitulatif** « Mentions ajoutées à l'annonce », puis « Envoyer l'annonce ». Décochez « Publier tout de suite » pour une relecture en brouillon.
+
+> Astuce : la mention Géorisques et le calcul du prix hors honoraires sont ajoutés automatiquement.
+
 ## Pages et SEO
 - **Titre et description affichés dans Google** pour chaque page, avec la longueur idéale (120 à 160 caractères). [[Voir les pages|/site-web/pages]]
-MD, 'direction'],
+MD, 'annonceurs'],
 ['chemini-mot-president', 'Chemini · Président', '🖋️', 'Mot du Président : relire, publier, partager', 'Le cycle mensuel du Mot du Président, de la rédaction automatique au partage par lien.', '3 min', 'Débutant', <<<'MD'
 ## Chaque mois
 1. **Le 25, un brouillon est rédigé** d'après les actualités du mois ; une alerte apparaît sur votre tableau de bord. [[Ouvrir le Mot du Président|/mot-du-president]]

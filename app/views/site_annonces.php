@@ -10,6 +10,7 @@ $tone = fn(string $s) => match (true) { in_array($s, ['En vente', 'A louer', 'À
 $wpS = ['publish' => ['En ligne', 'ok'], 'draft' => ['Brouillon', 'todo'], 'pending' => ['En attente', 'warn'], 'private' => ['Privée', 'todo'], 'future' => ['Programmée', 'warn']];
 $counts = []; foreach ($A as $a) { $k = wp_ann_statut($a, $tax); $counts[$k] = ($counts[$k] ?? 0) + 1; }
 ?>
+<a class="btn btn-primary ws-new" href="/site-web/annonces/nouvelle">+ Nouvelle annonce</a>
 <div class="ws-bar-f">
   <label class="gd-search" for="wsQ"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="wsQ" type="search" placeholder="Rechercher une annonce : rue, arrondissement…" autocomplete="off"></label>
   <div class="ws-chips" role="group" aria-label="Filtrer par statut"><button type="button" class="hv-chip" data-ws-f="" aria-pressed="true">Toutes <b><?= count($A) ?></b></button><?php foreach ($statuts as $id => $nm): if (empty($counts[$nm])) continue; ?><button type="button" class="hv-chip" data-ws-f="<?= e($nm) ?>" aria-pressed="false"><?= e($nm) ?> <b><?= (int)$counts[$nm] ?></b></button><?php endforeach; ?></div>

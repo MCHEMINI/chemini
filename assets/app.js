@@ -889,3 +889,49 @@ document.addEventListener('click', e => { if (e.target.closest('[data-print]')) 
     try { const r = await window.api('site/conn', Object.fromEntries(new FormData(cf).entries())); location.href = r.go || '/site-web'; }
     catch (x) { err.hidden = false; err.textContent = x.message; b.disabled = false; b.textContent = 'Tester et relier'; } });
 })();
+/* Site Web · nouvelle annonce (formulaire mobile) */
+(function(){
+  const f = document.getElementById('naF'); if (!f) return;
+  const photos = []; const thumbs = document.getElementById('naThumbs'), prev = document.getElementById('naPrev'), err = f.querySelector('.form-error');
+  const val = n => { const el = f.querySelector('[name="' + n + '"]:checked') || f.querySelector('[name="' + n + '"]:not([type=radio]):not([type=checkbox])'); return el ? el.value.trim() : ''; };
+  const on = n => !!f.querySelector('[name="' + n + '"]:checked');
+  const num = n => parseFloat(val(n).replace(/\s/g, '').replace(',', '.')) || 0;
+  const eur = (v, d = 0) => v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d }) + ' €';
+  const flags = () => ({ vente: val('tx') === 'vente', location: val('tx') === 'location', copro: on('copro'), acquereur: val('hono_charge') === 'acquereur', encadre: on('encadre'), procedure: on('procedure'), dpe: val('dpe_cas') === 'dpe', logement: on('logement') });
+  const shown = el => { let n = el; while (n && n !== f) { if (n.hidden) return false; n = n.parentElement; } return true; };
+  function sync() {
+    const F = flags();
+    f.querySelectorAll('[data-show]').forEach(el => { el.hidden = !el.dataset.show.split(' ').every(t => F[t]); });
+    const h = document.getElementById('naHors'); if (h) { const p = num('prix'), pc = num('hono_pct'); h.textContent = p && pc ? 'Prix hors honoraires : ' + eur(Math.round(p / (1 + pc / 100))) + ' · honoraires : ' + eur(p - Math.round(p / (1 + pc / 100))) : ''; }
+    const L = [];
+    if (F.location) { if (num('loyer')) L.push('Loyer ' + eur(num('loyer')) + '/mois charges comprises, dont ' + eur(num('charges')) + ' de charges (' + (val('charges_mode') === 'forfait' ? 'forfait' : 'provision') + ')'); if (num('depot')) L.push('Dépôt de garantie : ' + eur(num('depot'))); if (num('hono_loc')) L.push('Honoraires locataire : ' + eur(num('hono_loc')) + ' dont ' + eur(num('hono_edl')) + ' d\'état des lieux'); L.push(on('meuble') ? 'Location meublée' : 'Location vide'); if (F.encadre && num('loyer_ref')) L.push('Encadrement des loyers : référence ' + eur(num('loyer_ref'), 2) + '/m², majoré ' + eur(num('loyer_maj'), 2) + '/m²' + (num('complement') ? ', complément ' + eur(num('complement')) : '')); }
+    else if (num('prix')) L.push(F.acquereur ? 'Prix ' + eur(num('prix')) + ' honoraires inclus · ' + (num('hono_pct') || '?') + ' % TTC à la charge de l\'acquéreur' : 'Prix ' + eur(num('prix')) + ' · honoraires à la charge du vendeur');
+    if (num('surface')) L.push('Surface habitable ' + val('surface') + ' m²' + (F.vente && F.copro && val('carrez') ? ' · Carrez ' + val('carrez') + ' m²' : ''));
+    if (F.copro && num('lots')) L.push('Copropriété de ' + num('lots') + ' lots · charges annuelles ' + eur(num('charges_copro')) + ' · ' + (F.procedure ? 'procédure en cours' : 'aucune procédure en cours'));
+    if (F.dpe && val('dpe')) { L.push('CLASSE ÉNERGIE ' + val('dpe') + ' · CLASSE CLIMAT ' + (val('ges') || '?')); if (F.logement && num('ener_min')) L.push('Dépenses annuelles d\'énergie estimées entre ' + eur(num('ener_min')) + ' et ' + eur(num('ener_max')) + ' (prix ' + (val('ener_annee') || '?') + ')'); if (F.logement && ['F', 'G'].includes(val('dpe'))) L.push('Logement à consommation énergétique excessive : classe ' + val('dpe')); }
+    else if (!F.dpe) L.push({ vierge: 'DPE vierge', encours: 'DPE en cours', non: 'Non soumis au DPE' }[val('dpe_cas')]);
+    L.push('Risques : www.georisques.gouv.fr');
+    prev.textContent = ''; L.forEach(t => { const li = document.createElement('li'); li.textContent = t; prev.appendChild(li); });
+  }
+  f.addEventListener('input', sync); f.addEventListener('change', sync); sync();
+  /* Photos : redimensionnées dans le téléphone (1600 px) avant l'envoi */
+  const resize = file => new Promise((ok, ko) => { const rd = new FileReader(); rd.onerror = () => ko(new Error('Photo illisible : ' + file.name)); rd.onload = () => { const img = new Image(); img.onload = () => { const s = Math.min(1, 1600 / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); ok(c.toDataURL('image/jpeg', 0.82)); }; img.onerror = () => ko(new Error('Format de photo non pris en charge : ' + file.name + ' (utilisez JPEG ou PNG)')); img.src = rd.result; }; rd.readAsDataURL(file); }); // data: (les adresses blob: sont bloquées par la politique de sécurité)
+  function drawThumbs() { thumbs.textContent = ''; photos.forEach((p, i) => { const d = document.createElement('div'); d.className = 'na-th' + (i === 0 ? ' main' : ''); const im = document.createElement('img'); im.src = p; im.alt = ''; d.appendChild(im);
+      const t = document.createElement('span'); t.textContent = i === 0 ? 'Principale' : 'Mettre en premier'; t.className = 'na-th-t'; if (i) t.addEventListener('click', () => { photos.unshift(photos.splice(i, 1)[0]); drawThumbs(); }); d.appendChild(t);
+      const x = document.createElement('button'); x.type = 'button'; x.textContent = '✕'; x.setAttribute('aria-label', 'Retirer la photo'); x.addEventListener('click', () => { photos.splice(i, 1); drawThumbs(); }); d.appendChild(x); thumbs.appendChild(d); }); }
+  document.getElementById('na-ph').addEventListener('change', async e => { for (const file of [...e.target.files]) { if (photos.length >= 15) break; try { photos.push(await resize(file)); } catch (x) { err.hidden = false; err.textContent = x.message; } } e.target.value = ''; drawThumbs(); });
+  f.addEventListener('submit', async e => { e.preventDefault(); err.hidden = true;
+    const miss = []; f.querySelectorAll('label').forEach(l => { if (!/\*\s*$/.test(l.textContent) || !shown(l)) return; const inp = l.htmlFor ? document.getElementById(l.htmlFor) : null; if (inp && !inp.value.trim()) miss.push(l.textContent.replace(/\s*\*\s*$/, '')); });
+    f.querySelectorAll('.na-l').forEach(s => { if (!/\*\s*$/.test(s.textContent) || !shown(s)) return; const grp = s.parentElement.querySelector('[role=radiogroup]'); if (grp && !grp.querySelector('input:checked')) miss.push(s.textContent.replace(/\s*\*\s*$/, '')); });
+    if (!photos.length) miss.push('au moins une photo');
+    if (miss.length) { err.hidden = false; err.textContent = 'À compléter : ' + miss.join(', ') + '.'; err.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
+    const o = {}; new FormData(f).forEach((v, k) => { if (k === 'features') (o.features = o.features || []).push(v); else o[k] = v; }); o.photos = photos;
+    const b = document.getElementById('naGo'); b.disabled = true; b.textContent = 'Envoi des photos et de l\'annonce…';
+    try { const r = await window.api('site/annonce-create', o); f.hidden = true; const dn = document.getElementById('naDone'); dn.hidden = false;
+      document.getElementById('naDoneTxt').textContent = (r.status === 'publish' ? 'L\'annonce est en ligne' : 'L\'annonce est enregistrée en brouillon') + ' avec ' + r.photos + ' photo' + (r.photos > 1 ? 's' : '') + ' et ses mentions obligatoires.' + (r.meta_ok ? '' : ' Prix, surface et caractéristiques n\'ont pas pu être enregistrés dans les champs du thème : complétez-les dans WordPress.');
+      document.getElementById('naView').href = r.link; document.getElementById('naEdit').href = r.edit; window.scrollTo(0, 0); }
+    catch (x) { err.hidden = false; err.textContent = x.message; b.disabled = false; b.textContent = 'Envoyer l\'annonce'; } });
+})();
+
+(function(){ const f = document.getElementById('wsPos'); if (!f) return; f.addEventListener('submit', async e => { e.preventDefault(); const b = f.querySelector('button'); b.disabled = true;
+  try { await window.api('site/posters', { ids: [...f.querySelectorAll('input:checked')].map(i => Number(i.value)) }); location.reload(); } catch (x) { b.disabled = false; b.textContent = x.message; } }); })();

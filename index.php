@@ -94,6 +94,7 @@ try {
             redirect('/organigramme');
         case 'site-web':
         case 'site-web/annonces':
+        case 'site-web/annonces/nouvelle':
         case 'site-web/pages':
         case 'site-web/connexion':
             $u = require_user();

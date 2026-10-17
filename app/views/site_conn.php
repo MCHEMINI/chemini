@@ -35,3 +35,13 @@ $base = $conn ? rtrim($conn['url'], '/') : WP_DEFAULT_URL;
   </section>
 </div>
 <?php endif; ?>
+<?php if ($admin): $pos = wp_posters(); ?>
+<section class="panel ws-posters">
+  <h2>Annonceurs</h2>
+  <p class="muted small">En plus de la Direction, ces personnes peuvent publier et modifier les annonces depuis Chemini (Site Web › Annonces et Nouvelle annonce), sans accès aux statistiques ni à la connexion.</p>
+  <form id="wsPos" class="ws-pos">
+    <?php foreach (users_all() as $x): if (wp_viewer($x)) continue; ?><label class="na-check"><input type="checkbox" name="ids" value="<?= (int)$x['id'] ?>"<?= in_array((int)$x['id'], $pos, true) ? ' checked' : '' ?>> <?= e($x['name']) ?> <span class="muted small"><?= e((string)$x['email']) ?></span></label><?php endforeach; ?>
+    <button class="btn btn-ghost">Enregistrer les annonceurs</button>
+  </form>
+</section>
+<?php endif; ?>
