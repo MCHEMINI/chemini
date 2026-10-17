@@ -135,9 +135,12 @@ function wp_edit_link(int $id, bool $elementor = false): string { return wp_url(
 function wp_posters(): array {
     static $c = null; if ($c !== null) return $c;
     $raw = q("SELECT v FROM kv WHERE k='wp_posters'")->fetchColumn();
-    if ($raw !== false) return $c = array_map('intval', json_decode((string)$raw, true) ?: []);
+    // Personnes invitées avec l'accès Site Web : accès dès l'activation de leur compte
+    $em = json_decode((string)q("SELECT v FROM kv WHERE k='wp_poster_emails'")->fetchColumn(), true) ?: [];
+    $byEmail = $em ? array_map('intval', q('SELECT id FROM users WHERE lower(email) IN (' . implode(',', array_fill(0, count($em), '?')) . ') AND disabled_at IS NULL', array_map('strtolower', $em))->fetchAll(PDO::FETCH_COLUMN)) : [];
+    if ($raw !== false) return $c = array_values(array_unique(array_merge(array_map('intval', json_decode((string)$raw, true) ?: []), $byEmail)));
     // Tant que l'administrateur n'a pas choisi : Gaëtan GENDRY (transaction) est annonceur dès que son compte existe
-    return $c = array_map('intval', q("SELECT id FROM users WHERE (lower(name) LIKE '%gendry%' OR lower(email) LIKE '%gendry%') AND disabled_at IS NULL")->fetchAll(PDO::FETCH_COLUMN));
+    return $c = array_values(array_unique(array_merge(array_map('intval', q("SELECT id FROM users WHERE (lower(name) LIKE '%gendry%' OR lower(email) LIKE '%gendry%') AND disabled_at IS NULL")->fetchAll(PDO::FETCH_COLUMN)), $byEmail)));
 }
 function wp_posters_save(array $ids): void { q("INSERT INTO kv(k,v,updated_at) VALUES('wp_posters',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode(array_values(array_unique(array_map('intval', $ids)))), time()]); }
 function wp_poster(array $u): bool { return wp_viewer($u) || in_array((int)$u['id'], wp_posters(), true); }

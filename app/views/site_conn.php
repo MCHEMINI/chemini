@@ -43,5 +43,18 @@ $base = $conn ? rtrim($conn['url'], '/') : WP_DEFAULT_URL;
     <?php foreach (users_all() as $x): if (wp_viewer($x)) continue; ?><label class="na-check"><input type="checkbox" name="ids" value="<?= (int)$x['id'] ?>"<?= in_array((int)$x['id'], $pos, true) ? ' checked' : '' ?>> <?= e($x['name']) ?> <span class="muted small"><?= e((string)$x['email']) ?></span></label><?php endforeach; ?>
     <button class="btn btn-ghost">Enregistrer les accès</button>
   </form>
+  <?php $pend = json_decode((string)q("SELECT v FROM kv WHERE k='wp_poster_emails'")->fetchColumn(), true) ?: [];
+  $cand = array_values(array_filter(staff_access(), fn($s) => in_array($s['status'], ['none', 'invited'], true) && $s['email']));
+  usort($cand, fn($a, $b) => (stripos($b['name'], 'gendry') !== false) <=> (stripos($a['name'], 'gendry') !== false) ?: strcmp($a['name'], $b['name']));
+  if (true): ?>
+  <form id="wsInv" class="ws-inv">
+    <h3>Inviter un collaborateur avec l'accès Site Web</h3>
+    <p class="muted small">Il reçoit l'invitation par e-mail ; l'accès à la section Site Web est ouvert dès qu'il active son compte.</p>
+    <div class="ws-inv-row"><label class="sr" for="wsInvN">Collaborateur</label><select id="wsInvN" class="input" name="name"><?php foreach ($cand as $s): ?><option value="<?= e($s['name']) ?>"><?= e($s['name']) ?><?= $s['role'] ? ' · ' . e($s['role']) : '' ?><?= $s['status'] === 'invited' ? ' (déjà invité)' : '' ?><?= in_array(strtolower((string)$s['email']), $pend, true) ? ' · accès Site Web prévu' : '' ?></option><?php endforeach; ?><option value="">Autre personne…</option></select>
+    <button class="btn btn-primary">Inviter</button></div>
+    <div class="ws-inv-row ws-inv-new"<?= $cand ? ' hidden' : '' ?>><label class="sr" for="wsInvNm">Nom</label><input id="wsInvNm" class="input" name="new_name" maxlength="60" placeholder="Prénom NOM" value="<?= $cand ? '' : 'Gaëtan GENDRY' ?>"><label class="sr" for="wsInvEm">E-mail</label><input id="wsInvEm" class="input" type="email" name="email" maxlength="190" placeholder="adresse@gidsas.fr"></div>
+    <p class="ws-inv-r small" hidden></p>
+  </form>
+  <?php endif; ?>
 </section>
 <?php endif; ?>

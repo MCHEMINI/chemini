@@ -996,3 +996,8 @@ document.addEventListener('click', async e => {
     const t = document.getElementById('toast'); if (t) { t.textContent = r.consigne ? '✓ Tâche IA créée' : '✓ Maquette refusée'; t.hidden = false; setTimeout(() => location.reload(), 900); } else location.reload(); }
   catch (x) { err.textContent = x.message; err.hidden = false; b.disabled = false; }
 });
+(function(){ const f = document.getElementById('wsInv'); if (!f) return; const sel = f.querySelector('select'), nw = f.querySelector('.ws-inv-new'); if (sel) sel.addEventListener('change', () => { nw.hidden = sel.value !== ''; }); f.addEventListener('submit', async e => { e.preventDefault(); const b = f.querySelector('button'), r = f.querySelector('.ws-inv-r'); b.disabled = true;
+  try { const x = await window.api('site/invite', { name: f.querySelector('select')?.value || '', new_name: f.querySelector('[name=new_name]').value, email: f.querySelector('[name=email]').value }); r.hidden = false;
+    r.innerHTML = ''; r.append(x.sent ? '✓ Invitation envoyée par e-mail. Lien de secours : ' : 'L’e-mail n’a pas pu partir : transmettez ce lien : ');
+    const i = document.createElement('input'); i.className = 'input'; i.readOnly = true; i.value = x.link; i.onclick = () => i.select(); r.append(i); }
+  catch (x) { r.hidden = false; r.textContent = x.message; } b.disabled = false; }); })();

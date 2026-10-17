@@ -1670,3 +1670,5 @@ img[data-zoom]{cursor:zoom-in}
 .mq-open{justify-self:start}
 .mq-act{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .mq-form{display:grid;gap:8px}.mq-form textarea{width:100%;resize:vertical}
+.ws-inv{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);display:grid;gap:8px}.ws-inv h3{margin:0;font:600 16px var(--f-display)}
+.ws-inv-row{display:flex;gap:10px;flex-wrap:wrap}.ws-inv-row select{flex:1;min-width:220px}.ws-inv-r{display:grid;gap:6px;margin:0}

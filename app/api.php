@@ -436,6 +436,24 @@ function api(string $r): never {
             if (!wp_admin($u)) json_out(['error' => 'Réservé à l\'administrateur.'], 403);
             $ids = array_values(array_filter(array_map('intval', (array)(body()['ids'] ?? []))));
             wp_posters_save($ids); audit($uid, 'wp_posters:' . implode(',', $ids)); json_out(['ok' => true]);
+        case 'site/invite': // inviter un collaborateur (annuaire) et lui ouvrir la section Site Web dès l'activation
+            if (!wp_admin($u)) json_out(['error' => 'Réservé à l\'administrateur.'], 403);
+            $s = null; $nm = in_str('name', 120);
+            if ($nm !== '') { foreach (staff_access() as $x) if ($x['name'] === $nm && in_array($x['status'], ['none', 'invited'], true)) $s = $x; }
+            else { $e2 = strtolower(in_str('email', 190)); $n2 = in_str('new_name', 60);
+                if (!filter_var($e2, FILTER_VALIDATE_EMAIL) || $n2 === '') json_out(['error' => 'Indiquez le nom et une adresse e-mail valide.'], 400);
+                if (q('SELECT 1 FROM users WHERE lower(email)=?', [$e2])->fetchColumn()) json_out(['error' => 'Cette personne a déjà un compte : cochez-la dans la liste ci-dessus.'], 400);
+                $s = ['name' => $n2, 'email' => $e2]; }
+            if (!$s || !$s['email']) json_out(['error' => 'Collaborateur introuvable ou déjà inscrit.'], 400);
+            $email = strtolower((string)$s['email']);
+            $em = json_decode((string)q("SELECT v FROM kv WHERE k='wp_poster_emails'")->fetchColumn(), true) ?: [];
+            if (!in_array($email, $em, true)) { $em[] = $email; q("INSERT INTO kv(k,v,updated_at) VALUES('wp_poster_emails',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode($em), time()]); }
+            $tok = b64u_enc(random_bytes(24));
+            $ini = mb_strtoupper(implode('', array_map(fn($p) => mb_substr($p, 0, 1), array_slice(preg_split('/\s+/', trim($s['name'])), 0, 2))));
+            q('INSERT INTO invites(email,name,initials,role,token_hash,expires_at) VALUES(?,?,?,?,?,?)', [$email, $s['name'], $ini, 'member', hash('sha256', $tok), time() + 30 * 86400]);
+            $link = site_url() . '/activation?t=' . $tok; $sent = send_invite($email, $s['name'], $link);
+            audit($uid, 'invite_created:' . $email); audit($uid, 'wp_poster_invite:' . $email);
+            json_out(['ok' => true, 'link' => $link, 'sent' => $sent]);
         case 'site/conn': // relier le site (administrateur) : test des identifiants avant enregistrement
             if (!wp_admin($u)) json_out(['error' => 'Réservé à l\'administrateur.'], 403);
             $url = wp_normalize_url(in_str('url', 200)); $wu = in_str('user', 120); $wpw = trim((string)(body()['pass'] ?? ''));
