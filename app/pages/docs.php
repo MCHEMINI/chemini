@@ -99,7 +99,7 @@ function doc_view(array $u, string $slug): never {
     var A=C.audit, box=document.getElementById('tab-opti'); if(!A||!box||document.getElementById('gidAudit')) return;
     var M=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
     var p=String(A.period||'').split('-'), w=el('div','ga'); w.id='gidAudit';
-    var hd=el('div','ga-h'); hd.appendChild(el('div','ga-eye',(A.kind==='hebdo'||p.length>2?'Contrôle hebdomadaire · ':'Audit · ')+(p.length>2?'semaine du '+(+p[2])+' ':'')+(M[(+p[1]||1)-1]||'')+' '+(p[0]||'')));
+    var hd=el('div','ga-h'); var wk=String(A.week||'').split('-'); hd.appendChild(el('div','ga-eye',wk.length===3?'Contrôle hebdomadaire · semaine du '+(+wk[2]===1?'1er':+wk[2])+' '+M[(+wk[1]||1)-1]+' '+wk[0]:'Audit · '+(M[(+p[1]||1)-1]||'')+' '+(p[0]||'')));
     var nCrit=(A.findings||[]).filter(function(x){return x.level==='crit';}).length; if(nCrit){ var al=el('div','ga-alert'); al.appendChild(tri('crit')); al.appendChild(document.createTextNode(nCrit+' point'+(nCrit>1?'s':'')+' d’alerte à traiter')); hd.appendChild(al); }
     hd.appendChild(el('h2','ga-t',A.headline)); if(A.summary) hd.appendChild(el('p','ga-s',A.summary)); w.appendChild(hd);
     if(A.kpis&&A.kpis.length){ var k=el('div','ga-k'); A.kpis.forEach(function(x){ var c=el('div','ga-kc'); c.appendChild(el('div','ga-kl',x.label)); c.appendChild(el('div','ga-kv',x.value)); if(x.note) c.appendChild(el('div','ga-kn',x.note)); k.appendChild(c); }); w.appendChild(k); }
