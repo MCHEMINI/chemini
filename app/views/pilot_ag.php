@@ -10,7 +10,7 @@
   <summary><span class="btn btn-ghost">📅 Ajouter les AG à l'agenda de l'iPhone</span><span class="muted small">Abonnement personnel, mis à jour automatiquement</span></summary>
   <ol class="ac-ul">
     <li>Sur l'iPhone, touchez ce lien : <a href="<?= e(str_replace('https://', 'webcal://', $ical)) ?>">s'abonner au calendrier des AG</a></li>
-    <li>Ou, dans Réglages › Calendrier › Comptes › Ajouter un compte › Autre › Ajouter un calendrier avec abonnement, collez : <input class="input mono" readonly value="<?= e($ical) ?>" onclick="this.select()"></li>
+    <li>Ou, dans Réglages › Calendrier › Comptes › Ajouter un compte › Autre › Ajouter un calendrier avec abonnement, collez : <input class="input mono" readonly value="<?= e($ical) ?>" data-select></li>
     <li>Ce lien est personnel : ne le partagez pas.</li>
   </ol>
 </details>

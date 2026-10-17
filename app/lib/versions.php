@@ -75,4 +75,5 @@ const VERSIONS = [
     ['2026-10-17 06:40', 'direction', 'Honoraires › Immeubles sur mobile', 'Recherche en grand et liste des immeubles d\'abord ; le titre, le menu Fichier, les onglets, les filtres et les boutons s\'ouvrent par deux pictos à gauche de la taille du texte.'],
     ['2026-10-17 06:45', 'all', 'Menu regroupé en onglets', 'Tâches (Mes tâches, Tâches IA), Notes et livres (Bloc-notes, Mes livres), Informations (Informations, Accueil) ; côté Direction, Immeubles (+ Planning des AG), Honoraires (+ Stratégies) et Pilotage (+ Enquête). Toutes les pages et adresses restent accessibles, onglets adaptés au mobile.'],
     ['2026-10-17 07:15', 'direction', 'Mot du Président : partage par lien', 'Un lien non répertorié, en lecture seule et sans compte, se crée, se copie et se désactive depuis la page du mot (non indexé par les moteurs de recherche).'],
+    ['2026-10-17 07:40', 'all', 'Sécurité renforcée', 'Lien de connexion par e-mail confirmé d\'un clic (les antivirus de messagerie ne le consomment plus), déconnexion protégée, blocage des tentatives par adresse IP qui ne se remet plus à zéro, boutons Imprimer réparés.'],
 ];

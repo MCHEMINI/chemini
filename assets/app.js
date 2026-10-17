@@ -824,3 +824,6 @@ TEXTE À ÉCRIRE SUR L'IMAGE (seul texte autorisé) :
       if (a === 'off') { await call(false); inp.value = ''; on.hidden = true; off.hidden = false; toast('Lien désactivé'); }
     } catch (x) { err.hidden = false; err.textContent = x.message; } finally { b.disabled = false; } });
 })();
+
+/* Remplace les anciens onclick en ligne (bloqués par la politique de sécurité du navigateur) */
+document.addEventListener('click', e => { if (e.target.closest('[data-print]')) window.print(); const s = e.target.closest('input[data-select]'); if (s) s.select(); });

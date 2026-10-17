@@ -10,7 +10,7 @@ $eff = ['', 'rapide', 'moyen', 'important'];
     <h1>Enquête des équipes</h1>
     <div class="date"><?= $n ?> questionnaire<?= $n > 1 ? 's' : '' ?> reçu<?= $n > 1 ? 's' : '' ?> sur <?= (int)$staff ?> collaborateurs · <?= count($pending) ?> en attente · les outils à développer se classent automatiquement selon les réponses</div>
   </div>
-  <div class="head-actions"><a class="btn btn-ghost" href="/enquete">Voir le questionnaire</a><button type="button" class="btn btn-ghost" onclick="window.print()">Imprimer / partager</button></div>
+  <div class="head-actions"><a class="btn btn-ghost" href="/enquete">Voir le questionnaire</a><button type="button" class="btn btn-ghost" data-print>Imprimer / partager</button></div>
 </header>
 
 <div class="sv-part">

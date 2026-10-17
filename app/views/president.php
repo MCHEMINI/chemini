@@ -29,7 +29,7 @@ $src = $w ? (json_decode((string)$w['sources'], true) ?: []) : [];
       <div class="pw-body-r" data-f="body"><?= pw_render($w['body']) ?></div>
       </div>
       <div class="pw-sign"><span class="ag-av">MC</span><span><b>Mehdi Chemini</b><small>Président de GID</small></span></div>
-      <?php if ($src): ?><details class="pw-src"><summary>Sources (<?= count($src) ?>)</summary><ul><?php foreach ($src as $s): ?><li><a href="<?= e($s['url'] ?? '#') ?>" target="_blank" rel="noopener"><?= e($s['title'] ?? $s['url'] ?? '') ?></a></li><?php endforeach; ?></ul></details><?php endif; ?>
+      <?php if ($src): ?><details class="pw-src"><summary>Sources (<?= count($src) ?>)</summary><ul><?php foreach ($src as $s): if (!preg_match('#^https?://#i', (string)($s['url'] ?? ''))) continue; ?><li><a href="<?= e($s['url'] ?? '#') ?>" target="_blank" rel="noopener"><?= e($s['title'] ?? $s['url'] ?? '') ?></a></li><?php endforeach; ?></ul></details><?php endif; ?>
       <?php if ($ed): ?>
       <div class="pw-act">
         <button type="button" class="btn btn-ghost" id="pwEdit">Modifier</button>

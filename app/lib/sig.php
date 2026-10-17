@@ -52,6 +52,7 @@ function sig_track(): void {
     if (isset($_GET['v'])) return; // aperçu affiché dans Chemini : ne compte pas
     $ua = mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 160); $ref = mb_substr((string)($_SERVER['HTTP_REFERER'] ?? ''), 0, 160);
     $h = json_decode((string)q("SELECT v FROM kv WHERE k='sig_hits'")->fetchColumn(), true) ?: [];
+    if (time() - (int)($h['ext'] ?? 0) < 60 && stripos($ref . $ua, 'exclaimer') === false) return; // au plus une écriture par minute : pas d'écritures en rafale sur une adresse publique
     // Toute lecture de l'adresse publique hors de Chemini = Exclaimer (éditeur, serveurs d'envoi) ou messagerie d'un destinataire
     $h['ext'] = time(); $h['ext_n'] = (int)($h['ext_n'] ?? 0) + 1; $h['ext_ua'] = $ua ?: 'service sans nom';
     if (stripos($ref . $ua, 'exclaimer') !== false) $h['exclaimer'] = time();

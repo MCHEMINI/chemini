@@ -158,9 +158,12 @@ try {
             render('reset', ['title' => 'Nouveau mot de passe', 'token' => $tok], false);
         case 'connexion/lien':
             if (ip_blocked()) { http_response_code(429); render('notfound', ['title' => 'Accès bloqué', 'message' => 'Trop de tentatives échouées depuis cette adresse : réessayez dans 30 minutes.'], false); }
-            $tok = (string)($_GET['t'] ?? '');
+            $tok = (string)($_POST['t'] ?? $_GET['t'] ?? '');
             $row = $tok !== '' ? q('SELECT * FROM magic_links WHERE token_hash=? AND used_at IS NULL AND expires_at>?', [hash('sha256', $tok), time()])->fetch() : null;
             if (!$row) { if ($tok !== '') ip_fail(null, 'magic_link'); http_response_code(410); render('notfound', ['title' => 'Lien expiré', 'message' => 'Ce lien de connexion a expiré ou a déjà été utilisé. Demandez-en un nouveau.'], false); }
+            // Ouverture du lien (GET) : simple confirmation, le lien n'est consommé qu'au clic (les antivirus de messagerie qui pré-ouvrent les liens ne le grillent plus)
+            if ($method !== 'POST') render('magic_confirm', ['title' => 'Connexion', 'token' => $tok], false);
+            if (!hash_equals($_SESSION['csrf'] ?? '', (string)($_POST['csrf'] ?? ''))) redirect('/connexion/lien?t=' . rawurlencode($tok));
             q('UPDATE magic_links SET used_at=? WHERE id=?', [time(), $row['id']]);
             login_session((int)$row['user_id']);
             audit((int)$row['user_id'], 'login_magic_link');
@@ -168,7 +171,8 @@ try {
         case 'activation':
             require APP_DIR . '/pages/enroll.php';
             page_enroll((string)($_GET['t'] ?? ''));
-        case 'deconnexion':
+        case 'deconnexion': // POST + jeton : une page tierce ne peut pas déconnecter
+            if ($method !== 'POST' || !hash_equals($_SESSION['csrf'] ?? '', (string)($_POST['csrf'] ?? ''))) redirect('/');
             logout();
             redirect('/connexion');
         case 'microsoft/connexion':

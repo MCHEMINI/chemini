@@ -17,7 +17,7 @@ $checks = [
     <h1><?= e($b['imm']) ?></h1>
     <div class="date">AG <?= $ag ? 'du ' . e(date_long(strtotime($ag))) . (!empty($r['ag_heure']) ? ' à ' . e($r['ag_heure']) : '') : 'à planifier' ?> · <?= (int)$b['lots'] ?> lots · gestionnaire <?= e($gest) ?><?= !empty($b['compta']) ? ' · comptable ' . e($b['compta']) : '' ?></div>
   </div>
-  <button type="button" class="btn btn-ghost" onclick="window.print()">Imprimer la fiche</button>
+  <button type="button" class="btn btn-ghost" data-print>Imprimer la fiche</button>
 </header>
 <div class="ac-grid">
   <article class="panel ac-card">

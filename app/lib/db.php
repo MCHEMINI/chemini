@@ -440,7 +440,7 @@ function ip_fail(?int $uid = null, string $what = 'login'): void {
     rate_hit('fail:' . client_ip());
     if (ip_blocked()) audit($uid, 'ip_blocked:' . $what);
 }
-function ip_ok(): void { rate_clear('fail:' . client_ip()); }
+function ip_ok(): void { /* le compteur d'échecs de l'adresse IP n'est plus remis à zéro par une connexion réussie (sinon un compte valide permettrait de relancer les essais sur un autre) ; il expire seul après 30 minutes */ }
 function ip_block_guard(): void {
     if (ip_blocked()) json_out(['error' => 'Trop de tentatives échouées : cette adresse IP est bloquée pendant 30 minutes.'], 429);
 }

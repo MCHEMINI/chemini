@@ -26,8 +26,8 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
     <?php if ($cur): ?><p class="small"><b><?= e($cur['title']) ?></b> · <?= $cur['is_default'] && !$cur['start'] ? 'bandeau par défaut' : ($cur['active_at'] ? 'brouillon activé, jusqu\'à ce que vous le désactiviez' : 'jusqu\'au ' . e($fd($cur['end'])) . ($def && (int)$def['id'] !== (int)$cur['id'] ? ', puis retour à « ' . e($def['title']) . ' »' : '')) ?></p><?php endif; ?>
     <details class="sg-tech"><summary>Réglage Exclaimer (une seule fois)</summary>
       <p class="small muted">Dans la signature Exclaimer, bandeau › Source de l'image › Lier à une image, puis Lien hypertexte :</p>
-      <input class="input mono" readonly value="<?= e($img) ?>" onclick="this.select()" aria-label="Adresse de l'image">
-      <input class="input mono" readonly value="<?= e($lnk) ?>" onclick="this.select()" aria-label="Adresse du lien">
+      <input class="input mono" readonly value="<?= e($img) ?>" data-select aria-label="Adresse de l'image">
+      <input class="input mono" readonly value="<?= e($lnk) ?>" data-select aria-label="Adresse du lien">
     </details>
   </div>
 </section>

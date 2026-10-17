@@ -381,7 +381,6 @@ function api(string $r): never {
             else { $slug = guide_slug($t); $base = $slug; $i = 2; while (q('SELECT 1 FROM guides WHERE slug=?', [$slug])->fetchColumn()) $slug = $base . '-' . $i++;
                 q('INSERT INTO guides(cat,icon,title,summary,duration,level,body,updated_by,updated_at,slug,pos,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,99,?)', array_merge($vals, [$slug, time()])); }
             json_out(['ok' => true, 'go' => '/guides/' . $slug]);
-        case 'president/save':
         case 'president/share': // créer (on=1) ou désactiver (on=0) le lien non répertorié d'un mot
             if (!pw_editor($u)) json_out(['error' => 'Réservé au Président.'], 403);
             $w = pw_get(in_str('k', 7)); if (!$w) json_out(['error' => 'Mot introuvable.'], 404);
@@ -389,6 +388,7 @@ function api(string $r): never {
             $tok = $w['share_token'] ?: rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
             q('UPDATE president_words SET share_token=? WHERE id=?', [$tok, $w['id']]); audit($uid, 'pw_share_on:' . $w['month']);
             json_out(['ok' => true, 'path' => '/mot/' . $tok]);
+        case 'president/save':
         case 'president/validate':
         case 'president/unvalidate':
             if (!pw_editor($u)) json_out(['error' => 'Réservé au Président.'], 403);

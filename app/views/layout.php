@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=61">
+<link rel="stylesheet" href="/assets/app.css?v=62">
 </head>
 <body>
 <div id="app">
@@ -74,7 +74,7 @@
         <button type="button" data-theme-set="auto" title="Automatique (selon l'appareil)" aria-label="Thème automatique"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
       </span>
     </div>
-    <div class="me"><?= avatar($u) ?><div class="me-id"><?= e($u['name']) ?><small><?= e($u['email']) ?></small></div><a href="/deconnexion" class="me-out" title="Se déconnecter" aria-label="Se déconnecter"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></a></div>
+    <div class="me"><?= avatar($u) ?><div class="me-id"><?= e($u['name']) ?><small><?= e($u['email']) ?></small></div><form method="post" action="/deconnexion" class="me-out-f"><input type="hidden" name="csrf" value="<?= e($_SESSION['csrf'] ?? '') ?>"><button type="submit" class="me-out" title="Se déconnecter" aria-label="Se déconnecter"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button></form></div>
   </aside>
   <main class="<?= !empty($wide) ? 'wide' : '' ?>"><div class="page-tools"><div class="fs-switch" role="group" aria-label="Taille du texte"><button type="button" data-fs="-1" aria-label="Réduire le texte">A−</button><span data-fs-val>100 %</span><button type="button" data-fs="1" aria-label="Agrandir le texte">A+</button></div></div><?php /* Pages regroupées en onglets : une entrée de menu, plusieurs pages (toutes les adresses restent valables) */
     $isDirU = in_array('direction', user_spaces($u), true);
@@ -130,6 +130,6 @@
   <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Créer une tâche IA ou une tâche d'équipe"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=42"></script>
+<script src="/assets/app.js?v=43"></script>
 </body>
 </html>
