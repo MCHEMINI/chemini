@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=59">
+<link rel="stylesheet" href="/assets/app.css?v=60">
 </head>
 <body>
 <div id="app">
@@ -41,27 +41,21 @@
       <a class="<?= $cls('home') ?>" href="/"><i class="dot"></i>Tableau de bord</a>
       <a class="<?= $cls('perso') ?>" href="/espace"><i class="dot"></i>Mails à traiter<?php $nM = (int)q('SELECT COUNT(*) FROM mail_items WHERE user_id=? AND done=0', [(int)$u['id']])->fetchColumn(); if ($nM): ?> <span class="nav-n crit"><?= $nM ?></span><?php endif; ?></a>
       <a class="<?= $cls('mot') ?>" href="/mot-du-president"><i class="dot"></i>Mot du Président</a>
-      <a class="<?= $cls('tasks') ?>" href="/mes-taches"><i class="dot"></i>Mes tâches<?php $nT = ($meK = team_me($u)) ? (int)q('SELECT COUNT(*) FROM team_tasks WHERE person=? AND done_at IS NULL', [$meK])->fetchColumn() : 0; if ($nT): ?> <span class="nav-n"><?= $nT ?></span><?php endif; ?></a>
-      <a class="<?= $cls('notes') ?>" href="/bloc-notes"><i class="dot"></i>Bloc-notes</a>
-      <a class="<?= $cls('books') ?>" href="/mes-livres"><i class="dot"></i>Mes livres</a>
-      <a href="/assistant" class="nav-ia <?= $cls('ia') ?>"><i class="dot"></i>Tâches IA<?php $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nIa): ?> <span class="nav-n"><?= $nIa ?></span><?php endif; ?></a>
+      <a class="<?= in_array($n, ['tasks', 'ia'], true) ? 'active' : '' ?>" href="/mes-taches"><i class="dot"></i>Tâches<?php $nT = ($meK = team_me($u)) ? (int)q('SELECT COUNT(*) FROM team_tasks WHERE person=? AND done_at IS NULL', [$meK])->fetchColumn() : 0; $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nT + $nIa): ?> <span class="nav-n"><?= $nT + $nIa ?></span><?php endif; ?></a>
+      <a class="<?= in_array($n, ['notes', 'books'], true) ? 'active' : '' ?>" href="/bloc-notes"><i class="dot"></i>Notes et livres</a>
       <?php if (in_array('direction', $sp, true)): ?>
       <?= $grp('Direction', 'direction', space_members('direction')) ?>
       <a class="<?= $cls('space-direction') ?>" href="/direction"><i class="dot"></i>Tableau de bord</a>
-      <a class="<?= $cls('immeubles') ?>" href="/immeubles"><i class="dot"></i>Immeubles</a>
-      <a class="<?= $cls('ag') ?>" href="/planning-ag"><i class="dot"></i>Planning des AG</a>
-      <a class="<?= $cls('honoraires') ?>" href="/honoraires"><i class="dot"></i>Honoraires</a>
+      <a class="<?= in_array($n, ['immeubles', 'ag'], true) ? 'active' : '' ?>" href="/immeubles"><i class="dot"></i>Immeubles</a>
+      <a class="<?= in_array($n, ['honoraires', 'strategies'], true) ? 'active' : '' ?>" href="/honoraires"><i class="dot"></i>Honoraires</a>
       <a class="<?= $cls('compta') ?>" href="/comptabilite"><i class="dot"></i>Comptabilité</a>
-      <a class="<?= $cls('strategies') ?>" href="/strategies"><i class="dot"></i>Stratégies</a>
-      <a class="<?= $cls('pilot') ?>" href="/pilotage"><i class="dot"></i>Pilotage</a>
-      <a class="<?= $cls('survey') ?>" href="/enquete/resultats"><i class="dot"></i>Enquête</a>
+      <a class="<?= in_array($n, ['pilot', 'survey'], true) ? 'active' : '' ?>" href="/pilotage"><i class="dot"></i>Pilotage</a>
       <a class="<?= $cls('sig') ?>" href="/signatures"><i class="dot"></i>Signatures</a>
       <?php endif; ?>
       <?= $grp('Équipe', 'gid', space_members('gid')) ?>
       <a class="<?= $cls('dash') ?>" href="/tableau-de-bord"><i class="dot"></i>Tableau de bord</a>
-      <a class="<?= $cls('space-gid') ?>" href="/gid"><i class="dot"></i>Informations</a>
+      <a class="<?= in_array($n, ['space-gid', 'accueil'], true) ? 'active' : '' ?>" href="/gid"><i class="dot"></i>Informations</a>
       <a class="<?= $cls('orga') ?><?= ($nav ?? '') === 'team' ? ' active' : '' ?>" href="/organigramme"><i class="dot"></i>Collaborateurs</a>
-      <a class="<?= $cls('accueil') ?>" href="/accueil"><i class="dot"></i>Accueil</a>
       <a class="<?= $cls('guides') ?>" href="/guides"><i class="dot"></i>Guides</a>
       <?php if (in_array('famille', $sp, true)): ?>
       <?= $grp('Famille', 'famille', space_members('famille')) ?>
@@ -82,7 +76,20 @@
     </div>
     <div class="me"><?= avatar($u) ?><div class="me-id"><?= e($u['name']) ?><small><?= e($u['email']) ?></small></div><a href="/deconnexion" class="me-out" title="Se déconnecter" aria-label="Se déconnecter"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></a></div>
   </aside>
-  <main class="<?= !empty($wide) ? 'wide' : '' ?>"><div class="page-tools"><div class="fs-switch" role="group" aria-label="Taille du texte"><button type="button" data-fs="-1" aria-label="Réduire le texte">A−</button><span data-fs-val>100 %</span><button type="button" data-fs="1" aria-label="Agrandir le texte">A+</button></div></div><?= $content ?></main>
+  <main class="<?= !empty($wide) ? 'wide' : '' ?>"><div class="page-tools"><div class="fs-switch" role="group" aria-label="Taille du texte"><button type="button" data-fs="-1" aria-label="Réduire le texte">A−</button><span data-fs-val>100 %</span><button type="button" data-fs="1" aria-label="Agrandir le texte">A+</button></div></div><?php /* Pages regroupées en onglets : une entrée de menu, plusieurs pages (toutes les adresses restent valables) */
+    $isDirU = in_array('direction', user_spaces($u), true);
+    $TABS = [
+      [['tasks', '/mes-taches', 'Mes tâches'], ['ia', '/assistant', 'Tâches IA']],
+      [['notes', '/bloc-notes', 'Bloc-notes'], ['books', '/mes-livres', 'Mes livres']],
+      $isDirU ? [['immeubles', '/immeubles', 'Immeubles'], ['ag', '/planning-ag', 'Planning des AG']] : [],
+      $isDirU ? [['honoraires', '/honoraires', 'Honoraires'], ['strategies', '/strategies', 'Stratégies']] : [],
+      $isDirU ? [['pilot', '/pilotage', 'Pilotage'], ['survey', '/enquete/resultats', 'Enquête']] : [],
+      [['space-gid', '/gid', 'Informations'], ['accueil', '/accueil', 'Accueil']],
+    ];
+    foreach ($TABS as $T) { if (!in_array($n, array_column($T, 0), true)) continue;
+      echo '<nav class="page-tabs" aria-label="Onglets de la page">';
+      foreach ($T as [$k, $href, $lab]) echo '<a href="' . e($href) . '"' . ($k === $n ? ' class="on" aria-current="page"' : '') . '>' . e($lab) . '</a>';
+      echo '</nav>'; break; } ?><?= $content ?></main>
 </div>
 <div class="ia-fab-wrap">
   <div class="ia-pop panel" id="iaPop" hidden role="dialog" aria-labelledby="iaPopT">
