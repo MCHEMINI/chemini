@@ -242,6 +242,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS reg_items_ext ON reg_items(reg, ext_key);
 PRAGMA user_version = 24;
 SQL);
     }
+    if ($v < 25) { // obligations du cabinet à dater (registre Conformité)
+        $ins = $pdo->prepare("INSERT OR IGNORE INTO reg_items(reg,code,data,ext_key,created_at,updated_at) VALUES('conformite','',?,?,?,?)");
+        foreach (['Carte professionnelle (renouvellement 3 ans)' => 'Paris B 328 620 737, délivrée par la CCI Paris Île-de-France', 'Garantie financière (attestation annuelle)' => 'GALIAN : 13 380 000 € gestion, 120 000 € transaction', 'Assurance RCP (attestation annuelle)' => 'Contrat groupe MMA'] as $o => $n)
+            $ins->execute([json_encode(['objet' => $o, 'personne' => '', 'echeance' => '', 'note' => $n], JSON_UNESCAPED_UNICODE), 'seed-' . md5($o), time(), time()]);
+        $pdo->exec('PRAGMA user_version = 25;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
