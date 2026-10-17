@@ -234,6 +234,7 @@ try {
                 if (!empty($m[2])) book_file($u, (int)$m[1]);
                 page_book_read($u, (int)$m[1]);
             }
+            if (preg_match('#^mot/([A-Za-z0-9_-]{24,64})$#', $route, $m)) { require APP_DIR . '/pages/president.php'; page_president_public($m[1]); }
             if (preg_match('#^partage/([A-Za-z0-9_-]{24,64})$#', $route, $m)) {
                 require APP_DIR . '/pages/trips.php';
                 page_trip_public($m[1]);

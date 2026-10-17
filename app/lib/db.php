@@ -337,6 +337,11 @@ SQL);
         }
         $pdo->exec('PRAGMA user_version = 39;');
     }
+    if ($v < 40) { // Mot du Président : lien de partage non répertorié (lecture seule, sans compte), désactivable
+        $cols = array_column($pdo->query('PRAGMA table_info(president_words)')->fetchAll(), 'name');
+        if (!in_array('share_token', $cols, true)) $pdo->exec('ALTER TABLE president_words ADD COLUMN share_token TEXT');
+        $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS pw_share ON president_words(share_token); PRAGMA user_version = 40;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

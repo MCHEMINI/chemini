@@ -47,6 +47,17 @@ $src = $w ? (json_decode((string)$w['sources'], true) ?: []) : [];
       <ul class="pw-list"><?php foreach ($list as $x): [$sl, $sc] = $st($x); ?><li class="<?= $w && $x['id'] === $w['id'] ? 'on' : '' ?>"><a href="/mot-du-president/<?= e($x['month']) ?>"><b><?= e(pw_month_label($x['month'])) ?></b><span><?= e($x['title']) ?></span></a><?php if ($ed): ?><span class="chip <?= $sc ?>"><?= e(explode(' ·', $sl)[0]) ?></span><?php endif; ?></li><?php endforeach; ?></ul>
       <?php endif; ?>
     </div>
+    <?php if ($ed && $w): $tk = $w['share_token'] ?? null; ?><div class="panel pw-share" id="pwShare" data-k="<?= e($w['month']) ?>">
+      <h3>Partager par lien</h3>
+      <p class="muted small">Lien non répertorié : seules les personnes qui le reçoivent peuvent lire ce mot, sans compte. Il n'apparaît nulle part et peut être désactivé à tout moment.</p>
+      <div class="pw-share-on"<?= $tk ? '' : ' hidden' ?>>
+        <div class="pw-share-row"><input type="text" readonly id="pwShareUrl" value="<?= $tk ? e('/mot/' . $tk) : '' ?>" aria-label="Lien de partage"><button type="button" class="btn btn-primary" data-sh="copy">Copier</button></div>
+        <?php if (!pw_published($w)): ?><p class="small pw-share-warn">Ce mot n'est pas encore publié pour l'équipe : le lien montre la version actuelle.</p><?php endif; ?>
+        <button type="button" class="btn-link" data-sh="off">Désactiver le lien</button>
+      </div>
+      <div class="pw-share-off"<?= $tk ? ' hidden' : '' ?>><button type="button" class="btn btn-ghost" data-sh="on">Créer le lien</button></div>
+      <span class="form-error" hidden></span>
+    </div><?php endif; ?>
     <?php if ($ed): ?><div class="panel pw-how"><h3>Fonctionnement</h3><ol><li>Le 25 de chaque mois, un brouillon est rédigé d'après les actualités du mois.</li><li>Vous le relisez et le modifiez si besoin.</li><li>« Valider la publication » : il paraît le 1er pour toute l'équipe.</li><li>Sans validation, il reste en brouillon et une alerte s'affiche sur votre tableau de bord.</li></ol></div><?php endif; ?>
   </aside>
 </div>

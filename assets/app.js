@@ -807,3 +807,20 @@ TEXTE À ÉCRIRE SUR L'IMAGE (seul texte autorisé) :
   [t, sub].forEach(x => x.addEventListener('input', build)); build();
   document.getElementById('sgCopy').addEventListener('click', async e => { try { await navigator.clipboard.writeText(out.value); e.target.textContent = 'Copié ✓'; } catch (x) { out.select(); document.execCommand('copy'); e.target.textContent = 'Copié ✓'; } setTimeout(() => { e.target.textContent = 'Copier le prompt'; }, 2000); });
 })();
+
+/* Mot du Président : créer, copier, désactiver le lien non répertorié */
+(function(){ const box = document.getElementById('pwShare'); if (!box) return;
+  const inp = box.querySelector('#pwShareUrl'), err = box.querySelector('.form-error'), on = box.querySelector('.pw-share-on'), off = box.querySelector('.pw-share-off');
+  const full = p => p ? (p.startsWith('http') ? p : location.origin + p) : '';
+  if (inp.value) inp.value = full(inp.value);
+  const call = v => { err.hidden = true; return window.api('president/share', { k: box.dataset.k, on: v }); };
+  const toast = m => { const t = document.getElementById('toast'); if (!t) return; t.textContent = m; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(() => (t.hidden = true), 2600); };
+  const copy = async () => { try { await navigator.clipboard.writeText(inp.value); toast('🔗 Lien copié'); } catch (e) { inp.select(); document.execCommand && document.execCommand('copy'); } };
+  box.addEventListener('click', async e => { const b = e.target.closest('[data-sh]'); if (!b) return; const a = b.dataset.sh;
+    try {
+      if (a === 'copy') return copy();
+      b.disabled = true;
+      if (a === 'on') { const j = await call(true); inp.value = full(j.path); on.hidden = false; off.hidden = true; copy(); }
+      if (a === 'off') { await call(false); inp.value = ''; on.hidden = true; off.hidden = false; toast('Lien désactivé'); }
+    } catch (x) { err.hidden = false; err.textContent = x.message; } finally { b.disabled = false; } });
+})();
