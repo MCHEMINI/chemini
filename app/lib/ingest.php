@@ -187,8 +187,13 @@ function ingest_handle(string $kind): never {
         $src = array_values(array_filter(array_map(fn($x) => is_array($x) && preg_match('#^https?://#', (string)($x['url'] ?? '')) ? ['title' => mb_substr((string)($x['title'] ?? ''), 0, 200), 'url' => (string)$x['url']] : null, (array)($d['sources'] ?? []))));
         $send(pw_save((string)($d['month'] ?? ''), (string)($d['title'] ?? ''), (string)($d['chapo'] ?? ''), (string)($d['body'] ?? ''), $src, true));
     }
-    if ($kind === 'banners') { // bandeaux de signature : {items:[{title, mode: default|period|rotation|draft, start, end, data: dataURL}]}
+    if ($kind === 'banners') { // bandeaux de signature : {items:[{title, mode: default|period|rotation|draft, start, end, data: dataURL}], rename:[{id,title}], delete:[id]}
         $out = [];
+        foreach (array_slice((array)($d['rename'] ?? []), 0, 20) as $rn) { $t = mb_substr(trim((string)($rn['title'] ?? '')), 0, 120); if ($t === '') continue;
+            $n = q('UPDATE banners SET title=? WHERE id=?', [$t, (int)($rn['id'] ?? 0)])->rowCount(); $out[] = [$t, $n ? 'renommé' : 'introuvable']; }
+        foreach (array_slice((array)($d['delete'] ?? []), 0, 20) as $id) { $b = q('SELECT * FROM banners WHERE id=?', [(int)$id])->fetch();
+            if (!$b) { $out[] = [(int)$id, 'introuvable']; continue; } if ($b['is_default']) { $out[] = [$b['title'], 'bandeau par défaut : non supprimé']; continue; }
+            q('DELETE FROM banners WHERE id=?', [$b['id']]); foreach (glob(sig_dir() . '/' . basename($b['file']) . '*') ?: [] as $f) @unlink($f); $out[] = [$b['title'], 'supprimé']; }
         foreach (array_slice((array)($d['items'] ?? []), 0, 20) as $it) {
             if (!is_array($it)) continue; $t = mb_substr(trim((string)($it['title'] ?? '')), 0, 120);
             if (!empty($it['replace'])) { // nouvelle image pour un bandeau existant (mode, dates et titre conservés)
