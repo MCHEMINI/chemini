@@ -64,10 +64,10 @@
       <?php endif; ?>
       <?php if (wp_poster($u)): $wpV = wp_viewer($u); ?>
       <?= $grp('Site Web', 'siteweb', array_values(array_filter(users_all(), fn($x) => wp_poster($x)))) ?>
-      <?php if ($wpV): ?><a class="<?= $cls('site-stats') ?>" href="/site-web"><i class="dot"></i>Statistiques</a><?php endif; ?>
+      <a class="<?= $cls('site-stats') ?>" href="/site-web"><i class="dot"></i>Statistiques</a>
       <a class="<?= in_array($n, ['site-ann', 'site-new'], true) ? 'active' : '' ?>" href="/site-web/annonces"><i class="dot"></i>Annonces</a>
-      <?php if ($wpV): ?><a class="<?= $cls('site-pages') ?>" href="/site-web/pages"><i class="dot"></i>Pages et SEO</a>
-      <a class="<?= $cls('site-conn') ?>" href="/site-web/connexion"><i class="dot"></i>Connexion</a><?php endif; ?>
+      <a class="<?= $cls('site-pages') ?>" href="/site-web/pages"><i class="dot"></i>Pages et SEO</a>
+      <?php if ($wpV): ?><a class="<?= $cls('site-conn') ?>" href="/site-web/connexion"><i class="dot"></i>Connexion</a><?php endif; ?>
       <?php endif; ?>
     </nav>
     <div class="rail-picto" role="group" aria-label="Raccourcis">

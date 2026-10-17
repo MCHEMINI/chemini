@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 function guide_editor(array $u): bool { return can_space($u, 'direction'); }
 /** Qui voit un guide : toute l'équipe, Direction, Président ou Famille. */
-const GUIDE_AUD = ['tous' => 'Toute l\'équipe', 'direction' => 'Direction', 'annonceurs' => 'Direction et annonceurs', 'president' => 'Président', 'famille' => 'Famille'];
+const GUIDE_AUD = ['tous' => 'Toute l\'équipe', 'direction' => 'Direction', 'annonceurs' => 'Direction et accès Site Web', 'president' => 'Président', 'famille' => 'Famille'];
 function guide_visible(array $u, ?string $aud): bool {
     return match ($aud ?: 'tous') { 'direction' => can_space($u, 'direction'), 'annonceurs' => wp_poster($u), 'famille' => can_space($u, 'famille'), 'president' => pw_editor($u), default => true };
 }
