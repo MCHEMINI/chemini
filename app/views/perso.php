@@ -7,7 +7,7 @@
 </header>
 
 <div class="grid">
-  <section class="col-12">
+  <section class="col-7">
     <?php
       $mRun = (int)q('SELECT v FROM kv WHERE k=?', ['mails_run:' . (int)$u['id']])->fetchColumn() ?: (int)q('SELECT MAX(created_at) FROM mail_items WHERE user_id=?', [(int)$u['id']])->fetchColumn();
       $now = time(); $h = (int)date('G', $now); // prochaine relève : chaque heure pile de 8 h à 20 h

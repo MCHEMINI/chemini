@@ -1,5 +1,5 @@
 <?php $RQ = rq_mine((int)$u['id']); $unseen = count(array_filter($RQ, fn($x) => $x['status'] === 'answered' && !$x['seen_at'])); ?>
-<section class="col-12 rq-mine" aria-labelledby="rqT"<?= $unseen ? ' data-rq-unseen' : '' ?>>
+<section class="col-5 rq-mine" aria-labelledby="rqT"<?= $unseen ? ' data-rq-unseen' : '' ?>>
   <div class="sec-h"><h2 id="rqT">Mes demandes à la Direction <?php if ($unseen): ?><span class="aiq-n"><?= $unseen ?></span><?php endif; ?></h2><span class="muted small">Visibles uniquement par vous et la Direction</span></div>
   <details class="panel rq-new"<?= $RQ ? '' : ' open' ?>>
     <summary>+ Nouvelle demande</summary>

@@ -1688,3 +1688,5 @@ img[data-zoom]{cursor:zoom-in}
 .rqd-pick{display:flex;flex-wrap:wrap;gap:8px}.rqd-pick .aiq-opt{flex:0 1 auto}
 .rqd-edit{display:grid;gap:8px}.rqd-edit textarea{width:100%;resize:vertical;line-height:1.55}
 @media (max-width:640px){.rq-row{grid-template-columns:minmax(0,1fr)}}
+.rq-mine .rq-row{grid-template-columns:minmax(0,1fr)}
+.rq-mine .sec-h{flex-wrap:wrap;gap:4px 12px}
