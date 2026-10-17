@@ -668,6 +668,44 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
   document.querySelectorAll('[data-inv]').forEach(b => b.addEventListener('click', () => run('team/invite', { name: b.dataset.inv }, b)));
 })();
 
+/* Bulle : onglets Tâche IA / Tâche équipe, envoi ludique */
+function fabBurst(el) { const r = el.getBoundingClientRect(), box = document.createElement('div'); box.className = 'fab-burst'; box.style.left = (r.left + r.width / 2) + 'px'; box.style.top = (r.top + r.height / 2) + 'px';
+  ['🎉', '✅', '⭐', '👏', '🚀', '✨', '💪', '🎯'].forEach((c, i) => { const s = document.createElement('i'); s.textContent = c; const a = (i / 8) * Math.PI * 2; s.style.setProperty('--x', Math.cos(a) * 90 + 'px'); s.style.setProperty('--y', Math.sin(a) * 90 + 'px'); box.appendChild(s); });
+  document.body.appendChild(box); setTimeout(() => box.remove(), 1100); }
+(function(){ const pop = document.getElementById('iaPop'); if (!pop) return;
+  const tabs = pop.querySelectorAll('[data-fab-tab]'), panes = pop.querySelectorAll('[data-fab-pane]');
+  const show = k => { tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.fabTab === k))); panes.forEach(p => p.hidden = p.dataset.fabPane !== k); try { localStorage.setItem('fabTab', k); } catch (e) {} (pop.querySelector('[data-fab-pane="' + k + '"] textarea, [data-fab-pane="' + k + '"] input[type=text], [data-fab-pane="' + k + '"] #fabT') || {}).focus?.(); };
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.fabTab)));
+  try { const k = localStorage.getItem('fabTab'); if (k === 'team') show('team'); } catch (e) {}
+  const f = document.getElementById('fabTeam'); if (!f) return;
+  f.addEventListener('submit', async e => { e.preventDefault(); const err = f.querySelector('.form-error'), b = f.querySelector('.btn-primary'); err.hidden = true; b.disabled = true;
+    const o = Object.fromEntries(new FormData(f).entries());
+    try { await api('team/add', o); fabBurst(b); const who = f.querySelector('[name=person]:checked'); const nm = who ? who.closest('.fab-p').querySelector('small').textContent : '';
+      f.querySelector('#fabT').value = ''; b.disabled = false; toast(nm === 'Moi' ? '✅ Tâche ajoutée à votre liste' : '🚀 Tâche affectée à ' + nm); }
+    catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });
+})();
+/* Barre latérale : sections repliables (mémorisé) */
+(function(){ const nav = document.getElementById('railNav'); if (!nav) return; let st = {}; try { st = JSON.parse(localStorage.getItem('railGroups') || '{}'); } catch (e) {}
+  nav.querySelectorAll('.group').forEach(g => { const id = (g.querySelector('[data-grp]') || {}).dataset?.grp || g.textContent.trim(); const items = [];
+    let n = g.nextElementSibling; while (n && !n.classList.contains('group')) { if (n.tagName === 'A') items.push(n); n = n.nextElementSibling; }
+    const lbl = g.querySelector('span'); lbl.setAttribute('role', 'button'); lbl.tabIndex = 0; lbl.classList.add('grp-t');
+    const hasActive = items.some(a => a.classList.contains('active'));
+    const set = c => { g.classList.toggle('closed', c); items.forEach(a => a.classList.toggle('grp-hide', c)); lbl.setAttribute('aria-expanded', String(!c)); };
+    set(!!st[id] && !hasActive);
+    const tog = () => { const c = !g.classList.contains('closed'); set(c); st[id] = c; try { localStorage.setItem('railGroups', JSON.stringify(st)); } catch (e) {} };
+    lbl.addEventListener('click', tog); lbl.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
+  });
+})();
+/* iPhone : invitation à installer l'application (Safari, hors application installée) */
+(function(){ const ios = /iPhone|iPad|iPod/.test(navigator.userAgent), standalone = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  let seen = null; try { seen = localStorage.getItem('installHint'); } catch (e) {}
+  if (!ios || standalone || seen || !document.getElementById('app')) return;
+  const d = document.createElement('div'); d.className = 'ios-hint'; d.setAttribute('role', 'dialog');
+  d.innerHTML = '<img src="/assets/apple-touch-icon.png" alt=""><div><b>Installer Chemini sur votre iPhone</b><span>Touchez <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-label="Partager"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> puis « Sur l\'écran d\'accueil ».</span><a href="/installer">Voir le guide</a></div><button type="button" aria-label="Fermer">✕</button>';
+  d.querySelector('button').addEventListener('click', () => { d.remove(); try { localStorage.setItem('installHint', '1'); } catch (e) {} });
+  document.body.appendChild(d);
+})();
+
 /* Mot du Président : enregistrer le brouillon */
 (function(){ const f = document.getElementById('pwF'); if (!f) return;
   f.addEventListener('submit', async e => { e.preventDefault(); const err = f.querySelector('.form-error'), b = f.querySelector('.btn-primary'); err.hidden = true; b.disabled = true;

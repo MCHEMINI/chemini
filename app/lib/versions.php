@@ -66,4 +66,5 @@ const VERSIONS = [
     ['2026-10-17 05:50', 'all', 'Tableau de bord Perso', 'Page d\'accueil par défaut : synthèse de toute la plateforme en blocs selon votre profil (mails à traiter en rouge, tâches, Tâches IA, AG, pilotage, équipe), mise à jour automatique ; section Perso en premier dans la barre latérale.'],
     ['2026-10-17 05:50', 'all', 'Mot du Président', 'Un article chaque 1er du mois sur l\'actualité, nos trois métiers et les tendances, publié après validation du Président.'],
     ['2026-10-17 05:50', 'all', 'Barre latérale : pictos', 'Sécurité, Versioning et thème clair / sombre / automatique en pictos au-dessus du profil.'],
+    ['2026-10-17 06:05', 'all', 'Bulle : tâche IA ou tâche d\'équipe', 'Depuis la bulle en bas à droite, créer une consigne pour l\'assistant ou affecter une tâche à soi-même ou à un collègue en trois touches ; sections de la barre latérale repliables ; guide d\'installation sur iPhone.'],
 ];

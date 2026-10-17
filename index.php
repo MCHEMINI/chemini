@@ -54,6 +54,9 @@ try {
             require APP_DIR . '/pages/dashboard.php';
             require APP_DIR . '/pages/perso.php';
             page_home($u);
+        case 'installer':
+            $u = require_user();
+            render('install', ['title' => 'Installer sur iPhone', 'nav' => 'install', 'u' => $u]);
         case 'tableau-de-bord':
             $u = require_user();
             require APP_DIR . '/pages/dashboard.php';

@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=53">
+<link rel="stylesheet" href="/assets/app.css?v=54">
 </head>
 <body>
 <div id="app">
@@ -71,6 +71,7 @@
     <div class="rail-picto" role="group" aria-label="Raccourcis">
       <a href="/securite" class="<?= $n === 'secu' ? 'on' : '' ?>" title="Sécurité" aria-label="Sécurité"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></a>
       <a href="/versioning" class="<?= $n === 'versioning' ? 'on' : '' ?>" title="Versioning" aria-label="Versioning"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></a>
+      <a href="/installer" class="<?= $n === 'install' ? 'on' : '' ?>" title="Installer sur iPhone" aria-label="Installer sur iPhone"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></a>
       <span class="rp-sep" aria-hidden="true"></span>
       <span class="rp-theme" role="group" aria-label="Thème">
         <button type="button" data-theme-set="light" title="Mode clair" aria-label="Mode clair"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
@@ -84,10 +85,14 @@
 </div>
 <div class="ia-fab-wrap">
   <div class="ia-pop panel" id="iaPop" hidden role="dialog" aria-labelledby="iaPopT">
-    <div class="sec-h flat"><h3 id="iaPopT">Nouvelle consigne</h3><button type="button" class="btn-link" data-ia-close aria-label="Fermer">✕</button></div>
-    <form data-api="consignes/create" data-toast="Consigne envoyée : l'assistant la traitera au prochain passage horaire." class="ia-form">
+    <div class="fab-h"><h3 id="iaPopT">Que voulez-vous lancer ?</h3><button type="button" class="btn-link" data-ia-close aria-label="Fermer">✕</button></div>
+    <div class="fab-tabs" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-fab-tab="ia"><span class="fab-emo">✨</span><b>Tâche IA</b><small>l'assistant s'en charge</small></button>
+      <button type="button" role="tab" aria-selected="false" data-fab-tab="team"><span class="fab-emo">🤝</span><b>Tâche équipe</b><small>pour vous ou un collègue</small></button>
+    </div>
+    <form data-api="consignes/create" data-toast="✨ Consigne envoyée : l'assistant la traite au prochain passage." class="ia-form fab-pane" data-fab-pane="ia">
       <label for="iaBody" class="sr">Consigne</label>
-      <textarea class="input" id="iaBody" name="body" maxlength="4000" rows="4" placeholder="Décrivez ce que l'assistant doit faire…" required></textarea>
+      <textarea class="input" id="iaBody" name="body" maxlength="4000" rows="4" placeholder="Ex. Prépare un courrier de relance pour l'immeuble 00421…" required></textarea>
       <div class="ia-form-row">
         <label for="iaPrio" class="small muted">Priorité</label>
         <select class="input" id="iaPrio" name="priority"><?php foreach (CONSIGNE_PRIO as $k => $l): ?><option value="<?= e($k) ?>"<?= $k === 'normale' ? ' selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?></select>
@@ -97,10 +102,26 @@
       </div>
       <p class="muted small">Visible par vous seul · <a href="/assistant">voir mes Tâches IA</a></p>
     </form>
+    <form class="fab-pane fab-team" id="fabTeam" data-fab-pane="team" hidden>
+      <?php $fp = team_people(); $fme = team_me($u); $ini2 = fn(string $n) => mb_strtoupper(mb_substr($n, 0, 1) . (mb_substr(strrchr(' ' . $n, ' '), 1, 1) ?: '')); ?>
+      <div class="fab-lbl">Pour qui ?</div>
+      <div class="fab-people" role="radiogroup" aria-label="Personne">
+        <?php if ($fme && isset($fp[$fme])): ?><label class="fab-p me"><input type="radio" name="person" value="<?= e($fme) ?>" checked><span class="ag-av">Moi</span><small>Moi</small></label><?php endif; ?>
+        <?php foreach ($fp as $pk => $pp): if ($pk === $fme) continue; ?><label class="fab-p" title="<?= e($pp['name'] . ' · ' . $pp['role']) ?>"><input type="radio" name="person" value="<?= e($pk) ?>"><span class="ag-av"><?= e($ini2($pp['name'])) ?></span><small><?= e(strtok($pp['name'], ' ')) ?></small></label><?php endforeach; ?>
+      </div>
+      <label for="fabT" class="fab-lbl">Quoi ?</label>
+      <input class="input" id="fabT" name="title" maxlength="300" placeholder="Ex. Rappeler le président du conseil syndical" required>
+      <div class="fab-lbl">Pour quand ?</div>
+      <div class="fab-due" role="radiogroup" aria-label="Échéance">
+        <?php foreach (['' => 'Sans date', date('Y-m-d') => 'Aujourd\'hui', date('Y-m-d', strtotime('+1 day')) => 'Demain', date('Y-m-d', strtotime('friday this week')) => 'Vendredi', date('Y-m-d', strtotime('+7 days')) => 'Dans 7 jours'] as $dv => $dl): ?><label><input type="radio" name="due" value="<?= e($dv) ?>"<?= $dv === '' ? ' checked' : '' ?>><span><?= e($dl) ?></span></label><?php endforeach; ?>
+      </div>
+      <p class="form-error" hidden></p>
+      <div class="fab-foot"><a href="/organigramme" class="small">Voir les collaborateurs</a><button class="btn btn-primary">Affecter 🚀</button></div>
+    </form>
   </div>
-  <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Tâches IA : donner une consigne"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
+  <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Créer une tâche IA ou une tâche d'équipe"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=36"></script>
+<script src="/assets/app.js?v=37"></script>
 </body>
 </html>
