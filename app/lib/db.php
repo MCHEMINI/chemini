@@ -194,6 +194,14 @@ CREATE TABLE IF NOT EXISTS book_state (book_id INTEGER PRIMARY KEY, user_id INTE
 PRAGMA user_version = 18;
 SQL);
     }
+    if ($v < 19) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS hono_changes (id INTEGER PRIMARY KEY, at INTEGER NOT NULL, user_id INTEGER, source TEXT NOT NULL DEFAULT 'manuel',
+  tab TEXT NOT NULL, ref TEXT, field TEXT, old TEXT, new TEXT);
+CREATE INDEX IF NOT EXISTS hono_changes_at ON hono_changes(at);
+PRAGMA user_version = 19;
+SQL);
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

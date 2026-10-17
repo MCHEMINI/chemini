@@ -290,11 +290,13 @@ function api(string $r): never {
             if (!can_space($u, $dsp)) json_out(['error' => 'Accès refusé.'], 403);
             require_once APP_DIR . '/pages/docs.php';
             if (!doc_can_edit($u, $slug)) json_out(['error' => 'Lecture seule : seul Mehdi Chemini peut modifier ce tableau.'], 403);
-            if (body()['reset'] ?? false) { q('DELETE FROM doc_state WHERE slug=?', [$slug]); json_out(['ok' => true]); }
+            if (body()['reset'] ?? false) { q('DELETE FROM doc_state WHERE slug=?', [$slug]); if ($slug === 'honoraires') q('INSERT INTO hono_changes(at,user_id,source,tab,ref,field,old,new) VALUES(?,?,?,?,?,?,?,?)', [time(), $uid, 'manuel', 'Tous les onglets', '', 'Retour aux données d’origine', '', '']); json_out(['ok' => true]); }
             $json = (string)(body()['json'] ?? '');
             if (strlen($json) > 6_000_000 || json_decode($json) === null) json_out(['error' => 'Données invalides'], 400);
+            $prev = $slug === 'honoraires' ? hono_state() : [];
             q('INSERT INTO doc_state(slug,json,updated_at,updated_by) VALUES(?,?,?,?) ON CONFLICT(slug) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at, updated_by=excluded.updated_by',
                 [$slug, $json, time(), $uid]);
+            if ($slug === 'honoraires') hono_log_diff($prev, json_decode($json, true) ?: [], $uid, 'manuel');
             json_out(['ok' => true]);
 
         /* Espace personnel (privé) */

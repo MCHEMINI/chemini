@@ -13,6 +13,7 @@ require APP_DIR . '/lib/graph.php';
 require APP_DIR . '/lib/mail.php';
 require APP_DIR . '/lib/ingest.php';
 require APP_DIR . '/lib/building.php';
+require APP_DIR . '/lib/hono_log.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -24,7 +25,7 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
-if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv)$#', $route0, $m)) ingest_handle($m[1]);
+if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 
@@ -131,6 +132,11 @@ try {
                 $u = require_user();
                 require APP_DIR . '/pages/immeubles.php';
                 page_building($u, $m[1]);
+            }
+            if ($route === 'honoraires/modifications') {
+                $u = require_user();
+                if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès refusé', 'u' => $u]); }
+                render('hono_changes', ['title' => 'Modifications des honoraires', 'nav' => 'honoraires', 'u' => $u, 'changes' => hono_changes(0, 20000)]);
             }
             if (preg_match('#^mes-livres(?:/(\d+)(/fichier)?)?$#', $route, $m)) {
                 $u = require_user();

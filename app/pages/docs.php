@@ -35,7 +35,13 @@ function hono_extra_cfg(): array {
             'items' => array_map(fn($t) => ['res' => (string)($t['res'] ?? ''), 'objet' => (string)($t['objet'] ?? ''), 'taux' => (string)($t['taux'] ?? ''), 'ht' => (float)($t['ht'] ?? 0), 'ttc' => (float)($t['ttc'] ?? 0)], $det)];
         unset($o);
     }
-    return ['archive' => $arch, 'immopen' => $io, 'immopen_date' => $ag['date'] ?? null, 'pv' => $pv];
+    $mandats = [];
+    foreach ($ag['rows'] ?? [] as $r) {
+        $c = str_pad(preg_replace('/\D/', '', (string)($r['code'] ?? '')), 5, '0', STR_PAD_LEFT);
+        $mandats[$c] = ['fin_mandat' => $r['fin_mandat'] ?? null, 'ag_date' => $r['ag_date'] ?? null, 'limite_convoc' => $r['limite_convoc'] ?? null, 'convoc' => !empty($r['convoc']), 'pv' => !empty($r['pv']), 'last' => $r['last'] ?? null];
+    }
+    return ['archive' => $arch, 'immopen' => $io, 'immopen_date' => $ag['date'] ?? null, 'pv' => $pv, 'mandats' => $mandats,
+        'changes' => hono_changes(strtotime(date('Y-m-01', strtotime('-1 month'))), 3000)];
 }
 
 function doc_get(string $slug): ?array {

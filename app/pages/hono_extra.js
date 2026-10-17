@@ -84,6 +84,39 @@
     '.ha-i{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:6px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);background:none;font:italic 600 10px/1 Georgia,serif;cursor:pointer;vertical-align:1px;padding:0}.ha-i:hover{background:var(--accent);color:#fff}',
     '.tabpop{display:contents}.tabpop-btn{display:none}',
     '@media (max-width:820px){.tabpop{display:block;position:relative;margin:6px 0 10px}.tabpop-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 14px;border:1px solid var(--line,#ddd);border-radius:10px;background:var(--surface,#fff);color:var(--text,#111);font:inherit;font-weight:600;cursor:pointer}.tabpop-btn svg{width:18px!important;height:18px!important;flex:none}.tabpop.open .tabpop-btn svg{transform:rotate(180deg)}.tabpop>nav.tabs{display:none!important}.tabpop.open>nav.tabs{display:flex!important;flex-direction:column;position:absolute;z-index:50;top:calc(100% + 6px);left:0;right:0;padding:6px;border:1px solid var(--line,#ddd);border-radius:12px;background:var(--surface,#fff);box-shadow:0 14px 40px rgba(0,0,0,.18)}.tabpop.open>nav.tabs button{text-align:left;padding:12px;border:0;border-radius:8px;font-size:15px}.tabpop.open>nav.tabs button[aria-selected=true]{background:var(--line,#eee)}}',
+    '.hd{margin:0 0 26px}.hd-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:18px}',
+    '.hd-eye{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}',
+    '.hd-t{margin:6px 0 0;font:500 26px/1.2 "Lora",Georgia,serif;color:var(--text)}',
+    '.hd-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:99px;font-weight:600;font-size:14px}.hd-badge.crit{background:rgba(192,57,43,.1);color:#b4412f}.hd-badge.ok{background:rgba(46,125,79,.1);color:#2e7d4f}',
+    '.hd-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden}',
+    '.hd-kc{padding:16px 18px;border-left:1px solid var(--border)}.hd-kc:first-child{border-left:0}',
+    '.hd-kv{font:500 26px/1.1 "Lora",Georgia,serif;color:var(--text);font-variant-numeric:tabular-nums}.hd-kc.neg .hd-kv{color:#b4412f}.hd-kc.pos .hd-kv{color:#2e7d4f}',
+    '.hd-kl{font-size:13px;font-weight:600;margin-top:6px;color:var(--text)}.hd-kn{font-size:12px;color:var(--text-2);margin-top:2px}',
+    '.hd-st{margin:28px 0 10px;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--text-2)}',
+    '.hd-alerts{display:grid;gap:10px}',
+    '.hd-al{border:1px solid var(--border);border-left:4px solid #d68a1c;border-radius:10px;background:var(--surface)}.hd-al.crit{border-left-color:#c0392b;background:linear-gradient(90deg,rgba(192,57,43,.05),transparent 40%) ,var(--surface)}',
+    '.hd-al summary{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none}.hd-al summary::-webkit-details-marker{display:none}',
+    '.hd-al summary::after{content:"";margin-left:auto;width:9px;height:9px;border-right:2px solid var(--text-2);border-bottom:2px solid var(--text-2);transform:rotate(45deg);transition:transform .15s}.hd-al[open] summary::after{transform:rotate(-135deg)}',
+    '.hd-al-t{display:flex;flex-direction:column;gap:2px}.hd-al.crit strong{color:#b4412f}.hd-al-n{font-size:13px;color:var(--text-2)}',
+    '.hd-tri{width:20px;height:20px;flex:none}.hd-tri.crit{color:#c0392b}.hd-tri.warn{color:#d68a1c}',
+    '.hd-todo{margin:0 16px 10px 48px;font-size:13.5px;color:var(--text-2)}',
+    '.hd-al .hd-tbl{margin:0 16px 14px 48px;width:calc(100% - 64px)}',
+    '.hd-tbl{border-collapse:collapse;font-size:13.5px;width:100%}.hd-tbl td,.hd-tbl th{padding:8px 10px;border-top:1px solid var(--grid,var(--border));text-align:left}',
+    '.hd-tbl th{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2);border-top:0;background:var(--surface-2,transparent)}',
+    '.hd-tbl .n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.hd-tbl .c{color:var(--text-2);font-variant-numeric:tabular-nums;width:60px}.hd-tbl .p{color:var(--text-2);white-space:nowrap}.hd-tbl td.neg{color:#b4412f;font-weight:600}',
+    '.hd-scroll{border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:auto}',
+    '.hd-pill{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-weight:600;font-size:12.5px}.hd-pill .hd-tri{width:15px;height:15px}.hd-pill.crit{color:#b4412f}.hd-pill.warn{color:#b0701a}',
+    '.hd-empty{color:var(--text-2);margin:0}.hd-foot{font-size:12.5px;color:var(--text-2);margin:12px 0 0}',
+    '.hd-more{margin-top:26px;border-top:1px solid var(--border);padding-top:14px}.hd-more>summary{cursor:pointer;font-weight:600;color:var(--accent);padding:6px 0;margin-bottom:12px}',
+    '.hm-h{margin-bottom:18px}.hm-s{margin:8px 0 0;color:var(--text-2)}',
+    '.hm-day{border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:14px;overflow:hidden}',
+    '.hm-date{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;background:var(--surface-2,transparent);border-bottom:1px solid var(--border)}.hm-date strong::first-letter{text-transform:uppercase}.hm-date span{font-size:12.5px;color:var(--text-2)}',
+    '.hm-list{list-style:none;margin:0;padding:0}.hm-list li{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:10px 16px;border-top:1px solid var(--grid,var(--border));font-size:14px}.hm-list li:first-child{border-top:0}',
+    '.hm-time{color:var(--text-2);font-size:12.5px;font-variant-numeric:tabular-nums}.hm-tab{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}',
+    '.hm-field{display:block;color:var(--text-2);margin-top:2px}.hm-field del{color:#a6403a}.hm-field ins{color:#2e7d4f;text-decoration:none;font-weight:600}',
+    '.hm-who{font-size:12.5px;color:var(--text-2);white-space:nowrap}.hm-who.auto{color:var(--accent)}',
+    '.hm-more{display:inline-block;margin-top:6px;font-weight:600;color:var(--accent);text-decoration:none}.hm-more:hover{text-decoration:underline}',
+    '@media (max-width:640px){.hm-list li{grid-template-columns:44px minmax(0,1fr)}.hm-who{grid-column:2}.hd-al .hd-tbl,.hd-todo{margin-left:16px;width:calc(100% - 32px)}.hd-t{font-size:22px}}',
     /* Fenêtres : même charte que les dialogues du site (sur-titre, titre Lora, boutons sobres) */
     '.ha-dtx{min-width:96px}.ha-dtx.ha-bad{outline:2px solid #c0392b;outline-offset:-2px}',
     '.ha-dlg-bd{position:fixed;inset:0;z-index:2000;background:rgba(10,13,18,.55);backdrop-filter:blur(2px);display:grid;place-items:center;padding:16px;animation:haIn .15s ease-out}',
@@ -697,8 +730,141 @@
     var sp = bar.querySelector('.spacer'); bar.insertBefore(wrap, sp || null);
   }
 
+  /* ---------- État courant du tableau ---------- */
+  function getState() {
+    var st = null;
+    try { st = JSON.parse(localStorage.getItem(C.key) || 'null'); } catch (e) { /* rien */ }
+    if (!st || !st.bld) { try { st = JSON.parse((document.getElementById('seed') || {}).textContent || 'null'); } catch (e) { /* rien */ } }
+    return st && st.bld ? st : { bld: [] };
+  }
+  function tri(lv) { var sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('class', 'hd-tri ' + lv); sv.setAttribute('aria-hidden', 'true'); sv.innerHTML = '<path d="M12 3 2 21h20L12 3z" fill="currentColor"/><path d="M12 10v5M12 18h.01" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>'; return sv; }
+  var GN = { SR: 'Sébastien Raoult', SE: 'Sihame Eshaibi', LC: 'Laurent Chatelain', LD: 'Laurent Diez', KM: 'Kathy Maltez', NG: 'Namik Gadouche', AG: 'Angélique Grevet', ID: 'Ivana Debuire' };
+
+  /* ---------- Optimisation & stratégie : tableau de décision ---------- */
+  function decisionBoard() {
+    var box = document.getElementById('tab-opti'); if (!box) return;
+    var old = document.getElementById('hdBoard'); if (old) old.remove();
+    var st = getState(), today = new Date().toISOString().slice(0, 10), M = C.mandats || {};
+    var B = st.bld.map(function (b) { return { b: b, code: code5(b.num), lots: num(b.lots), perdus: num(b.perdus), h1: num(b.h2526), hv: num(b.h2627v), he: num(b.h2627e), ag: String(b.dateAG || ''), pv: String(b.datePV || ''), port: b.port || b.gest || '?' }; });
+    var act = B.filter(function (x) { return !(x.perdus > 0 && !x.hv); }), lost = B.filter(function (x) { return x.perdus > 0 && !x.hv; });
+    var sum = function (a, f) { return a.reduce(function (s, x) { return s + f(x); }, 0); };
+    var tot1 = sum(act, function (x) { return x.h1; }), totv = sum(act, function (x) { return x.hv; });
+    var held = act.filter(function (x) { return x.ag; }), voted = held.filter(function (x) { return x.he > 0; });
+    var gapAll = sum(voted, function (x) { return x.he - x.hv; });
+    var lotsP = act.filter(function (x) { return x.lots > 0 && x.hv > 0; }).map(function (x) { return x.hv / x.lots; }).sort(function (a, b) { return a - b; });
+    var med = lotsP.length ? lotsP[Math.floor(lotsP.length / 2)] : 0;
+    var days = function (d) { return Math.round((new Date(today) - new Date(d)) / 864e5); };
+    var alerts = [
+      { lv: 'crit', t: 'AG votées sous la proposition', items: voted.filter(function (x) { return x.he < x.hv - 1; }), v: function (x) { return x.he - x.hv; }, fmt: 'eur', todo: 'Comprendre la négociation et la reporter sur le contrat ; préparer la hausse au prochain renouvellement.' },
+      { lv: 'crit', t: 'PV non remis plus de 21 jours après l’AG', items: held.filter(function (x) { return !x.pv && days(x.ag) > 21; }), v: function (x) { return days(x.ag); }, fmt: 'j', todo: 'Relancer le gestionnaire : le PV doit être diffusé dans le mois qui suit l’AG.' },
+      { lv: 'crit', t: 'Mandats expirés ou expirant sous 60 jours', items: act.filter(function (x) { var m = M[x.code]; return m && m.fin_mandat && days(m.fin_mandat) > -60 && !(m.ag_date && m.ag_date < m.fin_mandat && m.ag_date >= today); }), v: function (x) { return M[x.code].fin_mandat; }, fmt: 'date', todo: 'Planifier l’AG de renouvellement avant la fin du mandat (risque de perte du mandat).' },
+      { lv: 'crit', t: 'Convocations en retard', items: act.filter(function (x) { var m = M[x.code]; return m && m.limite_convoc && m.limite_convoc < today && !m.convoc && m.ag_date && m.ag_date >= today; }), v: function (x) { return M[x.code].ag_date; }, fmt: 'date', todo: 'Envoyer les convocations ou reporter l’AG.' },
+      { lv: 'warn', t: 'Immeubles sans hausse 2026-2027', items: act.filter(function (x) { return x.hv > 0 && x.h1 > 0 && x.hv <= x.h1; }), v: function (x) { return x.hv - x.h1; }, fmt: 'eur', todo: 'Vérifier l’indexation et proposer une hausse au prochain vote.' },
+      { lv: 'warn', t: 'Honoraires sous 70 % de la médiane au lot', items: act.filter(function (x) { return med && x.lots > 0 && x.hv > 0 && x.hv / x.lots < med * 0.7; }), v: function (x) { return Math.max(0, x.lots * med * 0.85 - x.hv); }, fmt: 'eur', todo: 'Potentiel de rattrapage à porter au prochain renouvellement (médiane : ' + EUR.format(med) + ' / lot).' }
+    ].filter(function (a) { return a.items.length; });
+    var nCrit = alerts.filter(function (a) { return a.lv === 'crit'; }).reduce(function (n, a) { return n + a.items.length; }, 0);
+
+    var w = h('div', 'hd'); w.id = 'hdBoard';
+    var hd = h('div', 'hd-h'); var l = h('div');
+    l.appendChild(h('div', 'hd-eye', 'Tableau de décision · ' + new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })));
+    l.appendChild(h('h2', 'hd-t', 'Honoraires 2026-2027 : où agir maintenant'));
+    hd.appendChild(l);
+    var badge = h('div', 'hd-badge ' + (nCrit ? 'crit' : 'ok')); if (nCrit) badge.appendChild(tri('crit')); badge.appendChild(document.createTextNode(nCrit ? nCrit + ' alerte' + (nCrit > 1 ? 's' : '') + ' à traiter' : 'Aucune alerte critique')); hd.appendChild(badge);
+    w.appendChild(hd);
+    var k = h('div', 'hd-k');
+    [[EUR.format(totv), 'Honoraires 26-27 à voter', (tot1 ? (totv / tot1 * 100 - 100).toFixed(1).replace('.', ',') + ' % vs 25-26' : '')],
+     [held.length + ' / ' + act.length, 'AG tenues', (act.length ? Math.round(held.length / act.length * 100) + ' % du portefeuille' : '')],
+     [(gapAll >= 0 ? '+' : '') + EUR.format(gapAll), 'Voté vs proposé', voted.length + ' AG votée' + (voted.length > 1 ? 's' : ''), gapAll < 0 ? 'neg' : 'pos'],
+     [String(lost.length), 'Immeubles perdus', EUR.format(sum(lost, function (x) { return x.h1; })) + ' d’honoraires 25-26', lost.length ? 'neg' : ''],
+     [med ? EUR.format(med) : '–', 'Médiane au lot', 'honoraires 26-27 / lots']
+    ].forEach(function (x) { var c = h('div', 'hd-kc ' + (x[3] || '')); c.appendChild(h('div', 'hd-kv', x[0])); c.appendChild(h('div', 'hd-kl', x[1])); if (x[2]) c.appendChild(h('div', 'hd-kn', x[2])); k.appendChild(c); });
+    w.appendChild(k);
+
+    w.appendChild(h('h3', 'hd-st', 'Alertes et points de vigilance'));
+    if (!alerts.length) w.appendChild(h('p', 'hd-empty', 'Aucune alerte : toutes les vérifications sont au vert.'));
+    var ag = h('div', 'hd-alerts');
+    alerts.forEach(function (a) {
+      var tot = a.fmt === 'eur' ? sum(a.items, a.v) : null;
+      var d = h('details', 'hd-al ' + a.lv), sm = h('summary');
+      sm.appendChild(tri(a.lv)); var tx = h('span', 'hd-al-t'); tx.appendChild(h('strong', null, a.t)); tx.appendChild(h('span', 'hd-al-n', a.items.length + ' immeuble' + (a.items.length > 1 ? 's' : '') + (tot != null ? ' · ' + (tot > 0 && a.lv === 'warn' && a.t.indexOf('médiane') > 0 ? 'potentiel ' : '') + EUR.format(tot) : ''))); sm.appendChild(tx);
+      d.appendChild(sm); d.appendChild(h('p', 'hd-todo', a.todo));
+      var tb = h('table', 'hd-tbl'); a.items.slice().sort(function (x, y) { var vx = a.v(x), vy = a.v(y); return typeof vx === 'number' ? (a.lv === 'crit' && a.fmt === 'eur' ? vx - vy : vy - vx) : String(vx).localeCompare(String(vy)); }).forEach(function (x) {
+        var tr = h('tr'), v = a.v(x); tr.appendChild(h('td', 'c', x.code)); tr.appendChild(h('td', null, x.b.imm || '')); tr.appendChild(h('td', 'p', GN[x.port] || x.port));
+        tr.appendChild(h('td', 'n', a.fmt === 'eur' ? EUR.format(v) : a.fmt === 'j' ? v + ' j' : fdate(v))); tb.appendChild(tr);
+      });
+      d.appendChild(tb); ag.appendChild(d);
+    });
+    w.appendChild(ag);
+
+    w.appendChild(h('h3', 'hd-st', 'Par gestionnaire'));
+    var ports = {}; act.forEach(function (x) { (ports[x.port] = ports[x.port] || []).push(x); });
+    var alertBy = {}; alerts.forEach(function (a) { a.items.forEach(function (x) { var o = alertBy[x.port] = alertBy[x.port] || { crit: 0, warn: 0 }; o[a.lv]++; }); });
+    var pt = h('table', 'hd-tbl hd-port'), th = h('tr');
+    ['Gestionnaire', 'Immeubles', 'AG tenues', 'À voter 26-27', 'Évol.', 'Voté vs proposé', '€ / lot', 'Alertes'].forEach(function (x, i) { th.appendChild(h('th', i ? 'n' : null, x)); }); pt.appendChild(th);
+    Object.keys(ports).sort(function (a, b) { return sum(ports[b], function (x) { return x.hv; }) - sum(ports[a], function (x) { return x.hv; }); }).forEach(function (p) {
+      var a = ports[p], hv = sum(a, function (x) { return x.hv; }), h1 = sum(a, function (x) { return x.h1; }), lots = sum(a, function (x) { return x.lots; });
+      var vo = a.filter(function (x) { return x.ag && x.he > 0; }), gp = sum(vo, function (x) { return x.he - x.hv; }), al = alertBy[p] || { crit: 0, warn: 0 };
+      var tr = h('tr'); tr.appendChild(h('td', null, GN[p] || p)); tr.appendChild(h('td', 'n', String(a.length)));
+      tr.appendChild(h('td', 'n', a.filter(function (x) { return x.ag; }).length + ' / ' + a.length)); tr.appendChild(h('td', 'n', EUR.format(hv)));
+      tr.appendChild(h('td', 'n', h1 ? (hv / h1 * 100 - 100).toFixed(1).replace('.', ',') + ' %' : '–'));
+      var g = h('td', 'n' + (gp < -1 ? ' neg' : ''), vo.length ? (gp >= 0 ? '+' : '') + EUR.format(gp) : '–'); tr.appendChild(g);
+      tr.appendChild(h('td', 'n', lots ? EUR.format(hv / lots) : '–'));
+      var ac = h('td', 'n'); if (al.crit) { var s1 = h('span', 'hd-pill crit'); s1.appendChild(tri('crit')); s1.appendChild(document.createTextNode(al.crit)); ac.appendChild(s1); } if (al.warn) { var s2 = h('span', 'hd-pill warn'); s2.appendChild(tri('warn')); s2.appendChild(document.createTextNode(al.warn)); ac.appendChild(s2); } if (!al.crit && !al.warn) ac.textContent = '—'; tr.appendChild(ac);
+      pt.appendChild(tr);
+    });
+    var wrapT = h('div', 'hd-scroll'); wrapT.appendChild(pt); w.appendChild(wrapT);
+    w.appendChild(h('p', 'hd-foot', 'Calculé à partir du tableau des honoraires, des PV d’AG relevés dans vos mails et du planning ImmOpen. Contrôle et mise à jour automatiques chaque lundi à 7 h.'));
+    box.insertBefore(w, box.firstChild);
+    // le reste de l'onglet (analyse détaillée, simulations) est replié sous le tableau de décision
+    if (!document.getElementById('hdMore')) {
+      var more = h('details', 'hd-more'); more.id = 'hdMore'; more.appendChild(h('summary', null, 'Analyse détaillée, simulations et tableaux complets'));
+      [].slice.call(box.children).forEach(function (c) { if (c !== w && c.id !== 'gidAudit' && c !== more) more.appendChild(c); });
+      box.appendChild(more);
+    }
+    var au = document.getElementById('gidAudit'); if (au && au.previousSibling !== w) box.insertBefore(au, w.nextSibling);
+  }
+
+  /* ---------- Onglet « Modifications » ---------- */
+  function modifsTab() {
+    var nav = document.querySelector('nav.tabs'), opti = document.getElementById('tab-opti'); if (!nav || !opti || document.getElementById('tab-modifs')) return;
+    var btn = h('button', null, 'Modifications'); btn.setAttribute('role', 'tab'); btn.dataset.tab = 'modifs'; btn.setAttribute('aria-selected', 'false');
+    var ob = nav.querySelector('[data-tab="opti"]'); nav.insertBefore(btn, ob ? ob.nextSibling : null);
+    var sec = h('section', 'tab'); sec.id = 'tab-modifs'; opti.parentNode.insertBefore(sec, opti.nextSibling);
+    btn.addEventListener('click', function () {
+      [].forEach.call(nav.querySelectorAll('button'), function (x) { x.setAttribute('aria-selected', x === btn ? 'true' : 'false'); });
+      [].forEach.call(document.querySelectorAll('section.tab'), function (x) { x.classList.toggle('active', x === sec); });
+    });
+    var L = Array.isArray(C.changes) ? C.changes : [], mk = function (t) { var d = new Date(t * 1000); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2); };
+    var cur = mk(Date.now() / 1000), show = L.filter(function (c) { return mk(c.at) === cur; }), label = cur;
+    if (!show.length && L.length) { label = mk(L[0].at); show = L.filter(function (c) { return mk(c.at) === label; }); }
+    var p = label.split('-'), hd = h('div', 'hm-h');
+    hd.appendChild(h('div', 'hd-eye', 'Journal des modifications · ' + MOIS_L[+p[1] - 1] + ' ' + p[0]));
+    hd.appendChild(h('h2', 'hd-t', 'Modifications du tableau des honoraires'));
+    hd.appendChild(h('p', 'hm-s', 'Toutes les modifications des onglets Honoraires (saisies et mises à jour automatiques), regroupées par jour. ' + show.length + ' modification' + (show.length > 1 ? 's' : '') + ' ce mois-ci.'));
+    sec.appendChild(hd);
+    if (!show.length) sec.appendChild(h('p', 'hd-empty', 'Aucune modification enregistrée pour l’instant. Les prochaines saisies apparaîtront ici.'));
+    var byDay = {}; show.forEach(function (c) { var d = new Date(c.at * 1000).toLocaleDateString('fr-CA'); (byDay[d] = byDay[d] || []).push(c); });
+    Object.keys(byDay).sort().reverse().forEach(function (d) {
+      var card = h('section', 'hm-day'), dt = new Date(d + 'T12:00:00');
+      var top = h('div', 'hm-date'); top.appendChild(h('strong', null, dt.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))); top.appendChild(h('span', null, byDay[d].length + ' modification' + (byDay[d].length > 1 ? 's' : ''))); card.appendChild(top);
+      var ul = h('ul', 'hm-list');
+      byDay[d].forEach(function (c) {
+        var li = h('li'); li.appendChild(h('span', 'hm-time', new Date(c.at * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })));
+        var wh = h('span', 'hm-what'); wh.appendChild(h('span', 'hm-tab', c.tab)); if (c.ref) { wh.appendChild(document.createTextNode(' · ')); wh.appendChild(h('strong', null, c.ref)); }
+        var f = h('span', 'hm-field', c.field); if (c.old !== '' || c.new !== '') { f.appendChild(document.createTextNode(' : ')); f.appendChild(h('del', null, c.old !== '' ? c.old : 'vide')); f.appendChild(document.createTextNode(' → ')); f.appendChild(h('ins', null, c.new !== '' ? c.new : 'vide')); } wh.appendChild(f);
+        li.appendChild(wh); li.appendChild(h('span', 'hm-who' + (c.source === 'auto' ? ' auto' : ''), c.user)); ul.appendChild(li);
+      });
+      card.appendChild(ul); sec.appendChild(card);
+    });
+    var a = h('a', 'hm-more', 'Voir les mois précédents →'); a.href = '/honoraires/modifications'; a.target = '_top'; sec.appendChild(a);
+    if (location.hash === '#modifs') btn.click();
+  }
+  var MOIS_L = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
   function init() {
-    applyHidden(); colPicker(); archPicker(); decorate(); renderCard(); crossCheck();
+    applyHidden(); colPicker(); archPicker(); decorate(); renderCard(); crossCheck(); modifsTab(); decisionBoard();
+    window.addEventListener('load', function () { setTimeout(decisionBoard, 50); });
+    var ob = document.querySelector('nav.tabs [data-tab="opti"]'); if (ob) ob.addEventListener('click', function () { setTimeout(decisionBoard, 0); });
     if (location.hash === '#annexes' && A) openDetail(true);
     var t = document.getElementById('immTbl');
     var ccT = null;

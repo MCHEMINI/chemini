@@ -104,6 +104,9 @@ function ingest_handle(string $kind): never {
         q("INSERT INTO kv(k,v,updated_at) VALUES('ag_planning',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode(['date' => (string)($d['date'] ?? date('Y-m-d')), 'rows' => array_values($d['rows'])], JSON_UNESCAPED_UNICODE), time()]);
         $send(['ok' => true, 'rows' => count($d['rows'])]);
     }
+    if ($kind === 'honofill') { // complète les cellules vides du tableau des honoraires (PV d'AG, planning ImmOpen) ; extra = {code:{dateAG,datePV,h2627e,lots}}
+        $send(hono_autofill(is_array($d['extra'] ?? null) ? $d['extra'] : null));
+    }
     if ($kind === 'annexes') { // relevé ImmOpen des honoraires annexes : {at, source, cats:[{acc,k,l}], years:{"2026-2027":{end, partial, b:{code:{catIndex:montant}}}}}
         $d['id'] = 'ingest-' . date('YmdHis');
         if (!annexes_store($d)) $send(['error' => 'cats / years manquants'], 400);
