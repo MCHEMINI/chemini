@@ -58,7 +58,8 @@ function ingest_handle(string $kind): never {
     if (!is_array($d)) $send(['error' => 'JSON invalide'], 400);
     $str = fn($v, int $max) => mb_substr(trim((string)($v ?? '')), 0, $max);
     if ($kind === 'questions') { // {items:[{key, question, context, options[], multi, other, task}]}
-        $send(['ok' => true, 'items' => aiq_store((array)($d['items'] ?? []))]);
+        $rm = 0; foreach ((array)($d['remove'] ?? []) as $k) $rm += q("DELETE FROM ai_questions WHERE qkey=? AND status='open'", [(string)$k])->rowCount(); // questions devenues sans objet
+        $send(['ok' => true, 'removed' => $rm, 'items' => aiq_store((array)($d['items'] ?? []))]);
     }
     if ($kind === 'maquettes') { // maquettes HTML à valider par la Direction : {items:[{slug, title, description, html, task}]}
         $send(['ok' => true, 'items' => mq_store((array)($d['items'] ?? []))]);
