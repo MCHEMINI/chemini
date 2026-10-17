@@ -27,7 +27,7 @@ function wp_conn_clear(): void { q("DELETE FROM kv WHERE k='wp_conn'"); wp_cache
 function wp_url(): string { return rtrim((wp_conn()['url'] ?? WP_DEFAULT_URL), '/'); }
 function wp_normalize_url(string $u): ?string {
     $u = trim($u); if ($u === '') return null;
-    if (!preg_match('#^https://[a-z0-9.-]+(?::\d+)?(/[^\s?#]*)?$#i', $u)) return null; // HTTPS uniquement
+    if (!preg_match('~^https://[a-z0-9.-]+(?::\d+)?(/[^\s?#]*)?$~i', $u)) return null; // HTTPS uniquement
     return rtrim(preg_replace('#/wp-admin.*$|/wp-json.*$#i', '', $u), '/');
 }
 
