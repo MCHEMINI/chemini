@@ -71,9 +71,8 @@ try {
             if ($route === 'versioning') page_versioning($u);
             page_assistant($u);
         case 'equipe':
-            $u = require_user();
-            require APP_DIR . '/pages/team.php';
-            page_team($u);
+            require_user();
+            redirect('/organigramme');
         case 'signatures':
             $u = require_user();
             if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Réservé à la Direction.'], false); }

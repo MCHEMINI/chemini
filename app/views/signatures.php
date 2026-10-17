@@ -27,8 +27,31 @@
   </div>
 </section>
 
+<section class="panel sg-make">
+  <div class="sg-mk-h"><h3>Créer le visuel</h3><span class="muted small">Format et prompt prêts pour Gemini</span></div>
+  <div class="sg-mk">
+    <div>
+      <ul class="sg-spec">
+        <li><b>600 × 200 px</b><span>taille affichée dans les mails (format 3:1)</span></li>
+        <li><b>1200 × 400 px</b><span>taille à générer et à importer, pour un rendu net sur les écrans haute définition</span></li>
+        <li><b>PNG ou JPG</b><span>moins de 300 Ko conseillé (2 Mo au plus)</span></li>
+        <li><b>Marges</b><span>textes à 40 px des bords au moins ; pas de texte sous 24 px de haut</span></li>
+        <li><b>Charte</b><span>bleu nuit #2B2A6B, orange #F07D1A, blanc ; titres en capitales, police sans empattement grasse</span></li>
+      </ul>
+      <label class="small muted" for="sgTheme">Message du bandeau</label>
+      <input class="input" id="sgTheme" value="Meilleurs vœux 2027 — merci pour votre confiance" placeholder="Ex. Fermeture du cabinet du 24 au 26 décembre">
+    </div>
+    <div>
+      <label class="small muted" for="sgPrompt">Prompt à coller dans Gemini</label>
+      <textarea class="input bd-ta sg-prompt" id="sgPrompt" rows="11" readonly></textarea>
+      <div class="sg-mk-a"><button type="button" class="btn btn-primary" id="sgCopy">Copier le prompt</button><a class="btn btn-ghost" href="https://gemini.google.com/app" target="_blank" rel="noopener">Ouvrir Gemini</a></div>
+      <p class="muted small">Si l'image générée n'est pas exactement au format 3:1, demandez à Gemini « recadre en 1200 × 400 px sans couper le texte ».</p>
+    </div>
+  </div>
+</section>
+
 <details class="panel bd-new" id="sgForm"<?= $list ? '' : ' open' ?>>
-  <summary><span class="btn btn-primary">Nouveau bandeau</span><span class="muted small">PNG, JPG ou GIF, 2 Mo au plus · largeur conseillée 600 px</span></summary>
+  <summary><span class="btn btn-primary">Nouveau bandeau</span><span class="muted small">Image de 1200 × 400 px (affichée en 600 × 200 px) · PNG, JPG ou GIF, 2 Mo au plus</span></summary>
   <form class="pl-form" id="sgF">
     <div class="field pl-wide"><label for="sg-t">Nom</label><input class="input" id="sg-t" name="title" maxlength="120" required placeholder="Ex. Vœux 2027"></div>
     <div class="field pl-wide"><label for="sg-l">Lien au clic (facultatif)</label><input class="input" id="sg-l" name="link" maxlength="500" placeholder="https://www.gidsas.fr/…"></div>

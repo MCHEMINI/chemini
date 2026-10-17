@@ -6,7 +6,7 @@ $mine = $p['key'] === $me; $people = team_people(); $showWho = false;
   <div class="tp-id">
     <span class="ag-av tp-av"><?= e($ini($p['name'])) ?></span>
     <div>
-      <div class="eyebrow"><a href="/equipe">Collaborateurs</a> · <?= e($p['role']) ?></div>
+      <div class="eyebrow"><a href="/organigramme">Collaborateurs</a> · <?= e($p['role']) ?></div>
       <h1><?= e($p['name']) ?><?= $mine ? ' <small class="muted">(vous)</small>' : '' ?></h1>
       <div class="date"><?= count($open) ?> à faire · <?= count($done) ?> faite<?= count($done) > 1 ? 's' : '' ?><?= $p['email'] ? ' · <a href="mailto:' . e($p['email']) . '">' . e($p['email']) . '</a>' : '' ?></div>
     </div>

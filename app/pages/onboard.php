@@ -52,7 +52,16 @@ function company_facts(): array {
 }
 
 function page_organigramme(array $u): never {
-    render('organigramme', ['title' => 'Organigramme', 'nav' => 'orga', 'u' => $u, 'f' => company_facts(), 'people' => team_people(), 'A' => accueil_answers()]);
+    require_once APP_DIR . '/pages/team.php';
+    $today = date('Y-m-d'); $stat = []; $todayList = [];
+    foreach (team_load($u) as $t) { // visibilité selon le rôle (team_where)
+        if ($t['done_at'] || $t['title'] === SURVEY_TASK) continue;
+        $s = &$stat[$t['person']]; $s = ($s ?? []) + ['open' => 0, 'late' => 0]; $s['open']++;
+        if ($t['due'] && $t['due'] < $today) $s['late']++; unset($s);
+        if ($t['due'] && $t['due'] <= $today && $t['title'] !== SURVEY_TASK) $todayList[] = $t;
+    }
+    render('organigramme', ['title' => 'Collaborateurs', 'nav' => 'orga', 'u' => $u, 'f' => company_facts(), 'people' => team_people(), 'A' => accueil_answers(),
+        'stat' => $stat, 'todayList' => $todayList, 'isDir' => can_space($u, 'direction'), 'me' => team_me($u)]);
 }
 
 function page_accueil(array $u): never {

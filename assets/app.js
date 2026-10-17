@@ -665,3 +665,19 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
     const d = Object.fromEntries(new FormData(f).entries()); d.data = data; btn.disabled = true;
     try { await api('sig/add', d); location.reload(); } catch (x) { btn.disabled = false; err.hidden = false; err.textContent = x.message; } });
 })();
+
+/* Signatures : prompt Gemini pour générer un bandeau */
+(function(){ const t = document.getElementById('sgTheme'), out = document.getElementById('sgPrompt'); if (!t || !out) return;
+  const build = () => { const m = t.value.trim() || 'GID, administrateur de biens à Paris';
+    out.value = `Crée une bannière horizontale de signature e-mail au format exact 1200 × 400 pixels (ratio 3:1), en haute définition, pour GID, administrateur de biens indépendant à Paris depuis plus de 50 ans (syndic de copropriété et gestion locative).
+
+Message principal, écrit en français, en grandes lettres capitales blanches, police sans empattement grasse, parfaitement lisible : « ${m} ».
+Une courte ligne secondaire en orange en dessous si elle aide le message.
+
+Mise en page : texte sur les deux tiers gauche, sur un fond bleu nuit (#2B2A6B) ; à droite, une photo lumineuse d'un immeuble haussmannien parisien sous un ciel bleu, séparée par une bande diagonale orange (#F07D1A). Un fin filet orange en haut et en bas.
+Style sobre, haut de gamme et professionnel, cohérent avec un cabinet immobilier parisien. Marges d'au moins 40 pixels autour du texte.
+
+Interdits : aucun logo inventé, aucune adresse, aucun numéro de téléphone, aucun autre texte que le message, pas de fautes d'orthographe, pas de filigrane.`; };
+  t.addEventListener('input', build); build();
+  document.getElementById('sgCopy').addEventListener('click', async e => { try { await navigator.clipboard.writeText(out.value); e.target.textContent = 'Copié ✓'; } catch (x) { out.select(); document.execCommand('copy'); e.target.textContent = 'Copié ✓'; } setTimeout(() => { e.target.textContent = 'Copier le prompt'; }, 2000); });
+})();
