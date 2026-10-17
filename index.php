@@ -58,13 +58,15 @@ try {
             page_notes($u);
         case 'assistant':
         case 'assistant/historique':
+        case 'versioning':
             $u = require_user();
             require APP_DIR . '/pages/assistant.php';
             if ($route === 'assistant/historique') page_assistant_history($u);
+            if ($route === 'versioning') page_versioning($u);
             page_assistant($u);
         case 'strategies':
             $u = require_user();
-            require APP_DIR . '/pages/strategies.php';
+            require_once APP_DIR . '/pages/strategies.php';
             page_strategies($u);
         case 'immeubles':
             $u = require_user();

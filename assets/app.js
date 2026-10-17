@@ -442,20 +442,31 @@
     });
   }
 
-  /* Planning des AG : onglets par gestionnaire + filtre statut */
-  (function(){ const tabs = $$('.ag-tab'), s = document.getElementById('agS'); if (!tabs.length || !s) return;
-    let g = '';
+  /* Planning des AG : recherche, gestionnaire, statut et filtres rapides (mémorisés) */
+  (function(){ const G = document.getElementById('agG'), Q = document.getElementById('agQ'); if (!G || !Q) return;
+    const segs = $$('.ag-seg [data-s]'), kpis = $$('.ag-kpi'), cnt = document.getElementById('agCount'), none = document.getElementById('agNone');
+    let st = { g: '', s: '', k: '' };
     const apply = () => {
-      tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.g === g)));
+      const q = Q.value.trim().toLowerCase(); let tot = 0;
+      segs.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === st.s)));
+      kpis.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === st.k)));
+      G.value = st.g;
       document.querySelectorAll('.ag-group').forEach(sec => {
-        const okG = !g || sec.dataset.g === g; let any = false;
-        sec.querySelectorAll('tbody tr').forEach(tr => { const v = s.value, ok = !v || (v === 'alerte' ? tr.dataset.a === '1' : tr.dataset.s === v); tr.hidden = !ok; any = any || ok; });
-        sec.hidden = !okG || !any; });
-      try { localStorage.setItem('gid_ag', JSON.stringify([g, s.value])); } catch (e) {} };
-    try { const v = JSON.parse(localStorage.getItem('gid_ag') || '[]'); if (v[0] && tabs.some(t => t.dataset.g === v[0])) g = v[0]; if (v[1]) s.value = v[1]; } catch (e) {}
-    tabs.forEach((t, i) => { t.addEventListener('click', () => { g = t.dataset.g; apply(); });
-      t.addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; e.preventDefault(); const n = tabs[(i + d + tabs.length) % tabs.length]; n.focus(); n.click(); }); });
-    s.addEventListener('change', apply); apply(); })();
+        let n = 0;
+        if (!st.g || sec.dataset.g === st.g) sec.querySelectorAll('tbody tr').forEach(tr => {
+          const ok = (!st.s || (st.s === 'alerte' ? tr.dataset.a === '1' : tr.dataset.s === st.s)) && (!st.k || (' ' + tr.dataset.k + ' ').includes(' ' + st.k + ' ')) && (!q || tr.dataset.q.includes(q));
+          tr.hidden = !ok; if (ok) n++; });
+        sec.hidden = !n; const gc = sec.querySelector('[data-gc]'); if (gc) gc.textContent = n; tot += n; });
+      if (cnt) cnt.textContent = tot + ' immeuble' + (tot > 1 ? 's' : '') + ' affiché' + (tot > 1 ? 's' : '') + (st.g || st.s || st.k || q ? ' · ' : '');
+      if (cnt && (st.g || st.s || st.k || q)) { const r = document.createElement('button'); r.type = 'button'; r.className = 'btn-link'; r.textContent = 'Réinitialiser les filtres'; r.addEventListener('click', () => { st = { g: '', s: '', k: '' }; Q.value = ''; apply(); }); cnt.appendChild(r); }
+      if (none) none.hidden = tot > 0;
+      try { localStorage.setItem('gid_ag2', JSON.stringify(st)); } catch (e) {} };
+    try { const v = JSON.parse(localStorage.getItem('gid_ag2') || '{}'); if (v && typeof v === 'object') st = Object.assign(st, v); if (st.g && ![...G.options].some(o => o.value === st.g)) st.g = ''; } catch (e) {}
+    G.addEventListener('change', () => { st.g = G.value; apply(); });
+    segs.forEach(b => b.addEventListener('click', () => { st.s = b.dataset.s; apply(); }));
+    kpis.forEach(b => b.addEventListener('click', () => { st.k = st.k === b.dataset.k ? '' : b.dataset.k; if (st.k) st.s = ''; apply(); document.querySelector('.ag-bar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+    let t; Q.addEventListener('input', () => { clearTimeout(t); t = setTimeout(apply, 120); });
+    apply(); })();
 
   /* Planning des AG : ordre et affichage des colonnes, tri par colonne (mémorisés pour chaque utilisateur) */
   (function(){
@@ -533,11 +544,14 @@
 document.addEventListener('click', e => { const tr = e.target.closest('tr[data-href]'); if (!tr || e.target.closest('a,button,input,select,textarea')) return;
   if (e.metaKey || e.ctrlKey) window.open(tr.dataset.href, '_blank'); else location.href = tr.dataset.href; });
 
-/* Comptabilité : filtre par comptable */
-(function(){ const sel = document.getElementById('cpF'); if (!sel) return;
-  const apply = () => { const v = sel.value; document.querySelectorAll('[data-cp]').forEach(el => { el.hidden = !!v && el.dataset.cp !== v; }); try { localStorage.setItem('gid_cp', v); } catch (e) {} };
-  try { const v = localStorage.getItem('gid_cp'); if (v && [...sel.options].some(o => o.value === v)) sel.value = v; } catch (e) {}
-  sel.addEventListener('change', apply); apply(); })();
+/* Comptabilité : une fiche par comptable, détail affiché sous les blocs */
+(function(){ const tabs = [...document.querySelectorAll('[data-cp-tab]')]; if (!tabs.length) return;
+  const show = (n, scroll) => { tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.cpTab === n)));
+    document.querySelectorAll('[data-cp-panel]').forEach(p => { p.hidden = p.dataset.cpPanel !== n; if (!p.hidden && scroll) p.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    try { localStorage.setItem('gid_cp', n); } catch (e) {} };
+  let v = null; try { v = localStorage.getItem('gid_cp'); } catch (e) {}
+  show(tabs.some(t => t.dataset.cpTab === v) ? v : tabs[0].dataset.cpTab, false);
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.cpTab, true))); })();
 
 /* Sidebar : liste des personnes ayant accès à une section */
 (function(){
@@ -550,3 +564,14 @@ document.addEventListener('click', e => { const tr = e.target.closest('tr[data-h
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 })();
+
+/* Voir plus / Réduire : listes limitées à 10 lignes */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-more]'); if (!b) return;
+  const box = b.parentElement, list = box.querySelector('[data-more-list]'); if (!list) return;
+  const open = b.dataset.open === '1';
+  list.querySelectorAll('[data-more-x]').forEach(li => { li.hidden = open; });
+  if (!b.dataset.more0) b.dataset.more0 = b.textContent;
+  b.textContent = open ? b.dataset.more0 : (b.dataset.less || 'Réduire');
+  b.dataset.open = open ? '0' : '1';
+});

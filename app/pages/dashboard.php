@@ -87,9 +87,9 @@ function dir_overview(array $u): array {
         $act++; $ttc += hono_num($b['h2627v']); $h25 += hono_num($b['h2526']);
         if (!empty($b['dateAG'])) $held++;
         $e = hono_num($b['h2627e']); if ($e > 0 && $e < hono_num($b['h2627v']) - 1) { $under++; $underGap += $e - hono_num($b['h2627v']); }
-        $f = bld_finance(str_pad((string)$b['num'], 5, '0', STR_PAD_LEFT));
-        if ($f && isset($col[$f['color']])) { $col[$f['color']]++; if ($f['color'] === 'red') $gapRed += max(0, (COST_FIXED + COST_LOT * $f['lots'] + COST_HOUR * $f['hours']) / (1 - MARGIN_GREEN) * 1.2 - $f['ttc']); }
     }
+    require_once APP_DIR . '/pages/strategies.php';
+    $sn = strat_snapshot(); $col = $sn['data']['tot']; $gapRed = $sn['data']['gapRed'];
     $an = annexes_data(); $anCur = null;
     if ($an && !empty($an['years'])) {
         $ys = array_keys($an['years']); sort($ys); $y = end($ys); $tot = 0;

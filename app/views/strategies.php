@@ -1,6 +1,14 @@
 <?php
 $eur = fn($v) => number_format((float)$v, 0, ',', ' ') . ' €';
 $all = max(1, $tot['green'] + $tot['orange'] + $tot['red']);
+$nm = strtotime('first day of next month', $snapAt);
+$dl = function (string $k, $cur, bool $money = false, bool $goodUp = true) use ($prev, $eur) {
+    if (!$prev) return '';
+    $p = $k === 'gap' ? $prev['gapRed'] : ($prev['tot'][$k] ?? null); if ($p === null) return '';
+    $d = $cur - $p; if (abs($d) < ($money ? 1 : 0.5)) return '<em class="st-d">= vs ' . e(MOIS[(int)date('n', strtotime($prev['month'] . '-01')) - 1]) . '</em>';
+    $good = $goodUp ? $d > 0 : $d < 0;
+    return '<em class="st-d ' . ($good ? 'up' : 'down') . '">' . ($d > 0 ? '+' : '−') . ($money ? e($eur(abs($d))) : (int)abs($d)) . ' vs ' . e(MOIS[(int)date('n', strtotime($prev['month'] . '-01')) - 1]) . '</em>';
+};
 $dots = fn(int $n) => str_repeat('●', $n) . '<span class="st-off">' . str_repeat('●', 3 - $n) . '</span>';
 $card = function (array $l) use ($eur, $dots, $choices) { ob_start(); $on = !empty($choices[$l['k']]); ?>
   <article class="st-card <?= $on ? 'on' : '' ?>">
@@ -22,7 +30,7 @@ $card = function (array $l) use ($eur, $dots, $choices) { ob_start(); $on = !emp
   <div>
     <div class="eyebrow">Direction · Stratégies</div>
     <h1>Rentabilité et leviers</h1>
-    <div class="date">Où gagner du temps et de la marge, en un coup d'œil · modèle de coût : <?= number_format(COST_FIXED, 0, ',', ' ') ?> € par immeuble + <?= COST_LOT ?> € par lot + <?= COST_HOUR ?> € par heure incluse (HT)</div>
+    <div class="date">Où gagner du temps et de la marge, en un coup d'œil · chiffres au <?= e(date_short($snapAt)) ?> <?= date('Y', $snapAt) ?>, mis à jour le 1er de chaque mois (prochaine mise à jour le 1er <?= e(MOIS_LONG[(int)date('n', $nm) - 1]) ?>)<br>Modèle de coût : <?= number_format(COST_FIXED, 0, ',', ' ') ?> € par immeuble + <?= COST_LOT ?> € par lot + <?= COST_HOUR ?> € par heure incluse (HT)</div>
   </div>
 </header>
 
@@ -30,10 +38,10 @@ $card = function (array $l) use ($eur, $dots, $choices) { ob_start(); $on = !emp
   <div class="st-gauge">
     <div class="st-bar"><i class="g" style="width:<?= round($tot['green'] / $all * 100, 1) ?>%"></i><i class="o" style="width:<?= round($tot['orange'] / $all * 100, 1) ?>%"></i><i class="r" style="width:<?= round($tot['red'] / $all * 100, 1) ?>%"></i></div>
     <div class="st-tiles">
-      <div class="g"><b><?= (int)$tot['green'] ?></b><span>rentables</span><small><?= number_format($lots['green'], 0, ',', ' ') ?> lots</small></div>
-      <div class="o"><b><?= (int)$tot['orange'] ?></b><span>fragiles</span><small><?= number_format($lots['orange'], 0, ',', ' ') ?> lots</small></div>
-      <div class="r"><b><?= (int)$tot['red'] ?></b><span>non rentables</span><small><?= number_format($lots['red'], 0, ',', ' ') ?> lots</small></div>
-      <div class="m"><b><?= e($eur($gapRed)) ?></b><span>manque à gagner</span><small>pour remettre les non rentables au vert</small></div>
+      <div class="g"><b><?= (int)$tot['green'] ?></b><span>rentables</span><small><?= number_format($lots['green'], 0, ',', ' ') ?> lots</small><?= $dl('green', $tot['green']) ?></div>
+      <div class="o"><b><?= (int)$tot['orange'] ?></b><span>fragiles</span><small><?= number_format($lots['orange'], 0, ',', ' ') ?> lots</small><?= $dl('orange', $tot['orange'], false, false) ?></div>
+      <div class="r"><b><?= (int)$tot['red'] ?></b><span>non rentables</span><small><?= number_format($lots['red'], 0, ',', ' ') ?> lots</small><?= $dl('red', $tot['red'], false, false) ?></div>
+      <div class="m"><b><?= e($eur($gapRed)) ?></b><span>manque à gagner</span><small>pour remettre les non rentables au vert</small><?= $dl('gap', $gapRed, true, false) ?></div>
     </div>
   </div>
 </section>

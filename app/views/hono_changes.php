@@ -11,7 +11,7 @@ $fmtMonth = fn(string $k) => ucfirst(MOIS_LONG[(int)substr($k, 5, 2) - 1]) . ' '
   <div>
     <div class="eyebrow">Direction · Honoraires</div>
     <h1>Modifications</h1>
-    <div class="date">Historique complet des modifications apportées au tableau des honoraires · <?= count($changes) ?> modification<?= count($changes) > 1 ? 's' : '' ?></div>
+    <div class="date">Historique complet des modifications apportées au tableau des honoraires · saisies enregistrées en direct, mise à jour automatique chaque matin à 8 h · <?= count($changes) ?> modification<?= count($changes) > 1 ? 's' : '' ?></div>
   </div>
   <a class="btn" href="/honoraires">← Retour aux honoraires</a>
 </header>

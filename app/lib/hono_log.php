@@ -61,8 +61,17 @@ function hono_log_diff(array $old, array $new, ?int $uid, string $source): int {
 }
 
 /** Modifications récentes groupées pour l'affichage : [{at, user, source, tab, ref, field, old, new}] */
+/** Mise à jour quotidienne à partir de 8 h : relevé ImmOpen et cellules vides complétées d'après les PV (une fois par jour). */
+function hono_daily(): void {
+    static $done = false; if ($done || (int)date('G') < 8) return; $done = true;
+    $today = date('Y-m-d');
+    if (q("SELECT v FROM kv WHERE k='hono_daily'")->fetchColumn() === $today) return;
+    q("INSERT INTO kv(k,v,updated_at) VALUES('hono_daily',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [$today, time()]);
+    try { if (function_exists('immopen_sync')) immopen_sync(); hono_autofill(); } catch (Throwable $e) { error_log('[chemini] hono_daily ' . $e->getMessage()); }
+}
+
 function hono_changes(int $since = 0, int $limit = 3000): array {
-    hono_backfill();
+    hono_backfill(); hono_daily();
     return array_map(fn($r) => ['at' => (int)$r['at'], 'user' => $r['name'] ?: ($r['source'] === 'auto' ? 'Mise à jour automatique' : ($r['source'] === 'evolution' ? 'Évolution' : '—')), 'source' => $r['source'], 'tab' => $r['tab'],
         'ref' => (string)$r['ref'], 'field' => (string)$r['field'], 'old' => (string)$r['old'], 'new' => (string)$r['new']],
         q('SELECT c.*, u.name FROM hono_changes c LEFT JOIN users u ON u.id=c.user_id WHERE c.at>=? ORDER BY c.at DESC, c.id DESC LIMIT ' . (int)$limit, [$since])->fetchAll());

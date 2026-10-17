@@ -7,6 +7,26 @@ const STRAT_HOUR = 150; // € HT de coût horaire (même hypothèse que le mod�
 
 function page_strategies(array $u): never {
     if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Réservé à la Direction.'], false); }
+    $snap = strat_snapshot();
+    $choices = json_decode((string)q("SELECT v FROM kv WHERE k='strat_choices'")->fetchColumn(), true) ?: [];
+    render('strategies', $snap['data'] + ['title' => 'Stratégies', 'nav' => 'strategies', 'u' => $u, 'choices' => $choices, 'snapAt' => $snap['at'], 'prev' => $snap['prev'] ?? null]);
+}
+
+/** Chiffres figés au 1er du mois (après le relevé ImmOpen du matin), avec ceux du mois précédent pour l'évolution. */
+function strat_snapshot(): array {
+    $old = json_decode((string)q("SELECT v FROM kv WHERE k='strat_snap'")->fetchColumn(), true) ?: null;
+    $month = date('Y-m');
+    if ($old && ($old['month'] ?? '') === $month && empty($old['provisional'])) return $old;
+    $provisional = (int)date('j') === 1 && (int)date('G') < 9; // relevé ImmOpen en cours le 1er au matin
+    if ($old && ($old['month'] ?? '') === $month && $provisional) return $old;
+    $data = strat_compute();
+    $prev = $old && ($old['month'] ?? '') !== $month ? ['month' => $old['month'], 'tot' => $old['data']['tot'], 'gapRed' => $old['data']['gapRed']] : ($old['prev'] ?? null);
+    $new = ['month' => $month, 'at' => time(), 'provisional' => $provisional, 'data' => $data, 'prev' => $prev];
+    q("INSERT INTO kv(k,v,updated_at) VALUES('strat_snap',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode($new, JSON_UNESCAPED_UNICODE), time()]);
+    return $new;
+}
+
+function strat_compute(): array {
     $d = hono_data(); $rows = []; $tot = ['green' => 0, 'orange' => 0, 'red' => 0]; $lots = ['green' => 0, 'orange' => 0, 'red' => 0];
     foreach ($d['bld'] ?? [] as $b) {
         if (hono_lost($b)) continue;
@@ -55,7 +75,5 @@ function page_strategies(array $u): never {
              'gain' => null, 'hyp' => 'fidélisation et temps gagné', 'n' => count($rows), 'effort' => 2, 'delai' => '3 mois'],
         ],
     ];
-    $choices = json_decode((string)q("SELECT v FROM kv WHERE k='strat_choices'")->fetchColumn(), true) ?: [];
-    render('strategies', ['title' => 'Stratégies', 'nav' => 'strategies', 'u' => $u, 'tot' => $tot, 'lots' => $lots, 'red' => $red, 'fragile' => $fragile, 'L' => $L,
-        'gapRed' => $sum($red, 'gap'), 'med' => $med, 'choices' => $choices, 'nAll' => count($rows)]);
+    return ['tot' => $tot, 'lots' => $lots, 'red' => $red, 'fragile' => $fragile, 'L' => $L, 'gapRed' => $sum($red, 'gap'), 'med' => $med, 'nAll' => count($rows)];
 }

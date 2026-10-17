@@ -5,107 +5,119 @@ $anom = $d['anomalies'] ?? [];
 $fact = $d['factures'] ?? [];
 $openA = array_filter($anom, fn($a) => !isset($done[$a['k']]));
 $openF = array_filter($fact, fn($f) => !isset($done[$f['k']]));
-$names = array_values(array_unique(array_merge(array_column($comptables, 'name'), array_column($anom, 'comptable'), array_column($fact, 'comptable'))));
-sort($names);
 $sev = ['crit' => 'Bloquant', 'warn' => 'À corriger', 'ok' => 'À vérifier'];
-$byC = [];
-foreach ($fact as $f) $byC[$f['comptable'] ?: 'Non attribué'][] = $f;
-ksort($byC);
+$sevO = ['crit' => 0, 'warn' => 1, 'ok' => 2];
+$nm = fn($x) => trim((string)$x) !== '' ? trim((string)$x) : 'Non attribué';
+// Une fiche par comptable : chiffres du contrôle + éléments ouverts
+$C = [];
+foreach ($d['by_comptable'] ?? [] as $c) $C[$nm($c['name'])] = ['info' => $c, 'a' => [], 'f' => []];
+foreach ($anom as $a) { $C[$nm($a['comptable'])]['a'][] = $a; }
+foreach ($fact as $f) { $C[$nm($f['comptable'])]['f'][] = $f; }
+foreach ($C as $k => &$c) {
+    $c['info'] = ($c['info'] ?? []) + ['immeubles' => 0, 'ecritures' => 0, 'note' => ''];
+    usort($c['a'], fn($x, $y) => [isset($done[$x['k']]), $sevO[$x['severity']] ?? 1] <=> [isset($done[$y['k']]), $sevO[$y['severity']] ?? 1]);
+    usort($c['f'], fn($x, $y) => [isset($done[$x['k']]), -(float)$x['montant']] <=> [isset($done[$y['k']]), -(float)$y['montant']]);
+    $c['oa'] = count(array_filter($c['a'], fn($x) => !isset($done[$x['k']])));
+    $c['crit'] = count(array_filter($c['a'], fn($x) => !isset($done[$x['k']]) && ($x['severity'] ?? '') === 'crit'));
+    $c['of'] = count(array_filter($c['f'], fn($x) => !isset($done[$x['k']])));
+    $c['mf'] = array_sum(array_map(fn($x) => isset($done[$x['k']]) || !is_numeric($x['montant']) ? 0 : (float)$x['montant'], $c['f']));
+}
+unset($c);
+uksort($C, fn($x, $y) => [$C[$y]['oa'] + $C[$y]['of'], $x] <=> [$C[$x]['oa'] + $C[$x]['of'], $y]);
+$maxLoad = max(1, 0, ...array_values(array_map(fn($c) => $c["oa"] + $c["of"], $C)));
+$ini = fn(string $n) => mb_strtoupper(mb_substr($n, 0, 1) . (mb_substr(strrchr(' ' . $n, ' '), 1, 1) ?: ''));
 ?>
 <header class="head">
   <div>
     <div class="eyebrow">Direction · contrôle ImmOpen</div>
     <h1>Comptabilité</h1>
-    <div class="date"><?= $run ? 'Dernière vérification le ' . e(date('d/m/Y à H:i', (int)$run['created_at'])) . ' · ' . e($d['period'] ?? '') : 'Vérification automatique chaque vendredi à 19 h' ?></div>
+    <div class="date"><?= $run ? 'Dernière vérification le ' . e(date('d/m/Y à H:i', (int)$run['created_at'])) . ($d['period'] ?? '' ? ' · ' . e($d['period']) : '') . ' · contrôle automatique chaque vendredi à 19 h' : 'Vérification automatique chaque vendredi à 19 h' ?></div>
   </div>
-  <?php if ($names): ?>
-  <div class="head-actions">
-    <label for="cpF" class="sr">Comptable</label>
-    <select id="cpF" class="input"><option value="">Tous les comptables</option><?php foreach ($names as $n): ?><option value="<?= e($n) ?>"><?= e($n) ?></option><?php endforeach; ?></select>
-  </div>
-  <?php endif; ?>
 </header>
 
 <?php if (!$run): ?>
 <div class="empty"><strong>Première vérification en attente.</strong>Chaque vendredi à 19 h, les écritures ImmOpen sont contrôlées : doublons, écritures déséquilibrées, imputations incohérentes, factures sans pièce. Le résultat s'affiche ici, comptable par comptable.</div>
-<div class="sec-h" style="margin-top:32px"><h2>Comptables (annuaire ImmOpen)</h2></div>
-<div class="tbl"><table class="sec-table">
-  <thead><tr><th>Comptable</th><th>E-mail</th><th class="r">Immeubles suivis</th></tr></thead>
-  <tbody><?php foreach ($comptables as $c): ?><tr><td><strong><?= e($c['name']) ?></strong></td><td class="mono"><?= e($emails[$c['name']] ?? '—') ?></td><td class="r mono"><?= (int)$c['n'] ?></td></tr><?php endforeach; ?></tbody>
-</table></div>
 <?php else: ?>
 
-<div class="summary">
-  <div><div class="n <?= count($openA) ? 'crit' : '' ?>"><?= count($openA) ?></div><div class="l">Incohérences à traiter</div></div>
-  <div><div class="n"><?= count($openF) ?></div><div class="l">Factures manquantes</div></div>
-  <div><div class="n"><?= $fmt0(array_sum(array_filter(array_column($openF, 'montant'), 'is_numeric'))) ?> €</div><div class="l">Montant des factures manquantes</div></div>
-  <div><div class="n"><?= count($d['by_comptable'] ?? []) ?></div><div class="l">Comptables contrôlés</div></div>
-</div>
-<?php if (!empty($d['summary'])): ?><p class="cp-sum"><?= nl2br(e($d['summary'])) ?></p><?php endif; ?>
-
 <section>
-  <div class="sec-h"><h2>Synthèse par comptable</h2></div>
-  <div class="tbl"><table class="sec-table cp-tbl">
-    <thead><tr><th>Comptable</th><th class="r">Immeubles</th><th class="r">Écritures contrôlées</th><th class="r">Incohérences</th><th class="r">Factures manquantes</th><th class="r">Montant manquant</th><th>Observation</th></tr></thead>
-    <tbody>
-    <?php foreach ($d['by_comptable'] ?? [] as $c): ?>
-      <tr data-cp="<?= e($c['name']) ?>"><td><strong><?= e($c['name']) ?></strong><?php if (!empty($emails[$c['name']])): ?><br><a class="small" href="mailto:<?= e($emails[$c['name']]) ?>"><?= e($emails[$c['name']]) ?></a><?php endif; ?></td>
-        <td class="r mono"><?= $fmt0($c['immeubles']) ?></td><td class="r mono"><?= $fmt0($c['ecritures']) ?></td>
-        <td class="r mono"><?php if ($c['anomalies']): ?><span class="chip crit"><?= $fmt0($c['anomalies']) ?></span><?php else: ?>0<?php endif; ?></td>
-        <td class="r mono"><?php if ($c['factures_manquantes']): ?><span class="chip warn"><?= $fmt0($c['factures_manquantes']) ?></span><?php else: ?>0<?php endif; ?></td>
-        <td class="r mono"><?= $fmt0($c['montant_manquant']) ?> €</td><td class="small"><?= e($c['note']) ?></td></tr>
+  <div class="sec-h"><h2>Par comptable</h2><span class="muted small">Cliquez sur un comptable pour afficher son détail</span></div>
+  <div class="cp-cards" role="tablist" aria-label="Comptables">
+    <?php foreach ($C as $name => $c): $load = $c['oa'] + $c['of']; ?>
+    <button type="button" role="tab" class="cp-card" data-cp-tab="<?= e($name) ?>" aria-selected="false">
+      <span class="cp-ch"><span class="ag-av"><?= e($ini($name)) ?></span><span class="cp-cn"><b><?= e($name) ?></b><small><?= $fmt0($c['info']['immeubles']) ?> immeubles · <?= $fmt0($c['info']['ecritures']) ?> écritures</small></span></span>
+      <span class="cp-nums">
+        <span class="<?= $c['oa'] ? 'crit' : 'ok' ?>"><b><?= $fmt0($c['oa']) ?></b>incohérences<?= $c['crit'] ? '<em>dont ' . $fmt0($c['crit']) . ' bloquantes</em>' : '' ?></span>
+        <span class="<?= $c['of'] ? 'warn' : 'ok' ?>"><b><?= $fmt0($c['of']) ?></b>factures manquantes<?= $c['mf'] ? '<em>' . $fmt0($c['mf']) . ' €</em>' : '' ?></span>
+      </span>
+      <span class="cp-load" title="Charge relative"><i style="width:<?= round($load / $maxLoad * 100) ?>%"></i></span>
+      <?php if ($c['info']['note']): ?><span class="cp-note"><?= e($c['info']['note']) ?></span><?php endif; ?>
+    </button>
     <?php endforeach; ?>
-    </tbody>
-  </table></div>
+  </div>
 </section>
 
-<section style="margin-top:36px">
-  <div class="sec-h"><h2>Incohérences dans les écritures</h2><span class="muted small">Cochez une fois corrigée</span></div>
-  <?php if (!$anom): ?><div class="empty"><strong>Aucune incohérence détectée.</strong>Les écritures contrôlées sont cohérentes.</div><?php else: ?>
-  <div class="tbl"><table class="sec-table cp-tbl">
-    <thead><tr><th></th><th>Gravité</th><th>Comptable</th><th>Immeuble</th><th>Date</th><th>Pièce / compte</th><th class="r">Montant</th><th>Incohérence</th></tr></thead>
-    <tbody>
-    <?php foreach ($anom as $a): $isDone = isset($done[$a['k']]); ?>
-      <tr data-cp="<?= e($a['comptable']) ?>" class="<?= $isDone ? 'done' : '' ?>">
-        <td><input type="checkbox" data-api="compta/done" data-k="<?= e($a['k']) ?>" <?= $isDone ? 'checked' : '' ?> aria-label="Corrigée"></td>
-        <td><span class="chip <?= e($a['severity'] ?: 'warn') ?>"><?= e($sev[$a['severity']] ?? 'À corriger') ?></span></td>
-        <td><strong><?= e($a['comptable'] ?: 'Non attribué') ?></strong></td>
-        <td><?php if ($a['code']): ?><a href="/immeubles/<?= e($a['code']) ?>"><span class="mono"><?= e($a['code']) ?></span> <?= e($a['immeuble']) ?></a><?php else: ?><?= e($a['immeuble']) ?><?php endif; ?></td>
-        <td class="mono nowrap"><?= e($a['date']) ?></td>
-        <td class="mono small"><?= e(trim($a['piece'] . ($a['piece'] && $a['compte'] ? ' · ' : '') . $a['compte'])) ?></td>
-        <td class="r mono nowrap"><?= $a['montant'] !== '' ? $fmt($a['montant']) . ' €' : '' ?></td>
-        <td><strong><?= e($a['type']) ?></strong><?php if ($a['detail']): ?><br><span class="muted small"><?= e($a['detail']) ?></span><?php endif; ?></td>
-      </tr>
-    <?php endforeach; ?>
-    </tbody>
-  </table></div>
-  <?php endif; ?>
-</section>
-
-<section style="margin-top:36px">
-  <div class="sec-h"><h2>Factures manquantes par comptable</h2><span class="muted small">Cochez une fois saisie dans ImmOpen</span></div>
-  <?php if (!$fact): ?><div class="empty"><strong>Aucune facture manquante.</strong></div><?php else: ?>
-  <div class="cp-groups">
-    <?php foreach ($byC as $name => $rows): $left = count(array_filter($rows, fn($f) => !isset($done[$f['k']]))); ?>
-    <div class="panel cp-group" data-cp="<?= e($name) ?>">
-      <div class="sec-h flat"><h3><?= e($name) ?></h3><span class="chip <?= $left ? 'warn' : 'ok' ?>"><?= $left ?> à traiter</span></div>
-      <ul class="list mail-todo">
-        <?php foreach ($rows as $f): $isDone = isset($done[$f['k']]); ?>
-        <li class="<?= $isDone ? 'done' : '' ?>">
-          <input type="checkbox" id="f<?= e(substr($f['k'], 0, 12)) ?>" data-api="compta/done" data-k="<?= e($f['k']) ?>" <?= $isDone ? 'checked' : '' ?> aria-label="Saisie">
-          <label for="f<?= e(substr($f['k'], 0, 12)) ?>">
-            <div class="t"><?= e($f['fournisseur'] ?: 'Fournisseur inconnu') ?><?= $f['reference'] ? ' · ' . e($f['reference']) : '' ?></div>
-            <div class="d"><?= $f['code'] ? '<span class="mono">' . e($f['code']) . '</span> ' : '' ?><?= e($f['immeuble']) ?><?= $f['detail'] ? ' · ' . e($f['detail']) : '' ?></div>
-            <?php if ($f['source']): ?><div class="why"><?= e($f['source']) ?></div><?php endif; ?>
+<?php foreach ($C as $name => $c): ?>
+<section class="cp-detail" data-cp-panel="<?= e($name) ?>" role="tabpanel" hidden>
+  <header class="cp-dh">
+    <div><div class="eyebrow">Détail du comptable</div><h2><?= e($name) ?></h2></div>
+    <?php if (!empty($emails[$name])): ?><a class="btn btn-ghost" href="mailto:<?= e($emails[$name]) ?>"><?= e($emails[$name]) ?></a><?php endif; ?>
+  </header>
+  <div class="cp-cols">
+    <div class="cp-box">
+      <div class="sec-h flat"><h3>Incohérences dans les écritures</h3><span class="chip <?= $c['oa'] ? 'crit' : 'ok' ?>"><?= $c['oa'] ?> à traiter</span></div>
+      <?php if (!$c['a']): ?><p class="muted small">Aucune incohérence détectée.</p><?php else: ?>
+      <ul class="cp-list" data-more-list>
+        <?php foreach ($c['a'] as $i => $a): $isDone = isset($done[$a['k']]); $id = 'a' . substr($a['k'], 0, 12); ?>
+        <li class="<?= $isDone ? 'done' : '' ?>"<?= $i >= 10 ? ' hidden data-more-x' : '' ?>>
+          <input type="checkbox" id="<?= e($id) ?>" data-api="compta/done" data-k="<?= e($a['k']) ?>" <?= $isDone ? 'checked' : '' ?> aria-label="Corrigée">
+          <label for="<?= e($id) ?>">
+            <span class="cp-t"><span class="chip <?= e($a['severity'] ?: 'warn') ?>"><?= e($sev[$a['severity']] ?? 'À corriger') ?></span> <?= e($a['type']) ?></span>
+            <span class="cp-d"><?php if ($a['code']): ?><span class="mono"><?= e($a['code']) ?></span> <?php endif; ?><?= e($a['immeuble']) ?><?= trim($a['piece'] . $a['compte']) !== '' ? ' · <span class="mono">' . e(trim($a['piece'] . ($a['piece'] && $a['compte'] ? ' · ' : '') . $a['compte'])) . '</span>' : '' ?></span>
+            <?php if ($a['detail']): ?><span class="cp-why"><?= e($a['detail']) ?></span><?php endif; ?>
           </label>
-          <div class="meta"><span class="mono"><?= $f['montant'] !== '' ? $fmt($f['montant']) . ' €' : '' ?></span><span><?= e($f['date']) ?></span></div>
+          <span class="cp-m"><b class="mono"><?= $a['montant'] !== '' ? $fmt($a['montant']) . ' €' : '' ?></b><small class="mono"><?= e($a['date']) ?></small></span>
         </li>
         <?php endforeach; ?>
       </ul>
+      <?php if (count($c['a']) > 10): ?><button type="button" class="ia-more" data-more data-less="Réduire ↑">Voir plus (<?= count($c['a']) - 10 ?>) ↓</button><?php endif; ?>
+      <?php endif; ?>
     </div>
-    <?php endforeach; ?>
+    <div class="cp-box">
+      <div class="sec-h flat"><h3>Factures manquantes</h3><span class="chip <?= $c['of'] ? 'warn' : 'ok' ?>"><?= $c['of'] ?> à saisir</span></div>
+      <?php if (!$c['f']): ?><p class="muted small">Aucune facture manquante.</p><?php else: ?>
+      <ul class="cp-list" data-more-list>
+        <?php foreach ($c['f'] as $i => $f): $isDone = isset($done[$f['k']]); $id = 'f' . substr($f['k'], 0, 12); ?>
+        <li class="<?= $isDone ? 'done' : '' ?>"<?= $i >= 10 ? ' hidden data-more-x' : '' ?>>
+          <input type="checkbox" id="<?= e($id) ?>" data-api="compta/done" data-k="<?= e($f['k']) ?>" <?= $isDone ? 'checked' : '' ?> aria-label="Saisie">
+          <label for="<?= e($id) ?>">
+            <span class="cp-t"><?= e($f['fournisseur'] ?: 'Fournisseur inconnu') ?><?= $f['reference'] ? ' <span class="muted">· ' . e($f['reference']) . '</span>' : '' ?></span>
+            <span class="cp-d"><?= $f['code'] ? '<span class="mono">' . e($f['code']) . '</span> ' : '' ?><?= e($f['immeuble']) ?><?= $f['detail'] ? ' · ' . e($f['detail']) : '' ?></span>
+            <?php if ($f['source']): ?><span class="cp-why"><?= e($f['source']) ?></span><?php endif; ?>
+          </label>
+          <span class="cp-m"><b class="mono"><?= $f['montant'] !== '' ? $fmt($f['montant']) . ' €' : '' ?></b><small class="mono"><?= e($f['date']) ?></small></span>
+        </li>
+        <?php endforeach; ?>
+      </ul>
+      <?php if (count($c['f']) > 10): ?><button type="button" class="ia-more" data-more data-less="Réduire ↑">Voir plus (<?= count($c['f']) - 10 ?>) ↓</button><?php endif; ?>
+      <?php endif; ?>
+    </div>
   </div>
-  <?php endif; ?>
 </section>
-<?php if (!empty($d['source'])): ?><p class="muted small" style="margin-top:24px">Source : <?= e($d['source']) ?></p><?php endif; ?>
+<?php endforeach; ?>
+
+<section class="cp-general">
+  <div class="sec-h"><h2>Informations générales</h2></div>
+  <div class="summary">
+    <div><div class="n <?= count($openA) ? 'crit' : '' ?>"><?= $fmt0(count($openA)) ?></div><div class="l">Incohérences à traiter</div></div>
+    <div><div class="n <?= count($openF) ? 'warn' : '' ?>"><?= $fmt0(count($openF)) ?></div><div class="l">Factures manquantes</div></div>
+    <div><div class="n"><?= $fmt0(array_sum(array_filter(array_column($openF, 'montant'), 'is_numeric'))) ?> €</div><div class="l">Montant des factures manquantes</div></div>
+    <div><div class="n"><?= count($C) ?></div><div class="l">Comptables contrôlés</div></div>
+  </div>
+  <div class="grid">
+    <?php if (!empty($d['summary'])): ?><div class="col-7 panel"><h3 class="cp-h3">Synthèse du contrôle</h3><p class="cp-sum"><?= nl2br(e($d['summary'])) ?></p><?php if (!empty($d['source'])): ?><p class="muted small">Source : <?= e($d['source']) ?></p><?php endif; ?></div><?php endif; ?>
+    <div class="<?= !empty($d['summary']) ? 'col-5' : 'col-12' ?> panel"><h3 class="cp-h3">Annuaire des comptables</h3>
+      <ul class="cp-dir"><?php foreach ($comptables as $c): ?><li><span><b><?= e($c['name']) ?></b><?php if (!empty($emails[$c['name']])): ?><a class="small" href="mailto:<?= e($emails[$c['name']]) ?>"><?= e($emails[$c['name']]) ?></a><?php endif; ?></span><span class="mono muted"><?= (int)$c['n'] ?> imm.</span></li><?php endforeach; ?></ul>
+    </div>
+  </div>
+</section>
 <?php endif; ?>
