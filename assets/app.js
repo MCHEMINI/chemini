@@ -657,3 +657,11 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
   document.getElementById('invAll')?.addEventListener('click', e => run('team/invite_all', {}, e.currentTarget));
   document.querySelectorAll('[data-inv]').forEach(b => b.addEventListener('click', () => run('team/invite', { name: b.dataset.inv }, b)));
 })();
+
+/* Signatures : nouveau bandeau (image lue dans le navigateur) */
+(function(){ const f = document.getElementById('sgF'); if (!f) return; const inp = document.getElementById('sg-i'), pv = document.getElementById('sgPrev'); let data = '';
+  inp.addEventListener('change', () => { const file = inp.files[0]; if (!file) return; const r = new FileReader(); r.onload = () => { data = r.result; pv.hidden = false; pv.querySelector('img').src = data; }; r.readAsDataURL(file); });
+  f.addEventListener('submit', async e => { e.preventDefault(); const err = f.querySelector('.form-error'); err.hidden = true; const btn = f.querySelector('button');
+    const d = Object.fromEntries(new FormData(f).entries()); d.data = data; btn.disabled = true;
+    try { await api('sig/add', d); location.reload(); } catch (x) { btn.disabled = false; err.hidden = false; err.textContent = x.message; } });
+})();

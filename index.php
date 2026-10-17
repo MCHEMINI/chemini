@@ -17,6 +17,7 @@ require APP_DIR . '/lib/hono_log.php';
 require APP_DIR . '/lib/sec_audit.php';
 require APP_DIR . '/lib/team.php';
 require APP_DIR . '/lib/survey.php';
+require APP_DIR . '/lib/sig.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -28,6 +29,8 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
+if ($route0 === 'signature/banniere') sig_serve_image();
+if ($route0 === 'signature/lien') sig_redirect();
 if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
@@ -71,6 +74,10 @@ try {
             $u = require_user();
             require APP_DIR . '/pages/team.php';
             page_team($u);
+        case 'signatures':
+            $u = require_user();
+            if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Réservé à la Direction.'], false); }
+            render('signatures', ['title' => 'Signatures', 'nav' => 'sig', 'u' => $u, 'list' => sig_all(), 'cur' => sig_current(), 'tpl' => json_decode((string)q("SELECT v FROM kv WHERE k='sig_template'")->fetchColumn(), true) ?: null]);
         case 'enquete':
         case 'enquete/resultats':
             $u = require_user();
@@ -189,6 +196,12 @@ try {
             if (preg_match('#^calendrier/([a-f0-9]{32})\.ics$#', $route, $m)) {
                 require APP_DIR . '/pages/pilot.php';
                 ical_feed($m[1]);
+            }
+            if (preg_match('#^signatures/image/(\d+)$#', $route, $m)) {
+                $u = require_user(); if (!can_space($u, 'direction')) { http_response_code(403); exit; }
+                $b = q('SELECT * FROM banners WHERE id=?', [(int)$m[1]])->fetch(); $f = $b ? sig_dir() . '/' . basename($b['file']) : '';
+                if (!$b || !is_file($f)) { http_response_code(404); exit; }
+                header('Content-Type: ' . $b['mime']); header('Cache-Control: private, max-age=86400'); readfile($f); exit;
             }
             if (preg_match('#^equipe/([a-z0-9-]{1,80})$#', $route, $m)) {
                 $u = require_user();

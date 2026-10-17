@@ -259,6 +259,13 @@ SQL);
     if ($v < 27) { // annuaire des collaborateurs synchronisé avec ImmOpen : archivage et comptes désactivés
         $pdo->exec('ALTER TABLE staff ADD COLUMN archived_at INTEGER; ALTER TABLE users ADD COLUMN disabled_at INTEGER; PRAGMA user_version = 27;');
     }
+    if ($v < 28) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS banners (id INTEGER PRIMARY KEY, title TEXT NOT NULL, file TEXT NOT NULL, mime TEXT NOT NULL, w INTEGER, h INTEGER, link TEXT,
+  start TEXT, end TEXT, is_default INTEGER NOT NULL DEFAULT 0, created_by INTEGER, created_at INTEGER NOT NULL);
+PRAGMA user_version = 28;
+SQL);
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

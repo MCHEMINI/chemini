@@ -1091,3 +1091,16 @@ a.og-p:hover b{color:var(--bronze)}
 .tt-go{display:inline-flex;height:28px;padding:0 12px;font-size:12.5px;margin-left:8px;vertical-align:middle;text-decoration:none!important}
 @media (max-width:640px){.sv-cta{grid-template-columns:36px minmax(0,1fr)}.sv-cta .btn{grid-column:1/-1}}
 .sa-acts{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}#invOut{margin-top:18px}#invList li{gap:16px}#invList input{max-width:460px}
+
+/* Signatures */
+.sg-now{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;margin-bottom:24px;align-items:start}
+.sg-sig{margin:12px 0;padding:20px;border:1px dashed var(--line);border-radius:var(--r);background:#fff;color:#222}
+.sg-fake{margin:0 0 14px;font:13px/1.5 Arial,sans-serif}
+.sg-ban img{display:block;max-width:100%;height:auto}
+.sg-int{display:flex;flex-direction:column;gap:8px}.sg-int h3{margin:0;font-size:17px}.sg-int p{margin:0 0 6px;line-height:1.5}
+.sg-prev img{max-width:100%;border:1px solid var(--line);border-radius:6px}.sg-prev{grid-column:1/-1}
+.sg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.sg-card{display:flex;flex-direction:column;gap:8px}
+.sg-thumb{background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px;min-height:60px;display:grid;place-items:center}.sg-thumb img{max-width:100%;max-height:140px}
+.sg-meta{display:flex;justify-content:space-between;align-items:center;gap:8px}.sg-card p{margin:0}.sg-l{overflow-wrap:anywhere;color:var(--bronze)}
+@media (max-width:900px){.sg-now{grid-template-columns:1fr}}

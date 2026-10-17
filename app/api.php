@@ -349,6 +349,26 @@ function api(string $r): never {
             if (!$allowed) json_out(['error' => 'Accès refusé.'], 403);
             q($r === 'tasks/toggle' ? 'UPDATE tasks SET done = 1 - done WHERE id=?' : 'DELETE FROM tasks WHERE id=?', [$task['id']]);
             json_out(['ok' => true]);
+        case 'sig/add':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            $t = in_str('title', 120); if ($t === '') json_out(['error' => 'Donnez un nom au bandeau.'], 400);
+            if (!preg_match('#^data:(image/(png|jpeg|gif));base64,(.+)$#s', (string)(body()['data'] ?? ''), $m)) json_out(['error' => 'Choisissez une image PNG, JPG ou GIF.'], 400);
+            $bin = base64_decode($m[3], true); if ($bin === false || strlen($bin) > 2 * 1048576) json_out(['error' => 'Image trop lourde (2 Mo au plus).'], 400);
+            $info = @getimagesizefromstring($bin); if (!$info || !in_array($info['mime'], ['image/png', 'image/jpeg', 'image/gif'], true)) json_out(['error' => 'Image illisible.'], 400);
+            $file = bin2hex(random_bytes(8)) . '.' . ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif'][$info['mime']];
+            file_put_contents(sig_dir() . '/' . $file, $bin);
+            $link = in_str('link', 500); if ($link !== '' && !preg_match('#^https?://#', $link)) $link = 'https://' . $link;
+            $st = in_str('start', 10); $en = in_str('end', 10); $re = '/^\d{4}-\d{2}-\d{2}$/';
+            $def = in_str('is_default', 2) ? 1 : 0; if ($def) q('UPDATE banners SET is_default=0');
+            q('INSERT INTO banners(title,file,mime,w,h,link,start,end,is_default,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)', [$t, $file, $info['mime'], $info[0], $info[1], $link ?: null, preg_match($re, $st) ? $st : null, preg_match($re, $en) ? $en : null, $def, $uid, time()]);
+            json_out(['ok' => true]);
+        case 'sig/default':
+        case 'sig/delete':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            $b = q('SELECT * FROM banners WHERE id=?', [in_int('id')])->fetch(); if (!$b) json_out(['error' => 'Bandeau introuvable.'], 404);
+            if ($r === 'sig/default') { q('UPDATE banners SET is_default=0'); q('UPDATE banners SET is_default=1 WHERE id=?', [$b['id']]); }
+            else { q('DELETE FROM banners WHERE id=?', [$b['id']]); @unlink(sig_dir() . '/' . basename($b['file'])); }
+            json_out(['ok' => true]);
         case 'survey/save':
             $b = body(); $d = [];
             foreach (SURVEY as [$g, $qs]) foreach ($qs as $k => [$label, $type, $opts]) {
