@@ -83,4 +83,5 @@ const VERSIONS = [
     ['2026-10-17 15:00', 'all', 'Bulle : choix de la personne en liste', '« Pour qui ? » s\'ouvre en liste déroulante avec photo, nom, fonction et recherche, au lieu d\'une rangée à faire défiler.'],
     ['2026-10-17 15:10', 'all', 'Mot de passe visible à la demande', 'Un œil dans chaque champ mot de passe (connexion, nouveau mot de passe, activation, sécurité) affiche ou masque la saisie ; il reste affiché jusqu\'à ce que vous le masquiez.'],
     ['2026-10-17 15:20', 'all', 'Bulle : échéance au choix', '« Autre date… » après « Dans 7 jours » ouvre le calendrier ; la date choisie s\'affiche sur le bouton.'],
+    ['2026-10-17 21:30', 'direction', 'Nouvelle section Site Web', 'Administration déportée du site WordPress de GID : statistiques des annonces, référencement et santé technique ; changement de statut et mise en ligne des annonces ; pages et descriptions Google. Liaison sécurisée par mot de passe d\'application WordPress.'],
 ];

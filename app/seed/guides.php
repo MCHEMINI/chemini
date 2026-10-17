@@ -215,7 +215,7 @@ MD],
 
 ## Guides par rôle
 - **Toute l'équipe :** [[Créer une tâche|/guides/chemini-taches]] [[Tâches IA|/guides/chemini-taches-ia]] [[Utiliser les guides|/guides/chemini-utiliser-guides]]
-- **Direction :** [[Vue d'ensemble Direction|/guides/chemini-direction]] [[Honoraires|/guides/chemini-honoraires]] [[Pilotage et AG|/guides/chemini-pilotage]] [[Signatures e-mail|/guides/chemini-signatures]]
+- **Direction :** [[Vue d'ensemble Direction|/guides/chemini-direction]] [[Honoraires|/guides/chemini-honoraires]] [[Pilotage et AG|/guides/chemini-pilotage]] [[Signatures e-mail|/guides/chemini-signatures]] [[Site Web|/guides/chemini-site-web]]
 - **Président :** [[Mot du Président|/guides/chemini-mot-president]]
 - **Famille :** [[Espace Famille|/guides/chemini-famille]]
 
@@ -402,6 +402,28 @@ MD, 'direction'],
 - **L'indicateur « relié »** passe au vert dès qu'Exclaimer ou une messagerie lit le bandeau.
 
 ! Changer les réglages d'Exclaimer se fait dans Exclaimer lui-même ; Chemini ne fournit que l'image du moment.
+MD, 'direction'],
+['chemini-site-web', 'Chemini · Direction', '🌐', 'Site Web : statistiques et annonces', 'Suivre le site gidsas.fr et gérer les annonces immobilières depuis Chemini, sans ouvrir WordPress.', '4 min', 'Débutant', <<<'MD'
+## Relier le site (une seule fois, administrateur)
+1. **Dans WordPress, Comptes › Profil**, section « Mots de passe d'application » : nommez-le « Chemini » et cliquez sur Ajouter. [[Ouvrir la page Connexion|/site-web/connexion]]
+2. **Copiez la clé** (24 caractères) et collez-la dans Site Web › Connexion avec votre identifiant WordPress, puis « Tester et relier ».
+
+! Cette clé se révoque à tout moment depuis le profil WordPress ; elle est chiffrée dans Chemini et n'est jamais réaffichée.
+
+## Statistiques
+- **Annonces en ligne, à vendre, sous promesse, vendues**, par secteur et par mois de publication. [[Voir les statistiques|/site-web]]
+- **Référencement** : pages sans description Google, pages exclues des moteurs.
+- **Santé technique** : HTTPS, mises à jour, cache, extensions.
+- **Actualiser** relit les données du site ; sinon elles se rafraîchissent toutes les 10 minutes.
+
+## Gérer les annonces
+1. **Site Web › Annonces** : recherchez par rue ou arrondissement, filtrez par statut. [[Ouvrir les annonces|/site-web/annonces]]
+2. **Changez le statut** dans la liste déroulante (En vente, Sous promesse, Vendu…) : le site est mis à jour aussitôt.
+3. **« Retirer du site »** repasse l'annonce en brouillon ; **« Mettre en ligne »** la republie.
+4. **Texte, photos et prix** : « Modifier dans WordPress » ouvre l'annonce dans WordPress.
+
+## Pages et SEO
+- **Titre et description affichés dans Google** pour chaque page, avec la longueur idéale (120 à 160 caractères). [[Voir les pages|/site-web/pages]]
 MD, 'direction'],
 ['chemini-mot-president', 'Chemini · Président', '🖋️', 'Mot du Président : relire, publier, partager', 'Le cycle mensuel du Mot du Président, de la rédaction automatique au partage par lien.', '3 min', 'Débutant', <<<'MD'
 ## Chaque mois

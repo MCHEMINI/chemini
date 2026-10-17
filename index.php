@@ -20,6 +20,7 @@ require APP_DIR . '/lib/survey.php';
 require APP_DIR . '/lib/sig.php';
 require APP_DIR . '/lib/president.php';
 require APP_DIR . '/lib/guides.php';
+require APP_DIR . '/lib/wp.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -91,6 +92,13 @@ try {
         case 'equipe':
             require_user();
             redirect('/organigramme');
+        case 'site-web':
+        case 'site-web/annonces':
+        case 'site-web/pages':
+        case 'site-web/connexion':
+            $u = require_user();
+            require APP_DIR . '/pages/site.php';
+            page_site($u, (string)substr($route, 9));
         case 'signatures':
             $u = require_user();
             if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Réservé à la Direction.'], false); }

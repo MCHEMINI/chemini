@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=68">
+<link rel="stylesheet" href="/assets/app.css?v=69">
 </head>
 <body>
 <div id="app">
@@ -51,6 +51,13 @@
       <a class="<?= $cls('compta') ?>" href="/comptabilite"><i class="dot"></i>Comptabilité</a>
       <a class="<?= in_array($n, ['pilot', 'survey'], true) ? 'active' : '' ?>" href="/pilotage"><i class="dot"></i>Pilotage</a>
       <a class="<?= $cls('sig') ?>" href="/signatures"><i class="dot"></i>Signatures</a>
+      <?php endif; ?>
+      <?php if (in_array('direction', $sp, true)): ?>
+      <?= $grp('Site Web', 'siteweb', space_members('direction')) ?>
+      <a class="<?= $cls('site-stats') ?>" href="/site-web"><i class="dot"></i>Statistiques</a>
+      <a class="<?= $cls('site-ann') ?>" href="/site-web/annonces"><i class="dot"></i>Annonces</a>
+      <a class="<?= $cls('site-pages') ?>" href="/site-web/pages"><i class="dot"></i>Pages et SEO</a>
+      <a class="<?= $cls('site-conn') ?>" href="/site-web/connexion"><i class="dot"></i>Connexion</a>
       <?php endif; ?>
       <?= $grp('Équipe', 'gid', space_members('gid')) ?>
       <a class="<?= $cls('dash') ?>" href="/tableau-de-bord"><i class="dot"></i>Tableau de bord</a>
@@ -141,6 +148,6 @@
   <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Créer une tâche IA ou une tâche d'équipe"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=46"></script>
+<script src="/assets/app.js?v=47"></script>
 </body>
 </html>

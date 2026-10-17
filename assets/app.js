@@ -354,7 +354,7 @@
         return;
       }
       el.disabled = true;
-      try { const r = await api(el.dataset.api, el.dataset.k ? { k: el.dataset.k } : { id: Number(el.dataset.id || 0) }); if (r && r.go) location.href = r.go; else location.reload(); }
+      try { const r = await api(el.dataset.api, el.dataset.k ? { k: el.dataset.k } : { id: Number(el.dataset.id || 0) }); if (r && r.toast) { toast(r.toast); el.disabled = false; return; } if (r && r.go) location.href = r.go; else location.reload(); }
       catch (err) { el.disabled = false; toast(err.message); }
     });
   });
@@ -865,4 +865,27 @@ document.addEventListener('click', e => { if (e.target.closest('[data-print]')) 
     set(inp, false);
   };
   document.querySelectorAll('input[type=password]').forEach(add);
+})();
+
+/* Site Web : filtres et actions sur les annonces, liaison du site */
+(function(){
+  const list = document.getElementById('wsList');
+  if (list) {
+    const q = document.getElementById('wsQ'), chips = document.querySelectorAll('[data-ws-f]'), none = list.querySelector('.ws-none'); let f = '';
+    const apply = () => { const t = (q.value || '').trim().toLowerCase(); let n = 0; list.querySelectorAll('.ws-ann').forEach(a => { const ok = (!f || a.dataset.st === f) && (!t || a.dataset.s.includes(t)); a.hidden = !ok; n += ok; }); none.hidden = n > 0; };
+    q.addEventListener('input', apply);
+    chips.forEach(c => c.addEventListener('click', () => { f = c.dataset.wsF; chips.forEach(x => x.setAttribute('aria-pressed', String(x === c))); apply(); }));
+    const tone = s => ['En vente', 'A louer', 'À louer'].includes(s) ? 'ok' : s === 'Sous promesse' ? 'warn' : ['Vendu', 'Loué'].includes(s) ? 'neutral' : 'todo';
+    list.addEventListener('change', async e => { const s = e.target.closest('[data-ws-statut]'); if (!s) return; const card = s.closest('.ws-ann'), old = card.dataset.st, nm = s.options[s.selectedIndex].text; s.disabled = true;
+      try { await window.api('site/annonce', { id: Number(card.dataset.id), statut: Number(s.value) }); card.dataset.st = nm; const ch = card.querySelector('[data-ws-chip]'); ch.textContent = nm; ch.className = 'chip ' + tone(nm); card.dataset.s = card.dataset.s.replace(old.toLowerCase(), nm.toLowerCase()); }
+      catch (x) { [...s.options].forEach(o => { if (o.text === old) s.value = o.value; }); alertMsg(x.message); } finally { s.disabled = false; } });
+    list.addEventListener('click', async e => { const b = e.target.closest('[data-ws-toggle]'); if (!b) return; const card = b.closest('.ws-ann'), to = b.dataset.wsToggle; b.disabled = true;
+      try { const r = await window.api('site/annonce', { id: Number(card.dataset.id), status: to }); const on = r.status === 'publish'; const p = card.querySelector('[data-ws-pub]'); p.textContent = on ? 'En ligne' : 'Brouillon'; p.className = 'chip ' + (on ? 'ok' : 'todo'); b.dataset.wsToggle = on ? 'draft' : 'publish'; b.textContent = on ? 'Retirer du site' : 'Mettre en ligne'; }
+      catch (x) { alertMsg(x.message); } finally { b.disabled = false; } });
+  }
+  function alertMsg(m) { const t = document.getElementById('toast'); if (t) { t.textContent = m; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(() => (t.hidden = true), 4000); } }
+  const cf = document.getElementById('wsConn');
+  if (cf) cf.addEventListener('submit', async e => { e.preventDefault(); const err = cf.querySelector('.form-error'), b = cf.querySelector('.btn-primary'); err.hidden = true; b.disabled = true; b.textContent = 'Test en cours…';
+    try { const r = await window.api('site/conn', Object.fromEntries(new FormData(cf).entries())); location.href = r.go || '/site-web'; }
+    catch (x) { err.hidden = false; err.textContent = x.message; b.disabled = false; b.textContent = 'Tester et relier'; } });
 })();

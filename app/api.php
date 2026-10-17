@@ -382,6 +382,32 @@ function api(string $r): never {
             else { $slug = guide_slug($t); $base = $slug; $i = 2; while (q('SELECT 1 FROM guides WHERE slug=?', [$slug])->fetchColumn()) $slug = $base . '-' . $i++;
                 q('INSERT INTO guides(cat,icon,title,summary,duration,level,body,audience,updated_by,updated_at,slug,pos,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,99,?)', array_merge($vals, [$slug, time()])); }
             json_out(['ok' => true, 'go' => '/guides/' . $slug]);
+        case 'site/annonce': // Site Web : statut commercial (terme « statuts ») et/ou mise en ligne d'une annonce
+            if (!wp_viewer($u)) json_out(['error' => 'Réservé à la Direction.'], 403);
+            $id = in_int('id'); $b = [];
+            if (($st = in_int('statut')) > 0) $b['statuts'] = [$st];
+            $pub = in_str('status', 10); if (in_array($pub, ['publish', 'draft'], true)) $b['status'] = $pub;
+            if (!$id || !$b) json_out(['error' => 'Rien à modifier.'], 400);
+            $res = wp_req('POST', 'wp/v2/annonces/' . $id, ['_fields' => 'id,status,statuts'], $b);
+            if ($res['code'] !== 200) json_out(['error' => 'WordPress : ' . ($res['error'] ?? 'erreur ' . $res['code'])], 502);
+            audit($uid, 'wp_annonce:' . $id . ':' . json_encode($b)); wp_cache_clear();
+            json_out(['ok' => true, 'status' => $res['json']['status'] ?? null, 'statuts' => $res['json']['statuts'] ?? []]);
+        case 'site/conn': // relier le site (administrateur) : test des identifiants avant enregistrement
+            if (!wp_admin($u)) json_out(['error' => 'Réservé à l\'administrateur.'], 403);
+            $url = wp_normalize_url(in_str('url', 200)); $wu = in_str('user', 120); $wpw = trim((string)(body()['pass'] ?? ''));
+            if (!$url) json_out(['error' => 'Adresse invalide : elle doit commencer par https://'], 400);
+            if ($wu === '' || $wpw === '' || strlen($wpw) > 200) json_out(['error' => 'Identifiant et mot de passe d\'application obligatoires.'], 400);
+            $t = wp_req('GET', 'wp/v2/users/me', ['context' => 'edit', '_fields' => 'id,name,roles'], null, ['url' => $url, 'user' => $wu, 'pass' => $wpw]);
+            if ($t['code'] !== 200) json_out(['error' => $t['code'] === 401 || $t['code'] === 403 ? 'WordPress refuse ces identifiants : vérifiez l\'identifiant et la clé (mot de passe d\'application, pas le mot de passe de connexion).' : 'Site injoignable ou API fermée (' . ($t['error'] ?? $t['code']) . ').'], 400);
+            wp_conn_save($url, $wu, $wpw, $uid); audit($uid, 'wp_conn:' . $url);
+            json_out(['ok' => true, 'go' => '/site-web', 'name' => $t['json']['name'] ?? '', 'roles' => $t['json']['roles'] ?? []]);
+        case 'site/test':
+            if (!wp_admin($u)) json_out(['error' => 'Réservé à l\'administrateur.'], 403);
+            $t = wp_req('GET', 'wp/v2/users/me', ['context' => 'edit', '_fields' => 'name,roles']);
+            json_out($t['code'] === 200 ? ['ok' => true, 'toast' => '✅ Connexion au site réussie (' . ($t['json']['name'] ?? '') . ', ' . implode(', ', $t['json']['roles'] ?? []) . ')'] : ['error' => 'Échec : ' . ($t['error'] ?? $t['code'])], $t['code'] === 200 ? 200 : 502);
+        case 'site/disconnect':
+            if (!wp_admin($u)) json_out(['error' => 'Réservé à l\'administrateur.'], 403);
+            wp_conn_clear(); audit($uid, 'wp_disconnect'); json_out(['ok' => true, 'go' => '/site-web/connexion']);
         case 'president/share': // créer (on=1) ou désactiver (on=0) le lien non répertorié d'un mot
             if (!pw_editor($u)) json_out(['error' => 'Réservé au Président.'], 403);
             $w = pw_get(in_str('k', 7)); if (!$w) json_out(['error' => 'Mot introuvable.'], 404);
