@@ -231,6 +231,20 @@ function api(string $r): never {
             audit($uid, 'invite_created:' . $email);
             json_out(['ok' => true, 'link' => BASE_URL . '/activation?t=' . $tok]);
 
+        case 'team/invite':
+        case 'team/invite_all':
+            if ($u['role'] !== 'admin') json_out(['error' => 'Réservé à l\'administrateur.'], 403);
+            $targets = array_filter(staff_access(), fn($s) => $s['status'] === 'none' && ($r === 'team/invite_all' || $s['name'] === in_str('name', 120)));
+            $out = [];
+            foreach ($targets as $s) {
+                $tok = b64u_enc(random_bytes(24)); $email = strtolower((string)$s['email']);
+                $ini = mb_strtoupper(implode('', array_map(fn($p) => mb_substr($p, 0, 1), array_slice(preg_split('/\s+/', trim($s['name'])), 0, 2))));
+                q('INSERT INTO invites(email,name,initials,role,token_hash,expires_at) VALUES(?,?,?,?,?,?)', [$email, $s['name'], $ini, 'member', hash('sha256', $tok), time() + 30 * 86400]);
+                $link = BASE_URL . '/activation?t=' . $tok; $sent = send_invite($email, $s['name'], $link);
+                audit($uid, 'invite_created:' . $email);
+                $out[] = ['name' => $s['name'], 'link' => $link, 'sent' => $sent];
+            }
+            json_out(['ok' => true, 'invites' => $out]);
         case 'microsoft/disconnect':
             q('DELETE FROM graph_tokens WHERE user_id=?', [$uid]);
             unset($_SESSION['mails_' . $uid]);

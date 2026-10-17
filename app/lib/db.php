@@ -256,6 +256,9 @@ SQL);
         foreach ($pdo->query('SELECT name FROM staff')->fetchAll(PDO::FETCH_COLUMN) as $n) $ins->execute([$slug($n), 'Répondre au questionnaire de fonctionnement', date('Y-m-d', strtotime('+14 days')), $admin ?: 1, time()]);
         $pdo->exec('PRAGMA user_version = 26;');
     }
+    if ($v < 27) { // annuaire des collaborateurs synchronisé avec ImmOpen : archivage et comptes désactivés
+        $pdo->exec('ALTER TABLE staff ADD COLUMN archived_at INTEGER; ALTER TABLE users ADD COLUMN disabled_at INTEGER; PRAGMA user_version = 27;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

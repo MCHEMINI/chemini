@@ -148,25 +148,27 @@ $next = (int)date('N') === 6 && (int)date('G') < 12 ? strtotime('today 12:00') :
   </div>
 </section>
 
-<?php if ($u['role'] === 'admin'): ?>
+<?php if ($u['role'] === 'admin'):
+  $lbl = ['active' => ['Compte actif', 'ok'], 'invited' => ['Invitation envoyée', 'warn'], 'none' => ['Sans accès', 'neutral'], 'noemail' => ['E-mail manquant', 'crit'], 'disabled' => ['Compte désactivé', 'crit'], 'archived' => ['Archivé', 'neutral']];
+  $cnt = array_count_values(array_column($access, 'status')); $live = array_filter($access, fn($s) => $s['status'] !== 'archived'); $arch = array_filter($access, fn($s) => $s['status'] === 'archived'); ?>
 <section class="sc">
-  <div class="sec-h"><h2>Équipe</h2><span class="muted small"><?= count($team) ?> compte<?= count($team) > 1 ? 's' : '' ?><?= $invites ? ' · ' . count($invites) . ' invitation' . (count($invites) > 1 ? 's' : '') . ' en attente' : '' ?></span></div>
-  <div class="panel sc-team">
-    <ul class="sc-list">
-      <?php foreach ($team as $m): ?><li><span class="inline"><?= avatar($m, 'sm') ?> <span><b><?= e($m['name']) ?></b><small class="mono"><?= e($m['email']) ?></small></span></span><?php if ($m['role'] === 'admin'): ?><span class="chip neutral">Administrateur</span><?php endif; ?></li><?php endforeach; ?>
-      <?php foreach ($invites as $i): ?><li><span class="inline muted"><?= e($i['name']) ?></span><span class="chip warn">Invitation en attente</span></li><?php endforeach; ?>
-    </ul>
-    <form class="stack sc-inv" data-api="invite" data-show-link>
-      <h3>Inviter une personne</h3>
-      <div class="two">
-        <div class="field"><label for="iv-name">Prénom / nom</label><input class="input" id="iv-name" name="name" maxlength="60" placeholder="Céline" required></div>
-        <div class="field"><label for="iv-ini">Initiales</label><input class="input" id="iv-ini" name="initials" maxlength="3" placeholder="C"></div>
-      </div>
-      <div class="field"><label for="iv-email">Adresse e-mail</label><input class="input" id="iv-email" name="email" type="email" required placeholder="prenom@gidsas.fr"></div>
-      <p class="form-error" hidden></p>
-      <button class="btn btn-primary">Créer le lien d'invitation</button>
-      <div class="invite-link" hidden><p class="muted small">Lien valable 7 jours, à usage unique. Transmettez-le directement à la personne.</p><input class="input mono" id="iv-link" readonly><button type="button" class="btn btn-ghost" id="copyLink">Copier le lien</button></div>
-    </form>
+  <div class="sec-h"><h2>Équipe et accès</h2><span class="muted small"><?= count($live) ?> collaborateurs ImmOpen · <?= (int)($cnt['active'] ?? 0) ?> comptes actifs · <?= (int)($cnt['invited'] ?? 0) ?> invitations en attente · <?= (int)($cnt['none'] ?? 0) ?> sans accès</span></div>
+  <p class="tm-note"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+    La liste des employés est relevée dans ImmOpen le 1er de chaque mois<?= $sync ? ' (dernier relevé le ' . e(date('d/m/Y', (int)$sync['at'])) . ($sync['added'] ? ' · ajoutés : ' . e(implode(', ', $sync['added'])) : '') . ($sync['archived'] ? ' · archivés : ' . e(implode(', ', $sync['archived'])) : '') . ')' : '' ?>. Un nouvel employé est ajouté automatiquement à l'organigramme ; une personne qui n'y figure plus est archivée et son compte désactivé. Chaque compte donne accès à l'espace Équipe et à un espace personnel ; Direction et Famille restent attribués à la main.</p>
+  <div class="panel">
+    <div class="sa-acts"><?php if (!empty($cnt['none'])): ?><button type="button" class="btn btn-primary" id="invAll">Inviter les <?= (int)$cnt['none'] ?> collaborateurs sans accès</button><?php endif; ?><span class="muted small">L'invitation part par e-mail (lien personnel valable 30 jours) ; le lien s'affiche aussi ici pour être transmis.</span></div>
+    <div class="tbl"><table class="sec-table ag-tbl" id="accTbl">
+      <thead><tr><th>Collaborateur</th><th>Fonction</th><th>E-mail</th><th>Téléphone</th><th>Accès</th><th></th></tr></thead>
+      <tbody>
+      <?php foreach ($live as $s): [$l, $c] = $lbl[$s['status']]; ?>
+        <tr><td><a href="/equipe/<?= e(team_slug($s['name'])) ?>"><strong><?= e($s['name']) ?></strong></a></td><td class="small"><?= e((string)$s['role']) ?></td><td class="mono small"><?= e((string)$s['email']) ?: '—' ?></td><td class="mono small"><?= e((string)$s['phone']) ?: '—' ?></td>
+          <td><span class="chip <?= $c ?>"><?= e($l) ?><?= $s['status'] === 'invited' && $s['inv_exp'] ? ' · jusqu\'au ' . date('d/m', $s['inv_exp']) : '' ?></span></td>
+          <td><?php if ($s['status'] === 'none'): ?><button type="button" class="btn-link" data-inv="<?= e($s['name']) ?>">Inviter</button><?php endif; ?></td></tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table></div>
+    <div id="invOut" hidden><h3 class="cp-h3">Liens d'invitation</h3><ul class="sc-list" id="invList"></ul></div>
+    <?php if ($arch): ?><details class="sv-pend"><summary><?= count($arch) ?> archivé<?= count($arch) > 1 ? 's' : '' ?></summary><p class="muted small"><?= e(implode(', ', array_map(fn($s) => $s['name'] . ' (depuis le ' . date('d/m/Y', (int)$s['archived_at']) . ')', $arch))) ?></p></details><?php endif; ?>
   </div>
 </section>
 <?php endif; ?>

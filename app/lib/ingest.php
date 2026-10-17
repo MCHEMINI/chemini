@@ -136,6 +136,11 @@ function ingest_handle(string $kind): never {
         }
         $send(['ok' => true, 'n' => $n]);
     }
+    if ($kind === 'staff') { // liste COMPLÈTE des employés ImmOpen : {date, rows:[{name, role, email, phone}]} — les absents sont archivés
+        $rows = array_values(array_filter((array)($d['rows'] ?? []), 'is_array'));
+        if (count($rows) < 5) $send(['error' => 'liste incomplète (moins de 5 personnes) : rien n\'est archivé'], 400);
+        $send(['ok' => true] + staff_sync($rows));
+    }
     if ($kind === 'news') { // synthèse quotidienne des actualités : {date:"AAAA-MM-JJ", items:[{title, source, url, date, summary, why}]}
         $items = [];
         foreach (array_slice((array)($d['items'] ?? []), 0, 12) as $i) {

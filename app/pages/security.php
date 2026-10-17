@@ -10,6 +10,8 @@ function page_security(array $u): never {
         'currentDevice' => (int)($_SESSION['device_id'] ?? 0),
         'msConnected' => graph_connected($uid), 'msEnabled' => graph_enabled(), 'msError' => isset($_GET['ms']),
         'team' => $u['role'] === 'admin' ? users_all() : [],
+        'access' => $u['role'] === 'admin' ? staff_access() : [],
+        'sync' => $u['role'] === 'admin' ? (json_decode((string)q("SELECT v FROM kv WHERE k='staff_sync'")->fetchColumn(), true) ?: null) : null,
         'secAudits' => $u['role'] === 'admin' ? array_map(fn($a) => $a + ['d' => json_decode($a['data'], true) ?: []], q("SELECT * FROM audits WHERE kind='securite' ORDER BY period DESC LIMIT 8")->fetchAll()) : [],
         'invites' => $u['role'] === 'admin' ? q('SELECT * FROM invites WHERE used_at IS NULL AND expires_at>? ORDER BY id DESC', [time()])->fetchAll() : [],
     ]);

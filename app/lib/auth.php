@@ -37,6 +37,7 @@ function current_user(): ?array {
             clear_trust_cookie();
         }
     }
+    if ($u && !empty($u['disabled_at'])) { unset($_SESSION['uid']); $u = null; } // collaborateur sorti de l'annuaire ImmOpen
     return $u;
 }
 

@@ -83,3 +83,8 @@ function send_reset_link(array $user, string $link): bool {
     [$text, $html] = mail_template('Réinitialiser votre mot de passe', 'Ce lien est valable 30 minutes et utilisable une seule fois. Votre code à 6 chiffres restera demandé à la connexion.', 'Choisir un nouveau mot de passe', $link);
     return send_mail($user['email'], 'Réinitialisation du mot de passe · ' . APP_NAME, $text, $html);
 }
+
+function send_invite(string $email, string $name, string $link): bool {
+    [$text, $html] = mail_template('Bienvenue sur Chemini, ' . explode(' ', $name)[0], 'Chemini est la plateforme interne de GID : vos tâches, les informations du cabinet, l\'organigramme. Créez votre accès avec ce lien personnel, valable 30 jours.', 'Créer mon accès', $link);
+    return send_mail($email, 'Votre accès à Chemini · GID', $text, $html);
+}

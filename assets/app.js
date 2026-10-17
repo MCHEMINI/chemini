@@ -647,3 +647,13 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
   f.addEventListener('input', e => { if (e.target.matches('textarea,input[type=text],.sv-o')) { clearTimeout(t); t = setTimeout(() => save(false), 1200); } });
   document.getElementById('svSend').addEventListener('click', async () => { if (await save(true)) location.href = '/mes-taches'; });
 })();
+
+/* Sécurité › Équipe : invitations des collaborateurs */
+(function(){ const out = document.getElementById('invOut'); if (!out) return; const list = document.getElementById('invList');
+  const run = async (path, data, btn) => { btn.disabled = true; try { const r = await api(path, data); out.hidden = false;
+      (r.invites || []).forEach(i => { const li = document.createElement('li'); li.innerHTML = '<span><b></b><small></small></span><input class="input mono" readonly>'; li.querySelector('b').textContent = i.name; li.querySelector('small').textContent = i.sent ? 'Invitation envoyée par e-mail' : 'E-mail non parti : transmettez ce lien'; li.querySelector('input').value = i.link; li.querySelector('input').addEventListener('click', e => e.target.select()); list.appendChild(li); });
+      if (!(r.invites || []).length) { const li = document.createElement('li'); li.textContent = 'Aucune invitation à créer.'; list.appendChild(li); }
+      btn.textContent = 'Invité'; } catch (e) { btn.disabled = false; out.hidden = false; const li = document.createElement('li'); li.textContent = e.message; list.appendChild(li); } };
+  document.getElementById('invAll')?.addEventListener('click', e => run('team/invite_all', {}, e.currentTarget));
+  document.querySelectorAll('[data-inv]').forEach(b => b.addEventListener('click', () => run('team/invite', { name: b.dataset.inv }, b)));
+})();

@@ -57,5 +57,6 @@ const VERSIONS = [
     ['2026-10-17 03:40', 'all', 'Questionnaire de fonctionnement', 'Enquête auprès des équipes : tâches récurrentes, demandes des copropriétaires, recherches dans ImmOpen, automatisations souhaitées.'],
     ['2026-10-17 03:40', 'direction', 'Direction › Enquête', 'Résultats de l\'enquête et outils à développer classés selon les réponses.'],
     ['2026-10-17 03:40', 'all', 'Tâches partagées', 'Une tâche peut rester perso ou être partagée avec tout le monde, la Direction ou la Famille.'],
+    ['2026-10-17 03:50', 'direction', 'Annuaire synchronisé avec ImmOpen', 'Relevé des employés le 1er du mois : ajout automatique à l\'organigramme, archivage et désactivation du compte des personnes parties, invitations depuis Sécurité.'],
     ['2026-10-17 02:45', 'all', 'Versioning', 'Historique de tout ce qui a été fait sur la plateforme ; Tâches IA limitées à 10 lignes par bloc.'],
 ];
