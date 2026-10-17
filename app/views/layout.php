@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=50">
+<link rel="stylesheet" href="/assets/app.css?v=51">
 </head>
 <body>
 <div id="app">
@@ -65,10 +65,13 @@
       <a class="<?= $cls('notes') ?>" href="/bloc-notes"><i class="dot"></i>Bloc-notes</a>
       <a class="<?= $cls('books') ?>" href="/mes-livres"><i class="dot"></i>Mes livres</a>
       <a href="/assistant" class="nav-ia <?= $cls('ia') ?>"><i class="dot"></i>Tâches IA<?php $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nIa): ?> <span class="nav-n"><?= $nIa ?></span><?php endif; ?></a>
-      <a class="<?= $cls('versioning') ?>" href="/versioning"><i class="dot"></i>Versioning</a>
     </nav>
     <div class="theme-switch" role="group" aria-label="Thème"><button type="button" data-theme-set="light">Clair</button><button type="button" data-theme-set="dark">Sombre</button><button type="button" data-theme-set="auto">Auto</button></div>
-    <div class="me"><?= avatar($u) ?><div class="me-id"><?= e($u['name']) ?><small><?= e($u['email']) ?></small></div><a href="/securite" class="me-out<?= $n === 'secu' ? ' on' : '' ?>" title="Sécurité du compte" aria-label="Sécurité du compte"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></a><a href="/deconnexion" class="me-out" title="Se déconnecter" aria-label="Se déconnecter"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></a></div>
+    <div class="rail-picto" role="group" aria-label="Raccourcis">
+      <a href="/securite" class="<?= $n === 'secu' ? 'on' : '' ?>" title="Sécurité" aria-label="Sécurité"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Sécurité</span></a>
+      <a href="/versioning" class="<?= $n === 'versioning' ? 'on' : '' ?>" title="Versioning" aria-label="Versioning"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Versioning</span></a>
+    </div>
+    <div class="me"><?= avatar($u) ?><div class="me-id"><?= e($u['name']) ?><small><?= e($u['email']) ?></small></div><a href="/deconnexion" class="me-out" title="Se déconnecter" aria-label="Se déconnecter"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></a></div>
   </aside>
   <main class="<?= !empty($wide) ? 'wide' : '' ?>"><div class="page-tools"><div class="fs-switch" role="group" aria-label="Taille du texte"><button type="button" data-fs="-1" aria-label="Réduire le texte">A−</button><span data-fs-val>100 %</span><button type="button" data-fs="1" aria-label="Agrandir le texte">A+</button></div></div><?= $content ?></main>
 </div>
