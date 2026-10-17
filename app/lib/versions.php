@@ -60,5 +60,4 @@ const VERSIONS = [
     ['2026-10-17 03:50', 'direction', 'Annuaire synchronisé avec ImmOpen', 'Relevé des employés le 1er du mois : ajout automatique à l\'organigramme, archivage et désactivation du compte des personnes parties, invitations depuis Sécurité.'],
     ['2026-10-17 02:45', 'all', 'Versioning', 'Historique de tout ce qui a été fait sur la plateforme ; Tâches IA limitées à 10 lignes par bloc.'],
     ['2026-10-17 04:10', 'all', 'Coordonnées des collaborateurs', 'Ligne directe, raccourci interne et e-mail sur chaque fiche (appel en un geste, e-mail ouvert dans Outlook) ; nombre de tâches affiché pour chacun.'],
-    ['2026-10-17 04:15', 'all', 'Fiche collaborateur : coordonnées', 'Ligne directe, raccourci interne et e-mail qui ouvre Outlook ; nombre de tâches affiché pour chaque collaborateur.'],
 ];
