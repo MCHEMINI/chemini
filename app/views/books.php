@@ -33,12 +33,13 @@
   <?php endforeach; ?>
 </ul>
 
-<dialog class="bk-dlg" id="bkEdit">
-  <form method="dialog">
-    <h3>Modifier le livre</h3>
-    <label class="lbl" for="bkT">Titre</label><input class="input" id="bkT" maxlength="200" required>
-    <label class="lbl" for="bkA">Auteur</label><input class="input" id="bkA" maxlength="200">
-    <div class="bk-dlg-r"><button class="btn" value="cancel" formnovalidate>Annuler</button><button class="btn btn-primary" value="ok">Enregistrer</button></div>
+<dialog class="dlg" id="bkEdit">
+  <form method="dialog" class="stack">
+    <div class="eyebrow">Mes livres</div>
+    <h2>Modifier le livre</h2>
+    <div class="field"><label for="bkT">Titre</label><input class="input" id="bkT" maxlength="200" required></div>
+    <div class="field"><label for="bkA">Auteur</label><input class="input" id="bkA" maxlength="200"></div>
+    <div class="dlg-actions"><button class="btn btn-ghost" value="cancel" formnovalidate>Annuler</button><button class="btn btn-primary" value="ok">Enregistrer</button></div>
   </form>
 </dialog>
 <script src="/assets/vendor/jszip.min.js"></script>

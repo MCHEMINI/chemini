@@ -203,7 +203,7 @@ li:hover .row-actions,li:focus-within .row-actions{opacity:1}
 .sec-table td{padding:14px 12px 14px 0;border-bottom:1px solid var(--line);vertical-align:top}
 .tbl{overflow-x:auto}
 
-.dlg{border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:32px;width:min(520px,calc(100vw - 32px))}
+.dlg{border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.28);background:var(--bg);color:var(--ink);padding:32px;width:min(520px,calc(100vw - 32px))}
 .dlg::backdrop{background:rgba(10,13,18,.55);backdrop-filter:blur(2px)}
 .dlg h2{font-size:28px;margin-bottom:6px}
 .dlg .stack{gap:20px}
@@ -520,8 +520,8 @@ a.row-a:hover strong{text-decoration:underline;text-underline-offset:3px}
 
 /* Planning des AG : colonnes */
 .ag-cols-wrap{position:relative}
-.ag-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:40;width:300px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 10px 30px rgba(0,0,0,.15);padding:10px 12px}
-.ag-pop-h{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.ag-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:40;width:320px;background:var(--bg);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.18);padding:6px 14px 12px}
+.ag-pop-h{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:10px 0;margin-bottom:6px;border-bottom:1px solid var(--line)}.ag-pop-h button{letter-spacing:0;text-transform:none;font-size:12.5px}
 .ag-pop-r{display:flex;align-items:center;gap:4px;font-size:14px}.ag-pop-r label{flex:1;display:flex;gap:8px;align-items:center;padding:4px 0}
 .ag-pop-r button{width:24px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--muted);cursor:pointer}.ag-pop-r button:disabled{opacity:.3;cursor:default}
 .ag-tbl th.sorted{color:var(--ink)}.ag-tbl th.sorted::after{content:attr(data-dir);margin-left:4px}
