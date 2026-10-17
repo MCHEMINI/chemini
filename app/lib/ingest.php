@@ -136,6 +136,10 @@ function ingest_handle(string $kind): never {
         }
         $send(['ok' => true, 'n' => $n]);
     }
+    if ($kind === 'president') { // Mot du Président (brouillon) : {month:"AAAA-MM", title, chapo, body, sources:[{title,url}]}
+        $src = array_values(array_filter(array_map(fn($x) => is_array($x) && preg_match('#^https?://#', (string)($x['url'] ?? '')) ? ['title' => mb_substr((string)($x['title'] ?? ''), 0, 200), 'url' => (string)$x['url']] : null, (array)($d['sources'] ?? []))));
+        $send(pw_save((string)($d['month'] ?? ''), (string)($d['title'] ?? ''), (string)($d['chapo'] ?? ''), (string)($d['body'] ?? ''), $src, true));
+    }
     if ($kind === 'banners') { // bandeaux de signature : {items:[{title, mode: default|period|rotation|draft, start, end, data: dataURL}]}
         $out = [];
         foreach (array_slice((array)($d['items'] ?? []), 0, 20) as $it) {

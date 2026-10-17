@@ -18,6 +18,7 @@ require APP_DIR . '/lib/sec_audit.php';
 require APP_DIR . '/lib/team.php';
 require APP_DIR . '/lib/survey.php';
 require APP_DIR . '/lib/sig.php';
+require APP_DIR . '/lib/president.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -31,7 +32,7 @@ if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: ma
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
 if ($route0 === 'signature/banniere') sig_serve_image();
 if ($route0 === 'signature/lien') sig_redirect();
-if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts|banners)$#', $route0, $m)) ingest_handle($m[1]);
+if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts|banners|president)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 
@@ -51,7 +52,16 @@ try {
         case '':
             $u = require_user();
             require APP_DIR . '/pages/dashboard.php';
+            require APP_DIR . '/pages/perso.php';
+            page_home($u);
+        case 'tableau-de-bord':
+            $u = require_user();
+            require APP_DIR . '/pages/dashboard.php';
             page_dashboard($u);
+        case 'mot-du-president':
+            $u = require_user();
+            require APP_DIR . '/pages/president.php';
+            page_president($u);
         case 'espace':
             $u = require_user();
             require APP_DIR . '/pages/perso.php';
@@ -202,6 +212,7 @@ try {
                 if (!$b || !is_file($f)) { http_response_code(404); exit; }
                 header('Content-Type: ' . $b['mime']); header('Cache-Control: private, max-age=86400'); readfile($f); exit;
             }
+            if (preg_match('#^mot-du-president/(\d{4}-\d{2})$#', $route, $m)) { $u = require_user(); require APP_DIR . '/pages/president.php'; page_president($u, $m[1]); }
             if (preg_match('#^equipe/([a-z0-9-]{1,80})$#', $route, $m)) {
                 $u = require_user();
                 require APP_DIR . '/pages/team.php';

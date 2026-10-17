@@ -363,6 +363,22 @@ function api(string $r): never {
             if ($r === 'sig/edit') { $old = q('SELECT * FROM banners WHERE id=?', [in_int('id')])->fetch(); if (!$old) json_out(['error' => 'Bandeau introuvable.'], 404); }
             $res = sig_save($old, (string)(body()['data'] ?? ''), in_str('mode', 10) ?: (in_str('is_default', 2) ? 'default' : 'period'), in_str('start', 10), in_str('end', 10), in_str('title', 120), $uid);
             json_out($res, isset($res['error']) ? 400 : 200);
+        case 'perso/counts':
+            require_once APP_DIR . '/pages/team.php'; $me = team_me($u);
+            json_out(['mails' => (int)q('SELECT COUNT(*) FROM mail_items WHERE user_id=? AND done=0', [$uid])->fetchColumn(),
+                'crit' => (int)q("SELECT COUNT(*) FROM mail_items WHERE user_id=? AND done=0 AND priority='crit'", [$uid])->fetchColumn(),
+                'tasks' => $me ? (int)q('SELECT COUNT(*) FROM team_tasks WHERE person=? AND done_at IS NULL', [$me])->fetchColumn() : 0,
+                'ia' => (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [$uid])->fetchColumn()]);
+        case 'president/save':
+        case 'president/validate':
+        case 'president/unvalidate':
+            if (!pw_editor($u)) json_out(['error' => 'Réservé au Président.'], 403);
+            $m = in_str('month', 7) ?: in_str('k', 7); $w = pw_get($m);
+            if ($r === 'president/save') { $res = pw_save($m, in_str('title', 200), in_str('chapo', 800), (string)(body()['body'] ?? ''), null); json_out($res, isset($res['error']) ? 400 : 200); }
+            if (!$w) json_out(['error' => 'Mot introuvable.'], 404);
+            if ($r === 'president/validate') q("UPDATE president_words SET status='validated', validated_at=?, validated_by=? WHERE id=?", [time(), $uid, $w['id']]);
+            else q("UPDATE president_words SET status='draft', validated_at=NULL, validated_by=NULL WHERE id=?", [$w['id']]);
+            json_out(['ok' => true]);
         case 'sig/activate':
         case 'sig/deactivate':
             if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);

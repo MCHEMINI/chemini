@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=51">
+<link rel="stylesheet" href="/assets/app.css?v=53">
 </head>
 <body>
 <div id="app">
@@ -37,11 +37,14 @@
           foreach ($members as $m) $h .= '<li>' . avatar($m, 'sm') . '<div><strong>' . e($m['name']) . '</strong><span>' . e($m['email'] ?? '') . '</span></div></li>';
           return $h . '</ul></div>';
       }; ?>
-      <?= $grp('Équipe', 'gid', space_members('gid')) ?>
-      <a class="<?= $cls('dash') ?>" href="/"><i class="dot"></i>Tableau de bord</a>
-      <a class="<?= $cls('space-gid') ?>" href="/gid"><i class="dot"></i>Informations</a>
-      <a class="<?= $cls('orga') ?><?= ($nav ?? '') === 'team' ? ' active' : '' ?>" href="/organigramme"><i class="dot"></i>Collaborateurs</a>
-      <a class="<?= $cls('accueil') ?>" href="/accueil"><i class="dot"></i>Accueil</a>
+      <?= $grp('Perso', 'perso', [$u]) ?>
+      <a class="<?= $cls('home') ?>" href="/"><i class="dot"></i>Tableau de bord</a>
+      <a class="<?= $cls('perso') ?>" href="/espace"><i class="dot"></i>Mails à traiter<?php $nM = (int)q('SELECT COUNT(*) FROM mail_items WHERE user_id=? AND done=0', [(int)$u['id']])->fetchColumn(); if ($nM): ?> <span class="nav-n crit"><?= $nM ?></span><?php endif; ?></a>
+      <a class="<?= $cls('mot') ?>" href="/mot-du-president"><i class="dot"></i>Mot du Président</a>
+      <a class="<?= $cls('tasks') ?>" href="/mes-taches"><i class="dot"></i>Mes tâches<?php $nT = ($meK = team_me($u)) ? (int)q('SELECT COUNT(*) FROM team_tasks WHERE person=? AND done_at IS NULL', [$meK])->fetchColumn() : 0; if ($nT): ?> <span class="nav-n"><?= $nT ?></span><?php endif; ?></a>
+      <a class="<?= $cls('notes') ?>" href="/bloc-notes"><i class="dot"></i>Bloc-notes</a>
+      <a class="<?= $cls('books') ?>" href="/mes-livres"><i class="dot"></i>Mes livres</a>
+      <a href="/assistant" class="nav-ia <?= $cls('ia') ?>"><i class="dot"></i>Tâches IA<?php $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nIa): ?> <span class="nav-n"><?= $nIa ?></span><?php endif; ?></a>
       <?php if (in_array('direction', $sp, true)): ?>
       <?= $grp('Direction', 'direction', space_members('direction')) ?>
       <a class="<?= $cls('space-direction') ?>" href="/direction"><i class="dot"></i>Tableau de bord</a>
@@ -54,22 +57,26 @@
       <a class="<?= $cls('survey') ?>" href="/enquete/resultats"><i class="dot"></i>Enquête</a>
       <a class="<?= $cls('sig') ?>" href="/signatures"><i class="dot"></i>Signatures</a>
       <?php endif; ?>
+      <?= $grp('Équipe', 'gid', space_members('gid')) ?>
+      <a class="<?= $cls('dash') ?>" href="/tableau-de-bord"><i class="dot"></i>Tableau de bord</a>
+      <a class="<?= $cls('space-gid') ?>" href="/gid"><i class="dot"></i>Informations</a>
+      <a class="<?= $cls('orga') ?><?= ($nav ?? '') === 'team' ? ' active' : '' ?>" href="/organigramme"><i class="dot"></i>Collaborateurs</a>
+      <a class="<?= $cls('accueil') ?>" href="/accueil"><i class="dot"></i>Accueil</a>
       <?php if (in_array('famille', $sp, true)): ?>
       <?= $grp('Famille', 'famille', space_members('famille')) ?>
       <a class="<?= $cls('space-famille') ?>" href="/famille"><i class="dot"></i>Tableau de bord</a>
       <a class="<?= $cls('voyages') ?>" href="/voyages"><i class="dot"></i>Voyages</a>
       <?php endif; ?>
-      <?= $grp('Personnel', 'perso', [$u]) ?>
-      <a class="<?= $cls('perso') ?>" href="/espace"><?= avatar($u, 'sm') ?>Mon espace</a>
-      <a class="<?= $cls('tasks') ?>" href="/mes-taches"><i class="dot"></i>Mes tâches<?php $nT = ($meK = team_me($u)) ? (int)q('SELECT COUNT(*) FROM team_tasks WHERE person=? AND done_at IS NULL', [$meK])->fetchColumn() : 0; if ($nT): ?> <span class="nav-n"><?= $nT ?></span><?php endif; ?></a>
-      <a class="<?= $cls('notes') ?>" href="/bloc-notes"><i class="dot"></i>Bloc-notes</a>
-      <a class="<?= $cls('books') ?>" href="/mes-livres"><i class="dot"></i>Mes livres</a>
-      <a href="/assistant" class="nav-ia <?= $cls('ia') ?>"><i class="dot"></i>Tâches IA<?php $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nIa): ?> <span class="nav-n"><?= $nIa ?></span><?php endif; ?></a>
     </nav>
-    <div class="theme-switch" role="group" aria-label="Thème"><button type="button" data-theme-set="light">Clair</button><button type="button" data-theme-set="dark">Sombre</button><button type="button" data-theme-set="auto">Auto</button></div>
     <div class="rail-picto" role="group" aria-label="Raccourcis">
-      <a href="/securite" class="<?= $n === 'secu' ? 'on' : '' ?>" title="Sécurité" aria-label="Sécurité"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Sécurité</span></a>
-      <a href="/versioning" class="<?= $n === 'versioning' ? 'on' : '' ?>" title="Versioning" aria-label="Versioning"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Versioning</span></a>
+      <a href="/securite" class="<?= $n === 'secu' ? 'on' : '' ?>" title="Sécurité" aria-label="Sécurité"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></a>
+      <a href="/versioning" class="<?= $n === 'versioning' ? 'on' : '' ?>" title="Versioning" aria-label="Versioning"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></a>
+      <span class="rp-sep" aria-hidden="true"></span>
+      <span class="rp-theme" role="group" aria-label="Thème">
+        <button type="button" data-theme-set="light" title="Mode clair" aria-label="Mode clair"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+        <button type="button" data-theme-set="dark" title="Mode sombre" aria-label="Mode sombre"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+        <button type="button" data-theme-set="auto" title="Automatique (selon l'appareil)" aria-label="Thème automatique"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
+      </span>
     </div>
     <div class="me"><?= avatar($u) ?><div class="me-id"><?= e($u['name']) ?><small><?= e($u['email']) ?></small></div><a href="/deconnexion" class="me-out" title="Se déconnecter" aria-label="Se déconnecter"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></a></div>
   </aside>
@@ -94,6 +101,6 @@
   <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Tâches IA : donner une consigne"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=35"></script>
+<script src="/assets/app.js?v=36"></script>
 </body>
 </html>

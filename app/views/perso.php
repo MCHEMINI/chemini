@@ -1,7 +1,7 @@
 <header class="head">
   <div>
-    <div class="eyebrow">Espace personnel · privé</div>
-    <h1>Mon espace</h1>
+    <div class="eyebrow">Perso · privé</div>
+    <h1>Mails à traiter</h1>
     <div class="date">Visible uniquement par <?= e($u['name']) ?></div>
   </div>
 </header>

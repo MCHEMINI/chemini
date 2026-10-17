@@ -668,6 +668,18 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
   document.querySelectorAll('[data-inv]').forEach(b => b.addEventListener('click', () => run('team/invite', { name: b.dataset.inv }, b)));
 })();
 
+/* Mot du Président : enregistrer le brouillon */
+(function(){ const f = document.getElementById('pwF'); if (!f) return;
+  f.addEventListener('submit', async e => { e.preventDefault(); const err = f.querySelector('.form-error'), b = f.querySelector('.btn-primary'); err.hidden = true; b.disabled = true;
+    const o = Object.fromEntries(new FormData(f).entries()); o.month = f.dataset.month;
+    try { await api('president/save', o); location.href = '/mot-du-president/' + f.dataset.month; } catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });
+})();
+/* Tableau de bord Perso : compteurs mis à jour toutes les 2 minutes */
+(function(){ if (!document.querySelector('[data-live]')) return;
+  const tick = async () => { try { const r = await api('perso/counts', {}); Object.entries(r).forEach(([k, v]) => document.querySelectorAll('[data-live="' + k + '"]').forEach(el => { el.textContent = v; if (k === 'mails') el.closest('.hm-kpi')?.classList.toggle('hot', v > 0); })); } catch (x) {} };
+  setInterval(tick, 120000);
+})();
+
 /* Signatures : ajouter / modifier un visuel — défaut, période ou brouillon */
 function sgModes(f, perEl) { const radios = f.querySelectorAll('[name=mode]'), dates = perEl.querySelectorAll('input[type=date]');
   const mode = () => (f.querySelector('[name=mode]:checked') || {}).value;

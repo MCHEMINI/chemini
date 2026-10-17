@@ -63,4 +63,7 @@ const VERSIONS = [
     ['2026-10-17 04:45', 'direction', 'Signatures simplifiées', 'Ajouter un visuel avec sa période ou comme bandeau par défaut ; procédure et prompt Gemini à côté ; toujours un bandeau par défaut, statuts recalculés chaque jour.'],
     ['2026-10-17 05:00', 'direction', 'Signatures : brouillons et modification', 'Visuels en brouillon à activer ou désactiver à tout moment, modification de chaque bandeau, message du prompt Gemini mis en évidence tant qu\'il n\'est pas complété.'],
     ['2026-10-17 05:20', 'direction', 'Signatures : visuel du mois et calendrier', 'Rotation mensuelle des visuels hors périodes programmées, calendrier des 12 prochains mois, visuels Institutionnel, Syndic, Gestion locative, Transaction, Fêtes, Vœux, Été et Saison des AG.'],
+    ['2026-10-17 05:50', 'all', 'Tableau de bord Perso', 'Page d\'accueil par défaut : synthèse de toute la plateforme en blocs selon votre profil (mails à traiter en rouge, tâches, Tâches IA, AG, pilotage, équipe), mise à jour automatique ; section Perso en premier dans la barre latérale.'],
+    ['2026-10-17 05:50', 'all', 'Mot du Président', 'Un article chaque 1er du mois sur l\'actualité, nos trois métiers et les tendances, publié après validation du Président.'],
+    ['2026-10-17 05:50', 'all', 'Barre latérale : pictos', 'Sécurité, Versioning et thème clair / sombre / automatique en pictos au-dessus du profil.'],
 ];

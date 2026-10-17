@@ -307,6 +307,9 @@ SQL);
         }
         $pdo->exec('PRAGMA user_version = 35;');
     }
+    if ($v < 36) { // Mot du Président : un article par mois, brouillon tant qu'il n'est pas validé
+        $pdo->exec("CREATE TABLE IF NOT EXISTS president_words(id INTEGER PRIMARY KEY, month TEXT NOT NULL UNIQUE, title TEXT NOT NULL, chapo TEXT, body TEXT NOT NULL, sources TEXT, status TEXT NOT NULL DEFAULT 'draft', validated_at INTEGER, validated_by INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL); PRAGMA user_version = 36;");
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
