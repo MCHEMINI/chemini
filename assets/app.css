@@ -1646,3 +1646,27 @@ img[data-zoom]{cursor:zoom-in}
 .zoom-t{color:#fff;text-align:center;margin:10px 0 0;font-size:15px}
 .zoom-x{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;border:0;background:#fff;color:#151A22;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 @media (max-width:600px){.zoom-x{top:-44px;right:0}}
+/* Questions de l'IA (Direction) */
+.aiq{margin:0 0 28px}
+.aiq-n{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--bronze);color:#fff;font:600 12px var(--f-body);vertical-align:middle;margin-left:6px}
+.aiq-card{padding:20px 22px;display:grid;gap:12px;border-left:3px solid var(--bronze)}
+.aiq-top{display:flex;align-items:center;gap:14px}.aiq-bar{flex:1;height:4px;background:var(--line);border-radius:2px;overflow:hidden;max-width:220px}.aiq-bar i{display:block;height:100%;background:var(--bronze)}
+.aiq-card h3{font:600 19px/1.35 var(--f-display);margin:0;color:var(--ink)}
+.aiq-ctx{margin:0;color:var(--muted);font-size:14.5px;line-height:1.5}
+.aiq-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.aiq-opt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:11px 14px;cursor:pointer;background:var(--surface);font-size:15px}
+.aiq-opt:hover{border-color:var(--bronze)}.aiq-opt.on{border-color:var(--bronze);background:var(--bronze-soft)}
+.aiq-opt input[type=radio],.aiq-opt input[type=checkbox]{accent-color:var(--bronze);width:17px;height:17px;flex:none}
+.aiq-other input{border:0;background:none;font:inherit;color:var(--ink);width:100%;outline:none}
+.aiq-act{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.aiq-end{padding:18px 22px;display:grid;gap:4px}
+.aiq-done{margin-top:10px;font-size:14.5px}.aiq-done summary{cursor:pointer;color:var(--muted)}
+.aiq-done ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}.aiq-done li{display:grid;gap:2px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}.aiq-done li span{color:var(--muted);font-size:13.5px}
+.mq{margin:0 0 28px}
+.mq-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.mq-card{padding:18px 20px;display:grid;gap:10px;align-content:start}
+.mq-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.mq-h b{font:600 17px/1.3 var(--f-display);color:var(--ink)}
+.mq-d{margin:0;color:var(--muted);font-size:14.5px;line-height:1.5}
+.mq-open{justify-self:start}
+.mq-act{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mq-form{display:grid;gap:8px}.mq-form textarea{width:100%;resize:vertical}

@@ -968,3 +968,31 @@ document.addEventListener('click', async e => { const b = e.target.closest('[dat
   d.addEventListener('click', e => { if (e.target === d || e.target.closest('.zoom-x')) d.close(); });
   d.addEventListener('close', () => { im.removeAttribute('src'); });
 })();
+/* Questions de l'IA (tableau de bord Direction) : une question à la fois, la réponse crée une Tâche IA */
+(function(){ const deck = document.querySelector('.aiq-deck'); if (!deck) return;
+  const next = card => { card.hidden = true; const n = deck.querySelector('.aiq-card:not([hidden]):not(.sent)') || [...deck.querySelectorAll('.aiq-card')].find(c => !c.classList.contains('sent'));
+    card.classList.add('sent'); const rest = [...deck.querySelectorAll('.aiq-card')].filter(c => !c.classList.contains('sent'));
+    if (rest.length) rest[0].hidden = false; else deck.querySelector('.aiq-end').hidden = false;
+    const b = document.querySelector('.aiq-n'); if (b) { const v = rest.length; if (v) b.textContent = v; else b.remove(); } };
+  deck.addEventListener('change', e => { const o = e.target.closest('.aiq-opt'); if (!o) return; o.closest('.aiq-opts').querySelectorAll('.aiq-opt').forEach(l => { const i = l.querySelector('input[type=radio],input[type=checkbox]'); if (i) l.classList.toggle('on', i.checked); }); });
+  deck.addEventListener('submit', async e => { e.preventDefault(); const f = e.target, err = f.querySelector('.form-error'), btn = f.querySelector('.btn-primary');
+    const choices = [...f.querySelectorAll('input[name=c]:checked')].map(i => i.value), other = f.querySelector('input[name=other]')?.value || '';
+    if (!choices.length && !other.trim()) { err.textContent = 'Choisissez une réponse.'; err.hidden = false; return; }
+    btn.disabled = true; err.hidden = true;
+    try { await window.api('aiq/answer', { id: Number(f.dataset.id), choices, other }); const t = document.getElementById('toast'); if (t) { t.textContent = '✓ Tâche IA créée'; t.hidden = false; setTimeout(() => (t.hidden = true), 2200); } next(f); }
+    catch (x) { err.textContent = x.message; err.hidden = false; btn.disabled = false; } });
+  deck.addEventListener('click', async e => { const s = e.target.closest('[data-aiq-skip]'); if (!s) return; const f = s.closest('form');
+    try { await window.api('aiq/skip', { id: Number(f.dataset.id) }); next(f); } catch (x) { const err = f.querySelector('.form-error'); err.textContent = x.message; err.hidden = false; } });
+})();
+/* Maquettes à valider (Direction) : Valider → Tâche IA d'intégration, Modifications → Tâche IA de reprise, Refuser → aucune tâche */
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-mq],[data-mq-send],[data-mq-cancel]'); if (!b) return; const card = b.closest('.mq-card'); if (!card) return;
+  const form = card.querySelector('.mq-form'), act = card.querySelector('.mq-act'), err = card.querySelector('.form-error'), ta = form.querySelector('textarea'), hint = form.querySelector('.mq-hint');
+  const H = { validated: ['Remarques pour l’intégration (facultatif)', 'Une Tâche IA sera créée pour développer et intégrer la maquette.'], changes: ['Quelles modifications ?', 'Une Tâche IA sera créée pour reprendre la maquette ; la nouvelle version reviendra ici.'], refused: ['Motif (facultatif)', 'Aucune tâche ne sera créée.'] };
+  if (b.dataset.mq) { card.dataset.dec = b.dataset.mq; ta.placeholder = H[b.dataset.mq][0]; hint.textContent = H[b.dataset.mq][1]; form.hidden = false; act.hidden = true; err.hidden = true; ta.focus(); return; }
+  if ('mqCancel' in b.dataset) { form.hidden = true; act.hidden = false; err.hidden = true; return; }
+  b.disabled = true;
+  try { const r = await window.api('maquettes/decide', { id: Number(card.dataset.id), decision: card.dataset.dec, comment: ta.value });
+    const t = document.getElementById('toast'); if (t) { t.textContent = r.consigne ? '✓ Tâche IA créée' : '✓ Maquette refusée'; t.hidden = false; setTimeout(() => location.reload(), 900); } else location.reload(); }
+  catch (x) { err.textContent = x.message; err.hidden = false; b.disabled = false; }
+});

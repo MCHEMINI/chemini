@@ -24,6 +24,7 @@ require APP_DIR . '/lib/wp.php';
 require APP_DIR . '/lib/stats.php';
 require APP_DIR . '/lib/news.php';
 require APP_DIR . '/lib/search.php';
+require APP_DIR . '/lib/aiq.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -41,7 +42,7 @@ if ($route0 === 'signature/banniere') sig_serve_image();
 if ($route0 === 'signature/lien') sig_redirect();
 if ($route0 === 't') stats_collect(); // mesure d'audience du site gidsas.fr (public, sans cookie)
 if ($route0 === 't.js') stats_script();
-if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts|banners|president|ocr)$#', $route0, $m)) ingest_handle($m[1]);
+if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts|banners|president|ocr|questions|maquettes)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 
@@ -289,6 +290,7 @@ try {
                 if (!empty($m[2])) book_file($u, (int)$m[1]);
                 page_book_read($u, (int)$m[1]);
             }
+            if (preg_match('#^maquettes/([a-z0-9-]{1,60})$#', $route, $m)) { $u = require_user(); mq_serve($u, $m[1]); }
             if (preg_match('#^mot/([A-Za-z0-9_-]{24,64})$#', $route, $m)) { require APP_DIR . '/pages/president.php'; page_president_public($m[1]); }
             if (preg_match('#^partage/([A-Za-z0-9_-]{24,64})$#', $route, $m)) {
                 require APP_DIR . '/pages/trips.php';

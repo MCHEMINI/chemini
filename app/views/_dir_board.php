@@ -14,6 +14,9 @@
 <?php endif; ?>
 
 
+<?php require __DIR__ . '/_aiq.php'; ?>
+<?php require __DIR__ . '/_mq.php'; ?>
+
 <?php require __DIR__ . '/_overview.php'; ?>
 
 <div class="dir-actions"><button class="btn btn-ghost" type="button" data-open="dlgDeadline">Nouvelle échéance</button><button class="btn btn-primary" type="button" data-open="dlgItem">Nouveau point</button></div>

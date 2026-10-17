@@ -419,6 +419,11 @@ SQL);
         foreach ($pdo->query("SELECT id, title, body FROM board_posts WHERE title||body LIKE '%Chemini%'")->fetchAll() as $b) $up->execute([$rn($b['title']), $rn($b['body']), $b['id']]);
         $pdo->exec('PRAGMA user_version = 52;');
     }
+    if ($v < 53) { // Questions de l'IA sur le tableau de bord Direction (quiz → Tâche IA de correction)
+        $pdo->exec("CREATE TABLE IF NOT EXISTS ai_questions(id INTEGER PRIMARY KEY, qkey TEXT NOT NULL UNIQUE, question TEXT NOT NULL, context TEXT, options TEXT NOT NULL DEFAULT '[]', multi INTEGER NOT NULL DEFAULT 0, other INTEGER NOT NULL DEFAULT 0, task TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'open', answer TEXT, answered_by INTEGER, answered_at INTEGER, consigne_id INTEGER, created_at INTEGER NOT NULL);
+                    CREATE TABLE IF NOT EXISTS maquettes(id INTEGER PRIMARY KEY, slug TEXT NOT NULL UNIQUE, title TEXT NOT NULL, description TEXT, html TEXT NOT NULL, task TEXT, status TEXT NOT NULL DEFAULT 'pending', comment TEXT, decided_by INTEGER, decided_at INTEGER, consigne_id INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+                    PRAGMA user_version = 53;");
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

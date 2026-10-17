@@ -160,6 +160,18 @@ function api(string $r): never {
 
     if (preg_match('#^(items|deadlines|building)/#', $r) && !can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
     if (str_starts_with($r, 'books/')) { require APP_DIR . '/pages/books.php'; books_api($r, $u); }
+    if ($r === 'maquettes/decide') { // Valider / demander des modifications / refuser une maquette
+        if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+        $res = mq_decide($u, in_int('id'), in_str('decision', 10), in_str('comment', 3000));
+        json_out($res, isset($res['error']) ? 400 : 200);
+    }
+    if ($r === 'aiq/answer' || $r === 'aiq/skip') { // Questions de l'IA (Direction)
+        if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+        $d = body();
+        if ($r === 'aiq/skip') { q("UPDATE ai_questions SET status='skipped', answered_by=?, answered_at=? WHERE id=? AND status='open'", [$uid, time(), in_int('id')]); json_out(['ok' => true]); }
+        $res = aiq_answer($u, in_int('id'), array_map('strval', (array)($d['choices'] ?? [])), (string)($d['other'] ?? ''));
+        json_out($res, isset($res['error']) ? 400 : 200);
+    }
     if ($r === 'search') { // recherche instantanée (barre des tableaux de bord)
         if (rate_limited('search:' . $uid, 240, 300)) json_out(['error' => 'Trop de recherches, patientez un instant.'], 429);
         rate_hit('search:' . $uid);
