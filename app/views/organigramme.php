@@ -7,7 +7,10 @@ $shown = [];
 $person = function (string $name, string $role, string $cls = '') use ($ini, $key, $people, $stat, &$shown, $me) {
     $k = $key($name); $has = isset($people[$k]); $shown[$k] = true;
     $tag = $has ? 'a' : 'span'; $s = $stat[$k] ?? null;
-    $badge = $s ? '<span class="og-t' . ($s['late'] ? ' late' : '') . '" title="' . $s['open'] . ' tâche' . ($s['open'] > 1 ? 's' : '') . ' en cours' . ($s['late'] ? ', dont ' . $s['late'] . ' en retard' : '') . '">' . $s['open'] . '</span>' : '';
+    $s = $s ?? ['open' => 0, 'late' => 0];
+    $badge = $has ? '<span class="og-t' . ($s['late'] ? ' late' : ($s['open'] ? '' : ' zero')) . '" title="' . ($s['open'] ? $s['open'] . ' tâche' . ($s['open'] > 1 ? 's' : '') . ' en cours' . ($s['late'] ? ', dont ' . $s['late'] . ' en retard' : '') : 'Aucune tâche en cours') . '">' . $s['open'] . '</span>' : '';
+    $ext = $has ? ($people[$k]['ext'] ?? '') : '';
+    if ($ext) $role .= ' · ☎ ' . $ext;
     return '<' . $tag . ' class="og-p ' . $cls . ($k === $me ? ' me' : '') . '"' . ($has ? ' href="/equipe/' . e($k) . '"' : '') . '><span class="ag-av">' . e($ini($name)) . '</span><span class="og-id"><b>' . e($name) . '</b><small>' . e($role) . '</small></span>' . $badge . '</' . $tag . '>';
 };
 $comptas = [];

@@ -368,6 +368,16 @@
     $$('[data-ia-open]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); setIa(true); }));
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !iaPop.hidden) { setIa(false); iaFab.focus(); } });
   }
+  // E-mail : sur iPhone / Android, ouvrir directement l'application Outlook (retour au mail par défaut si elle est absente)
+  $$('a[data-outlook]').forEach(a => a.addEventListener('click', e => {
+    if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) return; // ordinateur : mailto ouvre Outlook, client par défaut
+    e.preventDefault();
+    const to = a.getAttribute('href').replace(/^mailto:/, '');
+    const t = setTimeout(() => { if (!document.hidden) location.href = 'mailto:' + to; }, 1500);
+    document.addEventListener('visibilitychange', () => clearTimeout(t), { once: true });
+    location.href = 'ms-outlook://compose?to=' + encodeURIComponent(to);
+  }));
+
   // Formulaires [data-api]
   $$('form[data-api]').forEach(f => f.addEventListener('submit', async e => {
     e.preventDefault();

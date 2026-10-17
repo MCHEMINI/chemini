@@ -136,6 +136,11 @@ function ingest_handle(string $kind): never {
         }
         $send(['ok' => true, 'n' => $n]);
     }
+    if ($kind === 'contacts') { // coordonnées : {rows:[{email, phone, ext}]} — ne touche qu'aux numéros, jamais à l'annuaire
+        $n = 0;
+        foreach ((array)($d['rows'] ?? []) as $r) if (is_array($r) && contact_set((string)($r['email'] ?? ''), (string)($r['phone'] ?? ''), (string)($r['ext'] ?? ''))) $n++;
+        $send(['ok' => true, 'n' => $n]);
+    }
     if ($kind === 'staff') { // liste COMPLÈTE des employés ImmOpen : {date, rows:[{name, role, email, phone}]} — les absents sont archivés
         $rows = array_values(array_filter((array)($d['rows'] ?? []), 'is_array'));
         if (count($rows) < 5) $send(['error' => 'liste incomplète (moins de 5 personnes) : rien n\'est archivé'], 400);

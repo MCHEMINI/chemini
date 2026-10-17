@@ -282,6 +282,9 @@ SQL);
         }
         $pdo->exec('PRAGMA user_version = 29;');
     }
+    if ($v < 30) { // coordonnées professionnelles (ligne directe, raccourci) par adresse e-mail
+        $pdo->exec('CREATE TABLE IF NOT EXISTS contacts(email TEXT PRIMARY KEY, phone TEXT, ext TEXT, updated_at INTEGER); PRAGMA user_version = 30;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

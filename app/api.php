@@ -231,6 +231,13 @@ function api(string $r): never {
             audit($uid, 'invite_created:' . $email);
             json_out(['ok' => true, 'link' => BASE_URL . '/activation?t=' . $tok]);
 
+        case 'team/contact':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            $p = team_people()[in_str('person', 120)] ?? null;
+            if (!$p || !$p['email']) json_out(['error' => 'Aucune adresse e-mail connue pour ce collaborateur.'], 400);
+            contact_set($p['email'], in_str('phone', 30), in_str('ext', 8));
+            json_out(['ok' => true, 'reload' => true]);
+
         case 'team/invite':
         case 'team/invite_all':
             if ($u['role'] !== 'admin') json_out(['error' => 'Réservé à l\'administrateur.'], 403);

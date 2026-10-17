@@ -23,6 +23,10 @@ function team_people(): array {
         $k = team_slug($s['name']); if (isset($out[$k])) continue;
         $out[$k] = ['key' => $k, 'name' => $s['name'], 'role' => $s['role'] ?: 'Assistant(e)', 'email' => strtolower((string)$s['email']), 'uid' => 0];
     }
+    $ct = []; foreach (q('SELECT * FROM contacts')->fetchAll() as $c) $ct[$c['email']] = $c;
+    $ph = []; foreach (q('SELECT lower(email) e, phone FROM staff WHERE phone IS NOT NULL')->fetchAll() as $x) $ph[$x['e']] = $x['phone'];
+    foreach ($out as &$p) { $c = $ct[$p['email']] ?? []; $p['phone'] = ($c['phone'] ?? '') ?: ($ph[$p['email']] ?? ''); $p['ext'] = $c['ext'] ?? ''; }
+    unset($p);
     $users = q('SELECT id, email FROM users')->fetchAll();
     foreach ($out as &$p) if (!$p['uid'] && $p['email']) foreach ($users as $x) if (strtolower($x['email']) === $p['email']) $p['uid'] = (int)$x['id'];
     unset($p);
@@ -102,4 +106,24 @@ function staff_access(): array {
         $out[] = $s + ['status' => $st, 'inv_exp' => $inv[$em] ?? null];
     }
     return $out;
+}
+
+/** Normalise un numéro français : 01 42 66 98 20. */
+function phone_fmt(string $p): string {
+    $d = preg_replace('/\D+/', '', $p);
+    if (str_starts_with($d, '33') && strlen($d) === 11) $d = '0' . substr($d, 2);
+    return strlen($d) === 10 ? trim(chunk_split($d, 2, ' ')) : trim($p);
+}
+function phone_tel(string $p): string {
+    $d = preg_replace('/\D+/', '', $p);
+    return strlen($d) === 10 && $d[0] === '0' ? '+33' . substr($d, 1) : $d;
+}
+
+/** Enregistre ligne directe et raccourci d'un collaborateur (par e-mail). Raccourci par défaut : 4 derniers chiffres. */
+function contact_set(string $email, string $phone, string $ext): bool {
+    $email = strtolower(trim($email)); if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return false;
+    $phone = mb_substr(phone_fmt($phone), 0, 30); $ext = mb_substr(preg_replace('/[^0-9#*]/', '', $ext), 0, 8);
+    if ($ext === '' && preg_match('/(\d{4})$/', preg_replace('/\D+/', '', $phone), $m)) $ext = $m[1];
+    q('INSERT INTO contacts(email,phone,ext,updated_at) VALUES(?,?,?,?) ON CONFLICT(email) DO UPDATE SET phone=excluded.phone, ext=excluded.ext, updated_at=excluded.updated_at', [$email, $phone ?: null, $ext ?: null, time()]);
+    return true;
 }

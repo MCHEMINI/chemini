@@ -1123,3 +1123,20 @@ a.og-p:hover b{color:var(--bronze)}
 .sg-prompt{font-size:13px;line-height:1.5;min-height:230px}
 .sg-mk-a{display:flex;gap:10px;flex-wrap:wrap}
 @media (max-width:900px){.sg-mk{grid-template-columns:1fr}}
+
+/* Coordonnées sur la fiche collaborateur */
+.og-t.zero{background:var(--line);color:var(--muted)}
+.tp-contact{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:20px;align-items:stretch}
+.tp-c{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);text-decoration:none;min-width:0}
+.tp-c svg{flex:none;color:var(--bronze)}
+.tp-c span{display:flex;flex-direction:column;min-width:0}
+.tp-c small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tp-c b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+a.tp-c:hover{border-color:var(--bronze)}a.tp-c:hover b{color:var(--bronze)}
+.tp-c.off{opacity:.6}.tp-c.off svg{color:var(--muted)}
+.tp-edit{grid-column:1/-1}
+.tp-edit summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.tp-edit form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:10px}
+.tp-edit label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+@media (max-width:760px){.tp-contact{grid-template-columns:1fr}}
+.og-p>span.og-t{display:inline-grid;flex-direction:row;align-self:center}
