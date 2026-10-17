@@ -145,7 +145,8 @@ function doc_view(array $u, string $slug): never {
 JS;
     $html = $doc['html'];
     if ($slug === 'honoraires') { // honoraires annexes + colonnes au choix : script exécuté après celui du document
-        $extra = '<script>' . str_replace('</', '<\\/', (string)file_get_contents(APP_DIR . '/pages/hono_extra.js')) . '</script>';
+        $extra = '<script>' . str_replace('</', '<\\/', (string)file_get_contents(APP_DIR . '/pages/hono_extra.js')) . '</script>'
+               . '<script>' . str_replace('</', '<\\/', (string)file_get_contents(APP_DIR . '/pages/hono_views.js')) . '</script>';
         $i = strripos($html, '</body>');
         $html = $i !== false ? substr_replace($html, $extra, $i, 0) : $html . $extra;
     }

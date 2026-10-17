@@ -320,7 +320,7 @@ SQL);
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
-const PREF_KEYS = ['hono_cols', 'hono_order', 'ha_year', 'ag_cols', 'ag_order', 'ag_sort'];
+const PREF_KEYS = ['hono_cols', 'hono_order', 'ha_year', 'ag_cols', 'ag_order', 'ag_sort', 'hono_view'];
 function user_prefs(int $uid): array {
     $o = [];
     foreach (q('SELECT k, v FROM user_prefs WHERE user_id=?', [$uid])->fetchAll() as $r) $o[$r['k']] = json_decode($r['v'], true);

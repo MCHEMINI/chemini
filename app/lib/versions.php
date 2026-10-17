@@ -69,4 +69,5 @@ const VERSIONS = [
     ['2026-10-17 06:05', 'all', 'Bulle : tâche IA ou tâche d\'équipe', 'Depuis la bulle en bas à droite, créer une consigne pour l\'assistant ou affecter une tâche à soi-même ou à un collègue en trois touches ; sections de la barre latérale repliables ; guide d\'installation sur iPhone.'],
     ['2026-10-17 06:10', 'all', 'Guides', 'Équipe › Guides : procédures pas à pas avec étapes à cocher, astuces et avertissements ; première série sur ImmOpen, modifiable par la Direction.'],
     ['2026-10-17 06:10', 'all', 'Questionnaire : remarques et suggestions', 'Un dernier champ libre pour compléter le questionnaire.'],
+    ['2026-10-17 06:20', 'direction', 'Honoraires › Immeubles repensé', 'Vues de colonnes (Essentiel, AG et prestations, Budgets, Travaux votés, Tout), n° et adresse figés, alertes par immeuble et filtres rapides, fiche immeuble modifiable, cartes sur iPhone ; Immeubles en cartes sur mobile.'],
 ];
