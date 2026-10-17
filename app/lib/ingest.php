@@ -15,7 +15,7 @@ function ingest_handle(string $kind): never {
     if (ip_blocked()) $send(['error' => 'IP bloquée'], 429);
     if (!hash_equals(ingest_key(), (string)($_SERVER['HTTP_X_INGEST_KEY'] ?? ''))) { ip_fail(null, 'ingest'); $send(['error' => 'clé invalide'], 403); }
     if ($kind === 'pv' && $method === 'GET') { // PV déjà traités (identifiants de message) pour ne pas les relire
-        $send(['ok' => true, 'msg_ids' => q('SELECT DISTINCT msg_id FROM pv_votes')->fetchAll(PDO::FETCH_COLUMN), 'count' => (int)q('SELECT COUNT(*) FROM pv_votes')->fetchColumn()]);
+        $send(['ok' => true, 'msg_ids' => q('SELECT DISTINCT msg_id FROM pv_votes')->fetchAll(PDO::FETCH_COLUMN), 'count' => (int)q('SELECT COUNT(*) FROM pv_votes')->fetchColumn(), 'rows' => q('SELECT code, ag_date, ag_type, gc_ttc, travaux_ttc FROM pv_votes ORDER BY ag_date')->fetchAll()]);
     }
     if ($kind === 'consignes' && $method === 'GET') { // consignes des Tâches IA à traiter (à faire / en cours), par priorité
         $rows = q("SELECT c.id, c.body, c.priority, c.status, c.space, c.result, c.created_at, u.email AS user_email, u.name AS user_name
@@ -90,7 +90,18 @@ function ingest_handle(string $kind): never {
           [$status, $result, time(), $status, time(), $status, time(), $id]);
         $send(['ok' => true, 'id' => $id, 'status' => $status]);
     }
-    if ($kind === 'pv' && $method === 'POST') { // honoraires votés relevés dans les PV d'AG : {items:[{msg_id, code, ag_date, pv_date, gc_ht, gc_ttc, travaux:[{res, objet, taux, ht, ttc}], link}]}
+    if ($kind === 'pv' && $method === 'POST') { // honoraires votés relevés dans les PV d'AG : {items:[{msg_id, code, ag_date, ag_type, pv_date, gc_ht, gc_ttc, travaux:[{res, objet, taux, ht, ttc}], link}]}
+        // ag_type : AGO (assemblée ordinaire, vote du contrat de syndic), AGS (spéciale), AGE (extraordinaire). {types:[{code, ag_date, ag_type}]} corrige seulement le type.
+        $agType = function ($v): ?string { $v = strtoupper(trim((string)$v)); return in_array($v, ['AGO', 'AGS', 'AGE'], true) ? $v : null; };
+        if (isset($d['types']) && is_array($d['types'])) {
+            $n = 0;
+            foreach (array_slice($d['types'], 0, 500) as $t) {
+                $code = str_pad(preg_replace('/\D/', '', (string)($t['code'] ?? '')), 5, '0', STR_PAD_LEFT); $ty = $agType($t['ag_type'] ?? '');
+                if ($code === '00000' || !$ty || !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($t['ag_date'] ?? ''))) continue;
+                $n += q('UPDATE pv_votes SET ag_type=? WHERE code=? AND ag_date=?', [$ty, $code, $t['ag_date']])->rowCount();
+            }
+            $send(['ok' => true, 'updated' => $n]);
+        }
         $n = 0;
         foreach (array_slice((array)($d['items'] ?? []), 0, 500) as $it) {
             $code = str_pad(preg_replace('/\D/', '', (string)($it['code'] ?? '')), 5, '0', STR_PAD_LEFT);
@@ -100,12 +111,13 @@ function ingest_handle(string $kind): never {
             $tr = array_values(array_filter((array)($it['travaux'] ?? []), 'is_array'));
             $sum = array_sum(array_map(fn($t) => (float)($t['ttc'] ?? 0), $tr));
             $pvd = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($it['pv_date'] ?? '')) ? (string)$it['pv_date'] : null; // date de diffusion / remise du PV
-            q('INSERT INTO pv_votes(msg_id,code,ag_date,exercice,gc_ht,gc_ttc,travaux_ttc,detail,link,created_at,pv_date) VALUES(?,?,?,?,?,?,?,?,?,?,?)
-               ON CONFLICT(code,ag_date) DO UPDATE SET msg_id=excluded.msg_id, gc_ht=excluded.gc_ht, gc_ttc=excluded.gc_ttc, travaux_ttc=excluded.travaux_ttc, detail=excluded.detail, link=excluded.link, pv_date=COALESCE(excluded.pv_date, pv_votes.pv_date)',
-              [$str($it['msg_id'] ?? '', 300), $code, $date, $s . '-' . ($s + 1), isset($it['gc_ht']) ? (float)$it['gc_ht'] : null, isset($it['gc_ttc']) ? (float)$it['gc_ttc'] : null, round($sum, 2), json_encode($tr, JSON_UNESCAPED_UNICODE), $str($it['link'] ?? '', 2000), time(), $pvd]);
+            $ty = $agType($it['ag_type'] ?? '') ?? (isset($it['gc_ttc']) ? 'AGO' : null); // contrat de syndic voté : AG ordinaire
+            q('INSERT INTO pv_votes(msg_id,code,ag_date,exercice,gc_ht,gc_ttc,travaux_ttc,detail,link,created_at,pv_date,ag_type) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(code,ag_date) DO UPDATE SET msg_id=excluded.msg_id, gc_ht=excluded.gc_ht, gc_ttc=excluded.gc_ttc, travaux_ttc=excluded.travaux_ttc, detail=excluded.detail, link=excluded.link, pv_date=COALESCE(excluded.pv_date, pv_votes.pv_date), ag_type=COALESCE(excluded.ag_type, pv_votes.ag_type)',
+              [$str($it['msg_id'] ?? '', 300), $code, $date, $s . '-' . ($s + 1), isset($it['gc_ht']) ? (float)$it['gc_ht'] : null, isset($it['gc_ttc']) ? (float)$it['gc_ttc'] : null, round($sum, 2), json_encode($tr, JSON_UNESCAPED_UNICODE), $str($it['link'] ?? '', 2000), time(), $pvd, $ty]);
             $n++;
             q('INSERT INTO hono_changes(at,user_id,source,tab,ref,field,old,new) VALUES(?,?,?,?,?,?,?,?)', [time(), null, 'auto', 'Immeubles', $code, 'PV d’AG relevé', '',
-              'AG du ' . hono_v($date) . ' · HTV ' . number_format($sum, 2, ',', ' ') . ' €' . (isset($it['gc_ttc']) ? ' · gestion votée ' . number_format((float)$it['gc_ttc'], 2, ',', ' ') . ' €' : '')]);
+              ($ty === 'AGO' ? 'AG ordinaire' : ($ty === 'AGE' ? 'AG extraordinaire' : ($ty === 'AGS' ? 'AG spéciale' : 'AG'))) . ' du ' . hono_v($date) . ' · HTV ' . number_format($sum, 2, ',', ' ') . ' €' . (isset($it['gc_ttc']) ? ' · gestion votée ' . number_format((float)$it['gc_ttc'], 2, ',', ' ') . ' €' : '')]);
         }
         $send(['ok' => true, 'saved' => $n]);
     }

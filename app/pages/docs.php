@@ -24,14 +24,14 @@ function hono_extra_cfg(): array {
     $io = array_map(fn($r) => ['code' => (string)($r['code'] ?? ''), 'nom' => (string)($r['nom'] ?? ''), 'lots' => (int)($r['lots'] ?? 0), 'gest' => trim(preg_replace('/^(M\.|Mme|Melle|Mlle)\s*/u', '', (string)($r['gest'] ?? ''))),
         'last' => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($r['last'] ?? '')) ? $r['last'] : null], $ag['rows'] ?? []);
     $pv = [];
-    foreach (q('SELECT code, exercice, ag_date, travaux_ttc, gc_ttc, detail, link, pv_date FROM pv_votes ORDER BY ag_date')->fetchAll() as $r) {
+    foreach (q('SELECT code, exercice, ag_date, travaux_ttc, gc_ttc, detail, link, pv_date, ag_type, ' . PV_AGO_SQL . ' AS ago FROM pv_votes ORDER BY ag_date')->fetchAll() as $r) {
         $det = json_decode((string)$r['detail'], true) ?: [];
         // Exercice des honoraires travaux votés (HTV) : AG tenues du 1er juillet au 30 juin (consigne de M. Chemini)
         $y = (int)substr($r['ag_date'], 0, 4); $sy = (int)substr($r['ag_date'], 5, 2) >= 7 ? $y : $y - 1;
         $o = &$pv[$r['code']][$sy . '-' . ($sy + 1)];
         $o['trav'] = round(($o['trav'] ?? 0) + (float)$r['travaux_ttc'], 2);
         $o['date'] = $r['ag_date'];
-        $o['ags'][] = ['date' => $r['ag_date'], 'pv' => $r['pv_date'], 'gc' => $r['gc_ttc'] !== null ? (float)$r['gc_ttc'] : null, 'link' => preg_match('#^https://outlook\.(office365|office|live)\.com/#', (string)$r['link']) ? $r['link'] : '',
+        $o['ags'][] = ['date' => $r['ag_date'], 'type' => $r['ago'] ? 'AGO' : ($r['ag_type'] ?: 'AGS'), 'pv' => $r['pv_date'], 'gc' => $r['gc_ttc'] !== null ? (float)$r['gc_ttc'] : null, 'link' => preg_match('#^https://outlook\.(office365|office|live)\.com/#', (string)$r['link']) ? $r['link'] : '',
             'items' => array_map(fn($t) => ['res' => (string)($t['res'] ?? ''), 'objet' => (string)($t['objet'] ?? ''), 'taux' => (string)($t['taux'] ?? ''), 'ht' => (float)($t['ht'] ?? 0), 'ttc' => (float)($t['ttc'] ?? 0)], $det)];
         unset($o);
     }

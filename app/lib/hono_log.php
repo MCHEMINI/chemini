@@ -6,7 +6,7 @@ declare(strict_types=1);
 const HONO_FIELDS = [
     'port' => 'Portefeuille', 'gest' => 'Gestionnaire', 'num' => 'N°', 'imm' => 'Immeuble', 'lots' => 'Lots', 'perdus' => 'Lots perdus', 'archive' => 'Archive',
     'plage' => 'Plage horaire AG', 'fin' => 'Heure fin AG', 'cs1' => 'CS 1h', 'cs2' => 'CS 2h', 'visite' => 'Visites 1h', 'coutAG' => 'Coût AG supp. TTC',
-    'dateAG' => 'AG tenue le', 'datePV' => 'Remise PV', 'h2526' => 'Hon. 25-26 voté', 'h2627v' => 'Hon. 26-27 à voter', 'h2627e' => 'Hon. 26-27 voté',
+    'dateAG' => 'AGO tenue le', 'datePV' => 'Remise PV', 'h2526' => 'Hon. 25-26 voté', 'h2627v' => 'Hon. 26-27 à voter', 'h2627e' => 'Hon. 26-27 voté',
     'h2728' => 'Budget 27-28', 'h2829' => 'Budget 28-29', 'taux' => 'Taux spécifique', 'nv' => 'Nouveau',
     'contrat' => 'N° contrat', 'nom' => 'Nom', 'lib' => 'Contrat', 'ht' => 'Montant HT',
 ];
@@ -71,7 +71,7 @@ function hono_daily(): void {
 }
 
 function hono_changes(int $since = 0, int $limit = 3000): array {
-    hono_backfill(); hono_daily();
+    hono_backfill(); hono_split_ags(); hono_daily();
     return array_map(fn($r) => ['at' => (int)$r['at'], 'user' => $r['name'] ?: ($r['source'] === 'auto' ? 'Mise à jour automatique' : ($r['source'] === 'evolution' ? 'Évolution' : '—')), 'source' => $r['source'], 'tab' => $r['tab'],
         'ref' => (string)$r['ref'], 'field' => (string)$r['field'], 'old' => (string)$r['old'], 'new' => (string)$r['new']],
         q('SELECT c.*, u.name FROM hono_changes c LEFT JOIN users u ON u.id=c.user_id WHERE c.at>=? ORDER BY c.at DESC, c.id DESC LIMIT ' . (int)$limit, [$since])->fetchAll());
@@ -86,16 +86,14 @@ function hono_autofill(?array $extra = null): array {
     $old = $st;
     $y = (int)date('Y'); $sy = (int)date('n') >= 7 ? $y : $y - 1; $from = $sy . '-07-01'; $to = ($sy + 1) . '-06-30';
     $pv = [];
-    foreach (q('SELECT code, ag_date, pv_date, gc_ttc FROM pv_votes WHERE ag_date BETWEEN ? AND ? ORDER BY ag_date', [$from, $to])->fetchAll() as $r) if ($r['gc_ttc'] !== null) $pv[$r['code']] = $r;
-    $ag = json_decode((string)q("SELECT v FROM kv WHERE k='ag_planning'")->fetchColumn(), true) ?: [];
-    $io = []; foreach ($ag['rows'] ?? [] as $r) $io[str_pad(preg_replace('/\D/', '', (string)($r['code'] ?? '')), 5, '0', STR_PAD_LEFT)] = $r;
+    // « AGO tenue le » : uniquement l'AG ordinaire (celle qui vote le contrat de syndic). Les AG spéciales n'y figurent pas (colonne « AG spéciale »).
+    foreach (q('SELECT code, ag_date, pv_date, gc_ttc FROM pv_votes WHERE ag_date BETWEEN ? AND ? AND ' . PV_AGO_SQL . ' ORDER BY ag_date', [$from, $to])->fetchAll() as $r) if ($r['gc_ttc'] !== null) $pv[$r['code']] = $r;
     $n = 0; $filled = [];
     foreach ($st['bld'] as &$b) {
         $code = str_pad(preg_replace('/\D/', '', (string)($b['num'] ?? '')), 5, '0', STR_PAD_LEFT); if ($code === '00000') continue;
         $set = function (string $f, $v) use (&$b, &$n, &$filled, $code) { if ($v === null || $v === '' || trim((string)($b[$f] ?? '')) !== '' && (float)($b[$f] ?? 0) != 0) return; $b[$f] = $v; $n++; $filled[] = $code . ':' . $f; };
         $p = $pv[$code] ?? null;
-        $last = $io[$code]['last'] ?? null; if (!is_string($last) || $last < $from || $last > $to) $last = null;
-        $set('dateAG', $p ? $p['ag_date'] : $last);
+        $set('dateAG', $p ? $p['ag_date'] : null); // plus de repli sur la dernière AG ImmOpen : son type (ordinaire ou spéciale) n'y figure pas
         if ($p) { $set('datePV', $p['pv_date']); $set('h2627e', round((float)$p['gc_ttc'], 2)); }
         foreach ((array)($extra[$code] ?? []) as $f => $v) if (in_array($f, ['dateAG', 'datePV', 'h2627e', 'lots'], true)) $set($f, $v);
     }
@@ -106,6 +104,36 @@ function hono_autofill(?array $extra = null): array {
         hono_log_diff($old, $st, null, 'auto');
     }
     return ['ok' => true, 'filled' => $n, 'cells' => $filled, 'window' => [$from, $to]];
+}
+
+/** Condition SQL : AG ordinaire (type relevé, ou à défaut contrat de syndic voté dans le PV). */
+const PV_AGO_SQL = "(ag_type='AGO' OR (ag_type IS NULL AND gc_ttc IS NOT NULL))";
+
+/**
+ * Reprise unique (17/10/2026) : « AG tenue le » ne doit contenir que des AG ordinaires. Les dates venues de la dernière AG ImmOpen
+ * ou d'un PV d'AG spéciale, sans honoraires de gestion votés, sont retirées de la colonne (elles restent visibles dans « AG spéciale »).
+ */
+function hono_split_ags(): void {
+    if (q("SELECT 1 FROM kv WHERE k='hono_ags_split_v1'")->fetchColumn()) return;
+    q("INSERT INTO kv(k,v,updated_at) VALUES('hono_ags_split_v1','1',?) ON CONFLICT(k) DO UPDATE SET v='1'", [time()]);
+    $st = hono_state(); if (!$st || empty($st['bld'])) return;
+    $old = $st; $ago = []; $other = [];
+    foreach (q('SELECT code, ag_date, ' . PV_AGO_SQL . ' AS ago FROM pv_votes')->fetchAll() as $r) { if ($r['ago']) $ago[$r['code'] . '|' . $r['ag_date']] = 1; else $other[$r['code'] . '|' . $r['ag_date']] = 1; }
+    $ag = json_decode((string)q("SELECT v FROM kv WHERE k='ag_planning'")->fetchColumn(), true) ?: [];
+    $io = []; foreach ($ag['rows'] ?? [] as $r) $io[str_pad(preg_replace('/\D/', '', (string)($r['code'] ?? '')), 5, '0', STR_PAD_LEFT)] = (string)($r['last'] ?? '');
+    $n = 0;
+    foreach ($st['bld'] as &$b) {
+        $code = str_pad(preg_replace('/\D/', '', (string)($b['num'] ?? '')), 5, '0', STR_PAD_LEFT); $d = trim((string)($b['dateAG'] ?? ''));
+        if ($code === '00000' || $d === '' || isset($ago[$code . '|' . $d]) || hono_num($b['h2627e'] ?? 0) != 0) continue; // AG ordinaire avérée : on garde
+        if (($io[$code] ?? '') !== $d && !isset($other[$code . '|' . $d])) continue; // date saisie à la main, d'origine inconnue : on garde
+        $b['dateAG'] = ''; $n++;
+    }
+    unset($b);
+    if ($n) {
+        q('INSERT INTO doc_state(slug,json,updated_at,updated_by) VALUES(?,?,?,NULL) ON CONFLICT(slug) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at, updated_by=NULL',
+          ['honoraires', json_encode($st, JSON_UNESCAPED_UNICODE), time()]);
+        hono_log_diff($old, $st, null, 'auto');
+    }
 }
 
 /** Évolutions de l'outil Honoraires (affichées dans le journal, onglet « Évolution de l'outil »). */
@@ -124,6 +152,7 @@ const HONO_EVOLUTIONS = [
     ['2026-10-17 02:02', 'Fenêtres de détail à la charte du site'],
     ['2026-10-17 02:06', 'Dates en champ texte JJ/MM/AAAA, complétées aussi d’après le planning ImmOpen'],
     ['2026-10-17 02:17', 'Onglet « Modifications », tableau de décision dans « Optimisation & stratégie », mise à jour automatique des cellules vides'],
+    ['2026-10-17 10:08', '« AGO tenue le » limité aux AG ordinaires (vote du contrat de syndic), AG spéciales dans une colonne distincte'],
 ];
 
 /** Reprise unique de l'historique antérieur au journal : PV relevés, archives, saisies depuis le fichier d'origine, évolutions de l'outil. */

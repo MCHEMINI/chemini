@@ -342,6 +342,11 @@ SQL);
         if (!in_array('share_token', $cols, true)) $pdo->exec('ALTER TABLE president_words ADD COLUMN share_token TEXT');
         $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS pw_share ON president_words(share_token); PRAGMA user_version = 40;');
     }
+    if ($v < 41) { // PV d'AG : type d'AG (AGO ordinaire, AGS spéciale, AGE extraordinaire) ; contrat de syndic voté = AGO
+        $cols = array_column($pdo->query('PRAGMA table_info(pv_votes)')->fetchAll(), 'name');
+        if (!in_array('ag_type', $cols, true)) $pdo->exec("ALTER TABLE pv_votes ADD COLUMN ag_type TEXT; UPDATE pv_votes SET ag_type='AGO' WHERE gc_ttc IS NOT NULL;");
+        $pdo->exec('PRAGMA user_version = 41;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

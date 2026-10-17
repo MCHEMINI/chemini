@@ -484,7 +484,7 @@
     if (!ags.length) m.body.appendChild(h('p', null, 'Aucun PV d’AG relevé pour cet exercice.'));
     ags.forEach(function (a) {
       var card = h('section', 'ha-ag'), hd = h('div', 'ha-ag-h'), left = h('div');
-      left.appendChild(h('strong', null, 'AG du ' + fdateLong(a.date)));
+      left.appendChild(h('strong', null, (isAgo(a) ? 'AG ordinaire du ' : a.type === 'AGE' ? 'AG extraordinaire du ' : 'AG spéciale du ') + fdateLong(a.date)));
       var meta = []; if (a.pv) meta.push('PV remis le ' + fdate(a.pv)); if (a.gc) meta.push('gestion courante votée ' + EUR2.format(a.gc) + ' TTC');
       if (meta.length) left.appendChild(h('div', 'meta', meta.join(' · ')));
       hd.appendChild(left);
@@ -525,6 +525,18 @@
   if (false) EXTRA.push({ k: '_trav', label: travLabel, title: function () { return 'Honoraires de travaux facturés par GID (compte GID TRAVAUX), exercice ' + yInfo(curYear()); }, val: travFor, tip: function () { return ''; } });
   EXTRA.push({ k: '_pv0', ex: EX0, label: function () { return 'HTV ' + yShort(EX0); }, title: function () { return 'HTV : honoraires du syndic sur travaux votés en AG (PV des AG du 01/07/' + EX0.slice(0, 4) + ' au 30/06/' + EX0.slice(5) + '), détail avec le bouton i'; }, val: function (c) { return pvFor(c, EX0); }, tip: function (c) { return pvTitle(c, EX0); } });
   EXTRA.push({ k: '_pv1', ex: EX1, label: function () { return 'HTV ' + yShort(EX1); }, title: function () { return 'HTV : honoraires du syndic sur travaux votés en AG (PV des AG du 01/07/' + EX1.slice(0, 4) + ' au 30/06/' + EX1.slice(5) + '), détail avec le bouton i'; }, val: function (c) { return pvFor(c, EX1); }, tip: function (c) { return pvTitle(c, EX1); } });
+  /* AG ordinaires (vote du contrat de syndic) et AG spéciales : « AGO tenue le » ne reprend que les AG ordinaires,
+     les autres AG de l'exercice (PV d'AG spéciale, ou dernière AG ImmOpen sans PV d'AG ordinaire à cette date) vont dans « AG spéciale ». */
+  function isAgo(a) { return a.type ? a.type === 'AGO' : a.gc != null; }
+  function agsOf(code) {
+    var start = EX0.slice(0, 4) + '-07-01', end = EX0.slice(5) + '-06-30', out = [], ago = {};
+    Object.keys(PV[code] || {}).forEach(function (ex) { (PV[code][ex].ags || []).forEach(function (a) { if (isAgo(a)) ago[a.date] = 1; else if (a.date >= start && a.date <= end) out.push({ d: a.date, src: a.type === 'AGE' ? 'AG extraordinaire (PV relevé)' : 'AG spéciale (PV relevé)' }); }); });
+    var io = (Array.isArray(C.immopen) ? C.immopen : []).filter(function (r) { return r.code === code; })[0], last = io && io.last;
+    var tr = [].filter.call(document.querySelectorAll('#immTbl tbody tr'), function (r) { return rowCode(r) === code; })[0], inp = tr && tr.querySelector('input[data-k="dateAG"]'), typed = inp ? String(inp.value).trim() : '';
+    if (last && last >= start && last <= end && !ago[last] && last !== typed && !out.some(function (o) { return o.d === last; })) out.push({ d: last, src: 'dernière AG du planning ImmOpen (pas de PV d’AG ordinaire à cette date)' });
+    return out.sort(function (a, b) { return a.d < b.d ? -1 : 1; });
+  }
+  EXTRA.push({ k: '_ags', txt: function (c) { return agsOf(c).map(function (o) { return fdate(o.d); }).join(', '); }, label: function () { return 'AG spéciale'; }, title: function () { return 'AG spéciales ou extraordinaires tenues du 01/07/' + EX0.slice(0, 4) + ' au 30/06/' + EX0.slice(5) + ' (autorisations ou votes de travaux, sans renouvellement du contrat de syndic). Les AG ordinaires sont dans « AGO tenue le ».'; }, val: function () { return 0; }, tip: function (c) { return agsOf(c).map(function (o) { return fdate(o.d) + ' : ' + o.src; }).join('\n'); } });
   /* Fusion (oct. 2026) de « Hon. travaux GID » (_trav) dans HTV (_pv0) : on garde la position et la visibilité choisies pour la colonne qui portait les montants. Exécutée une fois (marqueur _m1). */
   (function migrateTrav() {
     var o = Array.isArray(P.hono_order) ? P.hono_order.slice() : [], hs = Array.isArray(P.hono_cols) ? P.hono_cols.slice() : [];
@@ -548,9 +560,8 @@
     if (C.ro) return;
     [].forEach.call(t.querySelectorAll('tbody tr'), function (tr) {
       var code = rowCode(tr); if (!code || filled[code]) return; filled[code] = 1;
-      var r = PV[code] && PV[code][EX0], ag = r ? (r.ags || []).filter(function (a) { return a.gc != null; }).pop() : null;
-      var io = IOX[code], last = io && io.last && io.last >= EX0_START ? io.last : null;
-      setCell(tr, 'dateAG', ag ? ag.date : last);                    // AG annuelle : PV reçu, sinon dernière AG ImmOpen
+      var r = PV[code] && PV[code][EX0], ag = r ? (r.ags || []).filter(function (a) { return isAgo(a) && a.gc != null; }).pop() : null;
+      setCell(tr, 'dateAG', ag ? ag.date : null);                    // AG ordinaire uniquement (PV reçu) ; plus de repli sur ImmOpen, dont le type d'AG est inconnu
       if (ag) { setCell(tr, 'datePV', ag.pv); if (ag.gc) setCell(tr, 'h2627e', String(ag.gc)); } // remise du PV et honoraires votés d'après le PV
     });
   }
@@ -588,9 +599,10 @@
     try {
       var hr = t.querySelector('thead tr');
       if (hr && !hr.querySelector('[data-col]')) {
+        var thAg = hr.querySelector('th[data-k="dateAG"]'); if (thAg) { thAg.textContent = 'AGO tenue le'; thAg.title = 'Assemblée générale ordinaire (vote du contrat de syndic). Les AG spéciales sont dans la colonne « AG spéciale ».'; }
         KEYS = []; [].forEach.call(hr.children, function (th) { if (th.dataset.k) { th.dataset.col = th.dataset.k; KEYS.push(th.dataset.k); LABELS[th.dataset.k] = th.textContent.replace(/[↑↓▲▼]/g, '').trim(); } });
         var ref = hr.children[KEYS.length] || null;
-        EXTRA.forEach(function (x) { var th = h('th', null, x.label()); th.dataset.col = x.k; th.style.textAlign = 'right'; th.title = x.title(); hr.insertBefore(th, ref); });
+        EXTRA.forEach(function (x) { var th = h('th', null, x.label()); th.dataset.col = x.k; th.style.textAlign = x.txt ? 'left' : 'right'; th.title = x.title(); hr.insertBefore(th, ref); });
       }
       var n = KEYS.length, trs = t.querySelectorAll('tbody tr'), tot = EXTRA.map(function () { return 0; });
       for (var r = 0; r < trs.length; r++) {
@@ -600,7 +612,7 @@
         for (var j = 0; j < n && j < tr.children.length; j++) tr.children[j].dataset.col = KEYS[j];
         textDates(tr);
         var ref2 = tr.children[n] || null;
-        EXTRA.forEach(function (x) { var v = x.val(code), td = h('td', 'ro r', v || (x.ex && hasHtv(code, x.ex)) ? EUR.format(v) : '–'); td.dataset.col = x.k; var tp = x.tip(code); if (tp) td.title = tp;
+        EXTRA.forEach(function (x) { var v = x.val(code), td = x.txt ? h('td', 'ro', x.txt(code) || '–') : h('td', 'ro r', v || (x.ex && hasHtv(code, x.ex)) ? EUR.format(v) : '–'); td.dataset.col = x.k; var tp = x.tip(code); if (tp) td.title = tp;
           if (x.ex && hasHtv(code, x.ex)) { var ib = h('button', 'ha-i', 'i'); ib.type = 'button'; ib.dataset.code = code; ib.dataset.ex = x.ex; ib.setAttribute('aria-label', 'Détail des honoraires travaux votés'); td.appendChild(ib); }
           tr.insertBefore(td, ref2); });
       }
@@ -608,7 +620,7 @@
       if (f && f.children.length && !f.querySelector('[data-col]')) {
         for (var k = 0; k < n && k < f.children.length; k++) f.children[k].dataset.col = KEYS[k];
         var ref3 = f.children[n] || null;
-        EXTRA.forEach(function (x, i) { var ft = h('td', null, EUR.format(tot[i])); ft.dataset.col = x.k; f.insertBefore(ft, ref3); });
+        EXTRA.forEach(function (x, i) { var ft = h('td', null, x.txt ? '' : EUR.format(tot[i])); ft.dataset.col = x.k; f.insertBefore(ft, ref3); });
       }
       applyOrder(); markRows();
     } finally { busy = false; }
@@ -645,8 +657,8 @@
       EXTRA.forEach(function (x, i) {
         var th = document.querySelector('#immTbl thead th[data-col="' + x.k + '"]'); if (th) { th.textContent = x.label(); th.title = x.title(); }
         var total = 0;
-        document.querySelectorAll('#immTbl tbody tr').forEach(function (tr) { var c = rowCode(tr), v = x.val(c), td = tr.querySelector('td[data-col="' + x.k + '"]'); total += v; if (td) td.textContent = v ? EUR.format(v) : '–'; });
-        var ft = document.querySelector('#immFoot [data-col="' + x.k + '"]'); if (ft) ft.textContent = EUR.format(total);
+        document.querySelectorAll('#immTbl tbody tr').forEach(function (tr) { var c = rowCode(tr), v = x.val(c), td = tr.querySelector('td[data-col="' + x.k + '"]'); total += v; if (td) td.textContent = x.txt ? (x.txt(c) || '–') : v ? EUR.format(v) : '–'; });
+        var ft = document.querySelector('#immFoot [data-col="' + x.k + '"]'); if (ft) ft.textContent = x.txt ? '' : EUR.format(total);
       });
     } finally { busy = false; }
   }
