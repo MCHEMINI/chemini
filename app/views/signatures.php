@@ -22,7 +22,7 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
   <div class="panel sg-today">
     <div class="sg-today-h"><div class="eyebrow">Envoyé aujourd'hui</div>
       <span class="chip <?= $linked ? 'ok' : 'warn' ?>" title="<?= $linked ? 'Dernière lecture par Exclaimer ou une messagerie le ' . e(date('d/m/Y à H:i', (int)$hits['ext'])) : 'Exclaimer n\'a pas encore lu le bandeau' ?>"><?= $linked ? 'Exclaimer relié · lu le ' . e(date('d/m à H:i', (int)$hits['ext'])) : 'Exclaimer pas encore relié' ?></span></div>
-    <div class="sg-ban"><?php if ($cur): ?><img src="/signature/banniere?v=<?= (int)$cur['id'] ?>-<?= date('Ymd') ?>" alt="<?= e($cur['title']) ?>" width="600" height="200"><?php else: ?><div class="empty"><strong>Aucun bandeau.</strong>Ajoutez un premier visuel : il deviendra le bandeau par défaut.</div><?php endif; ?></div>
+    <div class="sg-ban"><?php if ($cur): ?><img src="/signature/banniere?v=<?= (int)$cur['id'] ?>-<?= date('Ymd') ?>" alt="<?= e($cur['title']) ?>" data-zoom width="600" height="200"><?php else: ?><div class="empty"><strong>Aucun bandeau.</strong>Ajoutez un premier visuel : il deviendra le bandeau par défaut.</div><?php endif; ?></div>
     <?php if ($cur): ?><p class="small"><b><?= e($cur['title']) ?></b> · <?= $cur['is_default'] && !$cur['start'] ? 'bandeau par défaut' : ($cur['active_at'] ? 'brouillon activé, jusqu\'à ce que vous le désactiviez' : 'jusqu\'au ' . e($fd($cur['end'])) . ($def && (int)$def['id'] !== (int)$cur['id'] ? ', puis retour à « ' . e($def['title']) . ' »' : '')) ?></p><?php endif; ?>
     <details class="sg-tech"><summary>Réglage Exclaimer (une seule fois)</summary>
       <p class="small muted">Dans la signature Exclaimer, bandeau › Source de l'image › Lier à une image, puis Lien hypertexte :</p>
@@ -81,7 +81,7 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
   <ol class="sg-months">
     <?php foreach ($cal as $m => $bs): ?>
     <li<?= $m === date('Y-m') ? ' class="now"' : '' ?>><b><?= e(ucfirst(MOIS_LONG[(int)substr($m, 5) - 1])) ?> <small><?= substr($m, 0, 4) ?></small></b>
-      <?php foreach ($bs as $x): $md = sig_mode($x); ?><span class="sg-mi <?= $md ?>"><img src="/signatures/image/<?= (int)$x['id'] ?>" alt="" loading="lazy"><em><?= e($x['title']) ?><?= $md === 'period' ? ' · ' . e(date('d/m', strtotime($x['start']))) . '–' . e(date('d/m', strtotime($x['end']))) : '' ?></em></span><?php endforeach; ?>
+      <?php foreach ($bs as $x): $md = sig_mode($x); ?><span class="sg-mi <?= $md ?>"><img src="/signatures/image/<?= (int)$x['id'] ?>?v=<?= substr(md5((string)$x['file']), 0, 8) ?>" alt="<?= e($x['title']) ?>" data-zoom loading="lazy"><em><?= e($x['title']) ?><?= $md === 'period' ? ' · ' . e(date('d/m', strtotime($x['start']))) . '–' . e(date('d/m', strtotime($x['end']))) : '' ?></em></span><?php endforeach; ?>
     </li>
     <?php endforeach; ?>
   </ol>
@@ -93,7 +93,7 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
   <div class="sg-grid">
     <?php foreach ($list as $b): [$st, $c] = sig_state($b); $isPer = $b['start'] || $b['end']; ?>
     <article class="panel sg-card<?= $c === 'ok' ? ' on' : '' ?>">
-      <div class="sg-thumb"><img src="/signatures/image/<?= (int)$b['id'] ?>" alt="" loading="lazy"></div>
+      <div class="sg-thumb"><img src="/signatures/image/<?= (int)$b['id'] ?>?v=<?= substr(md5((string)$b['file']), 0, 8) ?>" alt="<?= e($b['title']) ?>" data-zoom loading="lazy"></div>
       <div class="sg-meta"><b><?= e($b['title']) ?></b><span class="chip <?= $c ?>"><?= e($st) ?></span></div>
       <p class="muted small"><?= $isPer ? 'Du ' . $fd($b['start']) . ' au ' . $fd($b['end']) : ($b['is_default'] ? 'Bandeau par défaut, hors périodes' : (sig_mode($b) === 'rotation' ? 'Visuel du mois' . (($nx = $nextMonth[$b['id']] ?? null) ? ' · ' . $nx : ' · pas de mois libre sur 12 mois') : ($b['active_at'] ? 'Brouillon activé le ' . date('d/m/Y', (int)$b['active_at']) . ' : remplace les autres jusqu\'à désactivation' : 'Brouillon, sans période'))) ?></p>
       <div class="sg-act">
@@ -116,3 +116,4 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
   </div>
 </section>
 <?php endif; ?>
+<dialog class="zoom-dlg" id="zoomDlg" aria-label="Bandeau en grand"><button type="button" class="zoom-x" aria-label="Fermer">×</button><img alt=""><p class="zoom-t"></p></dialog>

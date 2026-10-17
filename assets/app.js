@@ -960,3 +960,10 @@ document.addEventListener('click', async e => { const b = e.target.closest('[dat
   document.addEventListener('click', e => { if (!f.contains(e.target)) close(); });
   document.addEventListener('keydown', e => { if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '') && !document.activeElement?.isContentEditable) { e.preventDefault(); i.focus(); } });
 })();
+/* Agrandir une image (data-zoom) dans une fenêtre : clic, Échap ou clic hors de l'image pour fermer */
+(function(){ const d = document.getElementById('zoomDlg'); if (!d || !d.showModal) return; const im = d.querySelector('img'), t = d.querySelector('.zoom-t');
+  document.addEventListener('click', e => { const s = e.target.closest('img[data-zoom]'); if (!s) return; e.preventDefault();
+    im.src = s.currentSrc || s.src; im.alt = s.alt || ''; t.textContent = s.alt || ''; t.hidden = !s.alt; d.showModal(); });
+  d.addEventListener('click', e => { if (e.target === d || e.target.closest('.zoom-x')) d.close(); });
+  d.addEventListener('close', () => { im.removeAttribute('src'); });
+})();

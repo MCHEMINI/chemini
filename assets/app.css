@@ -1638,3 +1638,11 @@ body.aa{background:var(--bg);color:var(--ink);min-height:100vh}
 .gs-group{margin-bottom:14px}.gs-group h2{font-size:17px;margin:0 0 6px}
 .gs-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
 @media (max-width:820px){.gs{max-width:none;margin:0}.page-tools:has(.gs){display:flex}.gs-drop{position:fixed;left:12px;right:12px;top:auto;max-height:65vh}}
+/* Image en grand (bandeaux de signature) */
+img[data-zoom]{cursor:zoom-in}
+.zoom-dlg{border:0;padding:0;background:transparent;max-width:min(1200px,calc(100vw - 32px));width:100%;overflow:visible}
+.zoom-dlg::backdrop{background:rgba(10,12,18,.78)}
+.zoom-dlg img{display:block;width:100%;height:auto;max-height:calc(100vh - 120px);object-fit:contain;border-radius:8px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.zoom-t{color:#fff;text-align:center;margin:10px 0 0;font-size:15px}
+.zoom-x{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;border:0;background:#fff;color:#151A22;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+@media (max-width:600px){.zoom-x{top:-44px;right:0}}

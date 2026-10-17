@@ -94,4 +94,5 @@ const VERSIONS = [
     ['2026-10-17 23:40', 'direction', 'Site Web : Fréquentation en premier', 'Les statistiques de fréquentation du site s\'affichent en tête de la page Statistiques.'],
     ['2026-10-17 23:45', 'all', 'Recherche sur toute la plateforme', 'Barre de recherche en haut des tableaux de bord (raccourci « / ») : pages, guides, collaborateurs, tâches, mails, notes, actualités, Mot du Président, immeubles, annonces, voyages et documents, selon les droits de chacun. Le texte des livres EPUB est indexé ; les PDF passent en file d\'attente pour la reconnaissance de texte (OCR).'],
     ['2026-10-17 23:50', 'all', 'La plateforme devient « Dashboard »', 'Nouveau nom sur la page de connexion, le menu, les guides, les e-mails d\'invitation et l\'appli installée (dashboard.gidsas.fr).'],
+    ['2026-10-17 23:55', 'direction', 'Signatures : bandeaux en grand', 'Un clic sur une vignette affiche le bandeau en grand ; les vignettes se mettent à jour dès qu\'un visuel est remplacé.'],
 ];
