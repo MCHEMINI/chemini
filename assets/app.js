@@ -354,7 +354,7 @@
         return;
       }
       el.disabled = true;
-      try { await api(el.dataset.api, el.dataset.k ? { k: el.dataset.k } : { id: Number(el.dataset.id || 0) }); location.reload(); }
+      try { const r = await api(el.dataset.api, el.dataset.k ? { k: el.dataset.k } : { id: Number(el.dataset.id || 0) }); if (r && r.go) location.href = r.go; else location.reload(); }
       catch (err) { el.disabled = false; toast(err.message); }
     });
   });
@@ -704,6 +704,29 @@ function fabBurst(el) { const r = el.getBoundingClientRect(), box = document.cre
   d.innerHTML = '<img src="/assets/apple-touch-icon.png" alt=""><div><b>Installer Chemini sur votre iPhone</b><span>Touchez <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-label="Partager"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> puis « Sur l\'écran d\'accueil ».</span><a href="/installer">Voir le guide</a></div><button type="button" aria-label="Fermer">✕</button>';
   d.querySelector('button').addEventListener('click', () => { d.remove(); try { localStorage.setItem('installHint', '1'); } catch (e) {} });
   document.body.appendChild(d);
+})();
+
+/* Guides : progression par étape (mémorisée), recherche, édition */
+(function(){
+  const w = document.querySelector('[data-guide]');
+  if (w) { const k = 'guide:' + w.dataset.guide, boxes = [...w.querySelectorAll('[data-step]')], n = boxes.length, bar = w.querySelector('.gd-pbar'), pt = w.querySelector('.gd-pt'), done = w.querySelector('.gd-done');
+    let st = []; try { st = JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) {}
+    const upd = (cel) => { const c = boxes.filter(b => b.checked).length; bar.querySelector('i').style.width = (n ? c / n * 100 : 0) + '%'; bar.setAttribute('aria-valuenow', c); pt.textContent = c + ' / ' + n;
+      const fin = n && c === n; if (fin && cel && done.hidden && typeof fabBurst === 'function') fabBurst(pt); done.hidden = !fin;
+      try { localStorage.setItem(k, JSON.stringify(boxes.map(b => b.checked))); } catch (e) {} };
+    boxes.forEach((b, i) => { b.checked = !!st[i]; b.addEventListener('change', () => upd(true)); });
+    w.querySelector('[data-gd-reset]')?.addEventListener('click', () => { boxes.forEach(b => b.checked = false); upd(false); });
+    upd(false); }
+  document.querySelectorAll('.gd-card').forEach(c => { let st = []; try { st = JSON.parse(localStorage.getItem('guide:' + c.dataset.gd) || '[]'); } catch (e) {}
+    const n = +c.dataset.steps, d = st.filter(Boolean).length; if (n && d) { c.querySelector('.gd-prog i').style.width = (d / n * 100) + '%'; c.classList.toggle('done', d >= n); } });
+  const q = document.getElementById('gdQ');
+  if (q) q.addEventListener('input', () => { const v = q.value.trim().toLowerCase(); let any = 0;
+    document.querySelectorAll('.gd-cat').forEach(sec => { let k = 0; sec.querySelectorAll('.gd-card').forEach(c => { const ok = !v || c.dataset.s.includes(v); c.hidden = !ok; if (ok) k++; }); sec.hidden = !k; any += k; });
+    document.querySelector('.gd-none').hidden = !!any; });
+  const f = document.getElementById('gdF');
+  if (f) f.addEventListener('submit', async e => { e.preventDefault(); const err = f.querySelector('.form-error'), b = f.querySelector('.btn-primary'); err.hidden = true; b.disabled = true;
+    const o = Object.fromEntries(new FormData(f).entries()); o.id = Number(f.dataset.id || 0);
+    try { const r = await api('guides/save', o); location.href = r.go || '/guides'; } catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });
 })();
 
 /* Mot du Président : enregistrer le brouillon */

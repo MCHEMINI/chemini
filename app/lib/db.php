@@ -310,6 +310,13 @@ SQL);
     if ($v < 36) { // Mot du Président : un article par mois, brouillon tant qu'il n'est pas validé
         $pdo->exec("CREATE TABLE IF NOT EXISTS president_words(id INTEGER PRIMARY KEY, month TEXT NOT NULL UNIQUE, title TEXT NOT NULL, chapo TEXT, body TEXT NOT NULL, sources TEXT, status TEXT NOT NULL DEFAULT 'draft', validated_at INTEGER, validated_by INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL); PRAGMA user_version = 36;");
     }
+    if ($v < 37) { // Guides (Équipe) : procédures modifiables, version 1 depuis app/seed/guides.php
+        $pdo->exec("CREATE TABLE IF NOT EXISTS guides(id INTEGER PRIMARY KEY, slug TEXT NOT NULL UNIQUE, cat TEXT NOT NULL, icon TEXT, title TEXT NOT NULL, summary TEXT, duration TEXT, level TEXT, body TEXT NOT NULL, pos INTEGER NOT NULL DEFAULT 0, updated_by INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)");
+        $seed = is_file(APP_DIR . '/seed/guides.php') ? require APP_DIR . '/seed/guides.php' : [];
+        $ins = $pdo->prepare('INSERT OR IGNORE INTO guides(slug,cat,icon,title,summary,duration,level,body,pos,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
+        foreach ($seed as $i => [$slug, $cat, $icon, $title, $sum, $dur, $lvl, $body]) $ins->execute([$slug, $cat, $icon, $title, $sum, $dur, $lvl, $body, $i, time(), time()]);
+        $pdo->exec('PRAGMA user_version = 37;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

@@ -39,6 +39,9 @@ const SURVEY = [
         'note_chemini' => ['Chemini vous est-il utile ?', 'radio', ['Très utile', 'Utile', 'Peu utile', 'Je ne l\'utilise pas encore']],
         'remarque' => ['Une remarque, une idée ?', 'text', []],
     ]],
+    ['Vos remarques et suggestions', [
+        'suggestions' => ['N\'hésitez pas à compléter le questionnaire si vous avez des remarques ou des suggestions : tout ce qui pourrait améliorer votre quotidien au cabinet est bienvenu.', 'text', []],
+    ]],
 ];
 
 /** Outils candidats : signaux (question => réponses) qui les justifient, bénéfice, partage. */

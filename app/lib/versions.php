@@ -67,4 +67,6 @@ const VERSIONS = [
     ['2026-10-17 05:50', 'all', 'Mot du Président', 'Un article chaque 1er du mois sur l\'actualité, nos trois métiers et les tendances, publié après validation du Président.'],
     ['2026-10-17 05:50', 'all', 'Barre latérale : pictos', 'Sécurité, Versioning et thème clair / sombre / automatique en pictos au-dessus du profil.'],
     ['2026-10-17 06:05', 'all', 'Bulle : tâche IA ou tâche d\'équipe', 'Depuis la bulle en bas à droite, créer une consigne pour l\'assistant ou affecter une tâche à soi-même ou à un collègue en trois touches ; sections de la barre latérale repliables ; guide d\'installation sur iPhone.'],
+    ['2026-10-17 06:10', 'all', 'Guides', 'Équipe › Guides : procédures pas à pas avec étapes à cocher, astuces et avertissements ; première série sur ImmOpen, modifiable par la Direction.'],
+    ['2026-10-17 06:10', 'all', 'Questionnaire : remarques et suggestions', 'Un dernier champ libre pour compléter le questionnaire.'],
 ];

@@ -19,6 +19,7 @@ require APP_DIR . '/lib/team.php';
 require APP_DIR . '/lib/survey.php';
 require APP_DIR . '/lib/sig.php';
 require APP_DIR . '/lib/president.php';
+require APP_DIR . '/lib/guides.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -54,6 +55,10 @@ try {
             require APP_DIR . '/pages/dashboard.php';
             require APP_DIR . '/pages/perso.php';
             page_home($u);
+        case 'guides':
+            $u = require_user();
+            require APP_DIR . '/pages/guides.php';
+            page_guides($u);
         case 'installer':
             $u = require_user();
             render('install', ['title' => 'Installer sur iPhone', 'nav' => 'install', 'u' => $u]);
@@ -215,6 +220,7 @@ try {
                 if (!$b || !is_file($f)) { http_response_code(404); exit; }
                 header('Content-Type: ' . $b['mime']); header('Cache-Control: private, max-age=86400'); readfile($f); exit;
             }
+            if (preg_match('#^guides/([a-z0-9-]{1,80})$#', $route, $m)) { $u = require_user(); require APP_DIR . '/pages/guides.php'; page_guides($u, $m[1]); }
             if (preg_match('#^mot-du-president/(\d{4}-\d{2})$#', $route, $m)) { $u = require_user(); require APP_DIR . '/pages/president.php'; page_president($u, $m[1]); }
             if (preg_match('#^equipe/([a-z0-9-]{1,80})$#', $route, $m)) {
                 $u = require_user();

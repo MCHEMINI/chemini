@@ -369,6 +369,18 @@ function api(string $r): never {
                 'crit' => (int)q("SELECT COUNT(*) FROM mail_items WHERE user_id=? AND done=0 AND priority='crit'", [$uid])->fetchColumn(),
                 'tasks' => $me ? (int)q('SELECT COUNT(*) FROM team_tasks WHERE person=? AND done_at IS NULL', [$me])->fetchColumn() : 0,
                 'ia' => (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [$uid])->fetchColumn()]);
+        case 'guides/save':
+        case 'guides/delete':
+            if (!guide_editor($u)) json_out(['error' => 'Réservé à la Direction.'], 403);
+            $id = in_int('id'); $old = $id ? q('SELECT * FROM guides WHERE id=?', [$id])->fetch() : null;
+            if ($r === 'guides/delete') { if ($old) q('DELETE FROM guides WHERE id=?', [$id]); json_out(['ok' => true, 'go' => '/guides']); }
+            $t = in_str('title', 120); $b = trim((string)(body()['body'] ?? '')); $cat = in_str('cat', 40) ?: 'Divers';
+            if ($t === '' || $b === '') json_out(['error' => 'Le titre et la procédure sont obligatoires.'], 400);
+            $vals = [$cat, in_str('icon', 8) ?: '📘', $t, in_str('summary', 240), in_str('duration', 20), in_str('level', 20), $b, $uid, time()];
+            if ($old) { q('UPDATE guides SET cat=?, icon=?, title=?, summary=?, duration=?, level=?, body=?, updated_by=?, updated_at=? WHERE id=?', array_merge($vals, [$id])); $slug = $old['slug']; }
+            else { $slug = guide_slug($t); $base = $slug; $i = 2; while (q('SELECT 1 FROM guides WHERE slug=?', [$slug])->fetchColumn()) $slug = $base . '-' . $i++;
+                q('INSERT INTO guides(cat,icon,title,summary,duration,level,body,updated_by,updated_at,slug,pos,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,99,?)', array_merge($vals, [$slug, time()])); }
+            json_out(['ok' => true, 'go' => '/guides/' . $slug]);
         case 'president/save':
         case 'president/validate':
         case 'president/unvalidate':
