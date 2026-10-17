@@ -109,7 +109,7 @@ MD],
 
 > Astuce : codes comptables ImmOpen : 02 KILAMOU, 03 SUBRA, 04 PIATTE, 05 DALOT, 06 MOUMEN. Le résultat du contrôle hebdomadaire est dans Direction › Comptabilité.
 MD],
-['immopen-nouveau-tiers', 'ImmOpen', '👤', 'Enregistrer un nouveau tiers ou copropriétaire', 'Créer la fiche d\'un copropriétaire ou d'un tiers : nom et prénom, coordonnées, accès à l\'espace client, autorisations d\'envoi.', '4 min', 'Débutant', <<<'MD'
+['immopen-nouveau-tiers', 'ImmOpen', '👤', 'Enregistrer un nouveau tiers ou copropriétaire', 'Créer la fiche d\'un copropriétaire ou d\'un tiers : nom et prénom, coordonnées, accès à l\'espace client, autorisations d\'envoi.', '4 min', 'Débutant', <<<'MD'
 ## Ouvrir la liste des tiers
 1. **Menu Syndic › Patrimoine › Tiers.**
 2. **Vérifiez que la personne n'existe pas déjà** : tapez le début du nom dans « Commence par » (ou un morceau dans « Contient »), ou filtrez par adresse et ville.
