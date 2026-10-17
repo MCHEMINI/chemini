@@ -422,12 +422,12 @@ MD, 'direction'],
 3. **« Retirer du site »** repasse l'annonce en brouillon ; **« Mettre en ligne »** la republie.
 4. **Texte, photos et prix** : « Modifier dans WordPress » ouvre l'annonce dans WordPress.
 
-## Publier une annonce depuis le téléphone
-1. **Site Web › Nouvelle annonce** (ou le bouton « + Nouvelle annonce »). [[Nouvelle annonce|/site-web/annonces/nouvelle]]
-2. **Choisissez Vente ou Location**, le type de bien, le secteur, l'adresse et le titre.
-3. **Prenez les photos** directement avec le téléphone : la première est la photo principale.
-4. **Remplissez les champs marqués d'un astérisque** : ils correspondent aux mentions obligatoires (prix et honoraires ou loyer, charges, dépôt de garantie, encadrement des loyers, copropriété, DPE et dépenses d'énergie).
-5. **Vérifiez le récapitulatif** « Mentions ajoutées à l'annonce », puis « Envoyer l'annonce ». Décochez « Publier tout de suite » pour une relecture en brouillon.
+## L'appli Annonces sur le téléphone
+1. **Ouvrez l'appli** : bouton « 📲 Installer l'appli Annonces » dans Site Web › Annonces, ou dashboard.gidsas.fr/annonces. [[Ouvrir l'appli Annonces|/annonces/]]
+2. **Installez-la** : sur iPhone, Safari › Partager › « Sur l'écran d'accueil » ; sur Android, bouton « Installer ».
+3. **« + Nouvelle »** : vente ou location, photos prises avec le téléphone, puis les champs marqués d'un astérisque (mentions obligatoires : prix et honoraires ou loyer, charges, dépôt de garantie, encadrement des loyers, copropriété, DPE et dépenses d'énergie).
+4. **Touchez une annonce** pour la modifier (texte, photos, prix, statut, en ligne ou brouillon) ou la supprimer (corbeille WordPress, récupérable).
+5. **Sans réseau**, l'appli continue de fonctionner : les annonces saisies ou modifiées attendent sur le téléphone (bandeau orange) et partent seules dès que la connexion revient.
 
 > Astuce : la mention Géorisques et le calcul du prix hors honoraires sont ajoutés automatiquement.
 

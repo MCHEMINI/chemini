@@ -86,6 +86,14 @@ function wp_snapshot(bool $fresh = false): array {
         $s['annonces'] = array_map(fn($a) => ['id' => (int)$a['id'], 'status' => $a['status'], 'title' => html_entity_decode((string)($a['title']['raw'] ?? $a['title']['rendered'] ?? ''), ENT_QUOTES),
             'date' => substr((string)$a['date'], 0, 10), 'modified' => substr((string)$a['modified'], 0, 10), 'link' => (string)$a['link'],
             'statuts' => $a['statuts'] ?? [], 'types' => $a['types'] ?? [], 'emplacement' => $a['emplacement'] ?? [], 'photo' => (int)($a['featured_media'] ?? 0)], $ann);
+        // Visuels : adresse de la photo principale de chaque annonce (taille moyenne)
+        $mids = array_values(array_filter(array_unique(array_column($s['annonces'], 'photo'))));
+        $urls = [];
+        foreach (array_chunk($mids, 100) as $ch) {
+            $m = wp_req('GET', 'wp/v2/media', ['include' => implode(',', $ch), 'per_page' => 100, '_fields' => 'id,source_url,media_details']);
+            if ($m['code'] === 200 && is_array($m['json'])) foreach ($m['json'] as $x) { $sz = $x['media_details']['sizes'] ?? []; $urls[(int)$x['id']] = (string)($sz['medium_large']['source_url'] ?? $sz['medium']['source_url'] ?? $x['source_url'] ?? ''); }
+        }
+        foreach ($s['annonces'] as &$a) $a['photo_url'] = $urls[$a['photo']] ?? ''; unset($a);
         $missing = [];
         foreach (['statuts', 'types', 'emplacement'] as $tx) {
             $t = wp_all('wp/v2/' . $tx, ['hide_empty' => 'false', '_fields' => 'id,name,count']);
@@ -196,4 +204,64 @@ function wp_ann_legal_html(array $d): string {
     $li[] = 'Les informations sur les risques auxquels ce bien est exposé sont disponibles sur le site Géorisques : <a href="https://www.georisques.gouv.fr" rel="noopener" target="_blank">www.georisques.gouv.fr</a>';
     $li[] = 'GID SAS, administrateur de biens · barème des honoraires disponible à l\'agence et sur le site';
     return '<h3>Informations réglementaires</h3><ul class="gid-mentions"><li>' . implode('</li><li>', $li) . '</li></ul>';
+}
+
+
+/* ---------- Fiches d'annonces saisies depuis Chemini (pour les rouvrir et les modifier) ---------- */
+function wp_ann_src(int $id): ?array { $r = q('SELECT data FROM wp_annonces WHERE wp_id=?', [$id])->fetchColumn(); return $r ? (json_decode((string)$r, true) ?: null) : null; }
+function wp_ann_src_save(int $id, array $d, int $uid): void { unset($d['photos']); q('INSERT INTO wp_annonces(wp_id,data,updated_at,updated_by) VALUES(?,?,?,?) ON CONFLICT(wp_id) DO UPDATE SET data=excluded.data, updated_at=excluded.updated_at, updated_by=excluded.updated_by', [$id, json_encode($d, JSON_UNESCAPED_UNICODE), time(), $uid]); }
+
+/** Fiche d'une annonce pour le formulaire : la saisie Chemini si elle existe, sinon ce que WordPress fournit (titre, texte, taxonomies, photo). */
+function wp_ann_get(int $id): array {
+    $r = wp_req('GET', 'wp/v2/annonces/' . $id, ['context' => 'edit', '_fields' => 'id,status,title,content,statuts,types,emplacement,featured_media,link,meta']);
+    if ($r['code'] !== 200) return ['error' => $r['error'] ?? ('Annonce introuvable (' . $r['code'] . ')')];
+    $a = $r['json']; $src = wp_ann_src($id) ?? [];
+    $raw = (string)($a['content']['raw'] ?? ''); $desc = trim(html_entity_decode(strip_tags(preg_replace('#<br\s*/?>#i', "\n", preg_replace('#</p>\s*<p>#i', "\n\n", explode('<h3>Informations réglementaires</h3>', $raw)[0]))), ENT_QUOTES));
+    $d = $src + ['title' => html_entity_decode((string)($a['title']['raw'] ?? ''), ENT_QUOTES), 'description' => $desc, 'type' => (string)($a['types'][0] ?? ''), 'emplacement' => (string)($a['emplacement'][0] ?? '')];
+    $d['title'] = html_entity_decode((string)($a['title']['raw'] ?? $d['title']), ENT_QUOTES); $d['description'] = $src['description'] ?? $desc;
+    $meta = is_array($a['meta'] ?? null) ? $a['meta'] : [];
+    if (!isset($src['address']) && !empty($meta['address'])) $d['address'] = $meta['address'];
+    $media = array_values(array_filter(array_unique(array_merge([(int)($a['featured_media'] ?? 0)], array_map('intval', $src['media'] ?? [])))));
+    $ph = [];
+    if ($media) { $m = wp_req('GET', 'wp/v2/media', ['include' => implode(',', $media), 'per_page' => 50, '_fields' => 'id,source_url,media_details']);
+        $by = []; if ($m['code'] === 200) foreach ((array)$m['json'] as $x) { $sz = $x['media_details']['sizes'] ?? []; $by[(int)$x['id']] = (string)($sz['medium_large']['source_url'] ?? $sz['medium']['source_url'] ?? $x['source_url'] ?? ''); }
+        foreach ($media as $mid) if (!empty($by[$mid])) $ph[] = ['id' => $mid, 'url' => $by[$mid]]; }
+    $d['photos'] = $ph; $d['id'] = (int)$a['id']; $d['status'] = (string)$a['status']; $d['link'] = (string)$a['link']; $d['from_chemini'] = (bool)$src;
+    return $d;
+}
+
+/** Création ou mise à jour d'une annonce. Photos : [{id}] (déjà sur le site) ou « data:image/… » (nouvelles), dans l'ordre (la première est la principale). */
+function wp_ann_save(array $d, int $uid): array {
+    foreach ($d as $k => $v) if (is_string($v)) $d[$k] = mb_substr(trim($v), 0, $k === 'description' ? 8000 : 300);
+    $d['tx'] = ($d['tx'] ?? '') === 'location' ? 'location' : 'vente';
+    $id = (int)($d['id'] ?? 0);
+    $photos = array_slice(array_values((array)($d['photos'] ?? [])), 0, 15); $d['photos'] = $photos;
+    if ($miss = wp_ann_check($d)) return ['error' => 'Champs obligatoires manquants : ' . implode(', ', $miss) . '.', 'code' => 400];
+    $snap = wp_snapshot(); $tax = $snap['tax'] ?? [];
+    $term = function (string $tx, $want) use ($tax) { foreach ($tax[$tx] ?? [] as $tid => $nm) if ((string)$tid === (string)$want || mb_strtolower($nm) === mb_strtolower((string)$want)) return (int)$tid; return 0; };
+    $title = mb_substr((string)$d['title'], 0, 160); $ids = [];
+    foreach ($photos as $i => $p) {
+        if (is_array($p) && !empty($p['id'])) { $ids[] = (int)$p['id']; continue; }
+        if (!is_string($p) || !preg_match('#^data:(image/(?:jpeg|png|webp));base64,(.+)$#', $p, $m)) return ['error' => 'Photo ' . ($i + 1) . ' : format non reconnu (JPEG, PNG ou WebP).', 'code' => 400];
+        $bin = base64_decode($m[2], true); if ($bin === false || strlen($bin) > 8 * 1024 * 1024 || !@getimagesizefromstring($bin)) return ['error' => 'Photo ' . ($i + 1) . ' illisible ou trop lourde.', 'code' => 400];
+        $up = wp_upload_media($bin, $m[1], guide_slug($title) . '-' . ($i + 1) . ($m[1] === 'image/png' ? '.png' : ($m[1] === 'image/webp' ? '.webp' : '.jpg')), $title);
+        if (isset($up['error'])) return ['error' => 'Photo ' . ($i + 1) . ' : ' . $up['error'], 'code' => 502];
+        $ids[] = $up['id'];
+    }
+    $desc = ''; foreach (preg_split('/\R{2,}/', (string)($d['description'] ?? '')) as $para) if (trim($para) !== '') $desc .= '<p>' . nl2br(e(trim($para))) . '</p>';
+    $feat = []; foreach (['balcon', 'parking', 'jardin', 'terrasse', 'cave', 'ascenseur', 'garage', 'box', 'piscine', 'gardien', 'wc'] as $f) $feat[$f] = in_array($f, (array)($d['features'] ?? []), true) ? 'true' : 'false';
+    $num = fn($k) => (string)(float)str_replace([' ', ','], ['', '.'], (string)($d[$k] ?? ''));
+    $meta = ['address' => mb_substr((string)($d['address'] ?? ''), 0, 200), 'price' => $d['tx'] === 'location' ? $num('loyer') : $num('prix'), 'property-size' => $num('surface'),
+             'energy_balance' => ($d['dpe_cas'] ?? 'dpe') === 'dpe' ? (string)($d['dpe'] ?? '') : '', 'consommation' => (string)($d['conso'] ?? ''), 'gaz' => (string)($d['emission'] ?? ''),
+             'pieces' => (string)($d['pieces'] ?? ''), 'bedrooms' => (string)($d['chambres'] ?? ''), 'bathsrooms' => (string)($d['sdb'] ?? ''), 'floor' => (string)($d['etage'] ?? ''),
+             'features' => $feat, 'gallery' => implode(',', array_slice($ids, 1))];
+    $post = ['title' => $title, 'content' => $desc . wp_ann_legal_html($d), 'types' => array_values(array_filter([$term('types', $d['type'] ?? '')])),
+             'emplacement' => array_values(array_filter([$term('emplacement', $d['emplacement'] ?? '')])), 'featured_media' => $ids[0] ?? 0, 'meta' => $meta];
+    if (isset($d['publier'])) $post['status'] = $d['publier'] === '1' ? 'publish' : 'draft';
+    if (!$id) { $stId = $term('statuts', $d['tx'] === 'location' ? 'A louer' : 'En vente') ?: $term('statuts', 'À louer'); $post['statuts'] = $stId ? [$stId] : []; $post['status'] ??= 'draft'; }
+    elseif (!empty($d['statut'])) $post['statuts'] = [(int)$d['statut']];
+    $res = wp_req('POST', 'wp/v2/annonces' . ($id ? '/' . $id : ''), ['context' => 'edit', '_fields' => 'id,status,link,meta'], $post);
+    if (!in_array($res['code'], [200, 201], true)) return ['error' => 'WordPress : ' . ($res['error'] ?? 'erreur ' . $res['code']), 'code' => 502];
+    $nid = (int)$res['json']['id']; $d['media'] = $ids; wp_ann_src_save($nid, $d, $uid); wp_cache_clear();
+    return ['ok' => true, 'id' => $nid, 'status' => $res['json']['status'], 'link' => $res['json']['link'], 'edit' => wp_edit_link($nid), 'meta_ok' => !empty($res['json']['meta']['price'] ?? null), 'photos' => count($ids)];
 }

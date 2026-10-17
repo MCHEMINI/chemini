@@ -375,6 +375,14 @@ SQL);
         foreach ($seed as $g) if ($g[0] === 'chemini-site-web') $pdo->prepare('UPDATE guides SET summary=?, duration=?, body=?, audience=?, updated_at=? WHERE slug=? AND updated_by IS NULL')->execute([$g[4], $g[5], $g[7], $g[8], time(), $g[0]]);
         $pdo->exec('PRAGMA user_version = 45;');
     }
+    if ($v < 46) { // Site Web : fiches d'annonces saisies depuis Chemini (pour les rouvrir et les modifier, y compris hors ligne)
+        $pdo->exec('CREATE TABLE IF NOT EXISTS wp_annonces(wp_id INTEGER PRIMARY KEY, data TEXT NOT NULL, updated_at INTEGER NOT NULL, updated_by INTEGER); PRAGMA user_version = 46;');
+    }
+    if ($v < 47) { // Guide Site Web : appli Annonces (installable, hors ligne)
+        $seed = is_file(APP_DIR . '/seed/guides.php') ? require APP_DIR . '/seed/guides.php' : [];
+        foreach ($seed as $g) if ($g[0] === 'chemini-site-web') $pdo->prepare('UPDATE guides SET body=?, updated_at=? WHERE slug=? AND updated_by IS NULL')->execute([$g[7], time(), $g[0]]);
+        $pdo->exec('PRAGMA user_version = 47;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

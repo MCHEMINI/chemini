@@ -29,7 +29,8 @@ header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
 header('X-Robots-Tag: noindex, nofollow, noarchive, nosnippet'); // plateforme privée : jamais référencée (dashboard.gidsas.fr comme chemini.gidsas.fr)
-header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self' https://login.microsoftonline.com");
+$wpImg = ''; try { $wpH = parse_url((string)(json_decode((string)q("SELECT v FROM kv WHERE k='wp_conn'")->fetchColumn(), true)['url'] ?? ''), PHP_URL_HOST); if ($wpH && preg_match('/^[a-z0-9.-]+$/i', $wpH)) $wpImg = ' https://' . $wpH; } catch (Throwable) {} // visuels des annonces du site
+header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:$wpImg; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self' https://login.microsoftonline.com");
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
@@ -93,9 +94,33 @@ try {
         case 'equipe':
             require_user();
             redirect('/organigramme');
+        case 'site-web/annonces/nouvelle': redirect('/annonces/#nouvelle');
+        case 'annonces': // appli Annonces (installable, hors ligne) : création, consultation, modification, suppression
+            $u = require_user();
+            if (!wp_poster($u)) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Réservé à la Direction et aux annonceurs.'], false); }
+            if (!str_ends_with(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '', '/')) redirect('/annonces/');
+            $conn = wp_conn();
+            render('annonces_app', ['title' => 'Annonces', 'u' => $u, 'snap' => $conn ? wp_snapshot() : ['tax' => []], 'cssV' => ASSET_CSS_V, 'jsV' => ASSET_ANN_V], false);
+        case 'annonces/manifest.webmanifest':
+            header('Content-Type: application/manifest+json');
+            echo json_encode(['name' => 'Annonces · GID', 'short_name' => 'Annonces', 'start_url' => '/annonces/', 'scope' => '/annonces/', 'display' => 'standalone', 'background_color' => '#121720', 'theme_color' => '#121720', 'lang' => 'fr',
+                'icons' => [['src' => '/assets/icon-192.png', 'sizes' => '192x192', 'type' => 'image/png'], ['src' => '/assets/icon-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any maskable']],
+                'shortcuts' => [['name' => 'Nouvelle annonce', 'url' => '/annonces/#nouvelle']]], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); exit;
+        case 'annonces/sw.js':
+            header('Content-Type: application/javascript; charset=utf-8'); header('Service-Worker-Allowed: /annonces/'); header('Cache-Control: no-cache');
+            $V = 'gid-annonces-' . ASSET_CSS_V . '-' . ASSET_ANN_V;
+            echo "/* Appli Annonces : écran disponible hors ligne ; les données passent par IndexedDB dans la page. */\n"
+               . "const V = '$V'; const SHELL = ['/annonces/', '/assets/app.css?v=" . ASSET_CSS_V . "', '/assets/annonces.js?v=" . ASSET_ANN_V . "', '/assets/theme.js?v=3', '/assets/favicon.svg', '/assets/icon-192.png', '/assets/apple-touch-icon.png'];\n"
+               . "self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).catch(() => {})); });\n"
+               . "self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x.startsWith('gid-annonces-') && x !== V).map(x => caches.delete(x)))).then(() => self.clients.claim())); });\n"
+               . "self.addEventListener('fetch', e => { const r = e.request; if (r.method !== 'GET') return; const u = new URL(r.url);\n"
+               . "  if (r.mode === 'navigate') { e.respondWith(fetch(r).then(res => { if (res.ok && u.pathname === '/annonces/') caches.open(V).then(c => c.put('/annonces/', res.clone())); return res; }).catch(() => caches.match('/annonces/'))); return; }\n"
+               . "  if (u.origin === location.origin && u.pathname.startsWith('/assets/')) { e.respondWith(caches.match(r).then(h => h || fetch(r).then(res => { if (res.ok) caches.open(V).then(c => c.put(r, res.clone())); return res; }))); return; }\n"
+               . "  if (r.destination === 'image' && u.origin !== location.origin) { e.respondWith(caches.open(V + '-img').then(c => c.match(r).then(h => h || fetch(r).then(res => { c.put(r, res.clone()); return res; }).catch(() => h)))); }\n"
+               . "});\n";
+            exit;
         case 'site-web':
         case 'site-web/annonces':
-        case 'site-web/annonces/nouvelle':
         case 'site-web/pages':
         case 'site-web/connexion':
             $u = require_user();
