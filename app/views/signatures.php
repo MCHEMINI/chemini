@@ -22,6 +22,9 @@
   <div class="panel sg-int">
     <h3>Mise à jour automatique avec Exclaimer</h3>
     <p class="small">Dans Exclaimer, le bandeau de la signature pointe une fois pour toutes vers ces deux adresses. Ensuite, tout se règle ici : le bon bandeau s'affiche selon les dates, sans retoucher Exclaimer.</p>
+    <?php $hits = json_decode((string)q("SELECT v FROM kv WHERE k='sig_hits'")->fetchColumn(), true) ?: []; $linked = !empty($hits['ext']) && $hits['ext'] > time() - 30 * 86400; ?>
+    <p class="sg-link <?= $linked ? 'ok' : 'warn' ?>"><span class="chip <?= $linked ? 'ok' : 'warn' ?>"><?= $linked ? 'Relié' : 'Pas encore relié' ?></span>
+      <?= $linked ? 'Bandeau lu par Exclaimer ou une messagerie le ' . e(date('d/m/Y à H:i', (int)$hits['ext'])) . ' (' . (int)$hits['ext_n'] . ' lectures).' : 'Aucune lecture du bandeau par Exclaimer pour l\'instant : le réglage unique ci-dessous reste à faire dans Exclaimer (Source de l\'image › Lier à une image).' ?></p>
     <label class="small muted">Image du bandeau</label><input class="input mono" readonly value="<?= e($img) ?>" onclick="this.select()">
     <label class="small muted">Lien au clic</label><input class="input mono" readonly value="<?= e($lnk) ?>" onclick="this.select()">
   </div>

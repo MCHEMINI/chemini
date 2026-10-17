@@ -23,7 +23,17 @@ function sig_state(array $b): array {
 }
 
 /** Image publique (adresse fixe pour Exclaimer). */
+/** Mémorise qui lit le bandeau : prouve qu'Exclaimer (ou les messageries des destinataires) est bien relié à Chemini. */
+function sig_track(): void {
+    $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+    $ext = $ua === '' || preg_match('/exclaimer|microsoft office|outlook|ms-office|googleimageproxy|yahoomailproxy|apple ?mail|thunderbird|proxy|bot/i', $ua);
+    $h = json_decode((string)q("SELECT v FROM kv WHERE k='sig_hits'")->fetchColumn(), true) ?: ['n' => 0];
+    $h['n'] = (int)$h['n'] + 1; $h['last'] = time();
+    if ($ext) { $h['ext'] = time(); $h['ext_ua'] = mb_substr($ua ?: 'service sans nom', 0, 120); $h['ext_n'] = (int)($h['ext_n'] ?? 0) + 1; }
+    q("INSERT INTO kv(k,v,updated_at) VALUES('sig_hits',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode($h, JSON_UNESCAPED_UNICODE), time()]);
+}
 function sig_serve_image(): never {
+    try { sig_track(); } catch (Throwable) {}
     $b = sig_current(); $f = $b ? sig_dir() . '/' . basename($b['file']) : '';
     if (!$b || !is_file($f)) { header('Content-Type: image/gif'); header('Cache-Control: no-cache'); echo base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'); exit; }
     header('Content-Type: ' . $b['mime']); header('Cache-Control: public, max-age=900'); header('Content-Length: ' . filesize($f));
