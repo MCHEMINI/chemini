@@ -6,7 +6,7 @@ if (($t['title'] ?? '') === SURVEY_TASK) { // questionnaire : message explicatif
   <span class="pl-ic" aria-hidden="true">📝</span>
   <div><b>Questionnaire de fonctionnement</b>
     <p><?= $mine ? 'Dites-nous en 10 minutes comment vous travaillez : vos tâches récurrentes, les demandes des copropriétaires, vos recherches dans ImmOpen et ce que vous aimeriez automatiser. Vos réponses serviront à choisir les prochains outils de Chemini.' : 'En attente : ' . e(team_people()[$t['person']]['name'] ?? $t['person']) . ' n\'a pas encore rempli le questionnaire de fonctionnement.' ?></p>
-    <?php if ($mine): ?><a class="btn btn-primary" href="/enquete">Répondre au questionnaire</a><small>Ce message disparaîtra dès que vous aurez rempli le questionnaire.</small><?php endif; ?>
+    <?php if ($mine): ?><a class="btn btn-primary" href="/enquete">Répondre au questionnaire</a><small>Ce message disparaîtra dès que vous aurez rempli le questionnaire.</small><?php else: ?><a class="btn btn-ghost" href="/enquete">Voir le questionnaire</a><?php endif; ?>
   </div>
 </li>
 <?php return; }

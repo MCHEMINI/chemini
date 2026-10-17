@@ -266,6 +266,22 @@ CREATE TABLE IF NOT EXISTS banners (id INTEGER PRIMARY KEY, title TEXT NOT NULL,
 PRAGMA user_version = 28;
 SQL);
     }
+    if ($v < 29) { // bandeau actuel d'Exclaimer comme bandeau par défaut ; questionnaire aussi pour la Direction
+        $src = APP_DIR . '/seed/banner-default.png'; $dir = DATA_DIR . '/banners';
+        if (is_file($src) && !(int)$pdo->query('SELECT COUNT(*) FROM banners')->fetchColumn()) {
+            if (!is_dir($dir)) @mkdir($dir, 0700, true);
+            if (@copy($src, $dir . '/default-60ans.png'))
+                $pdo->prepare('INSERT INTO banners(title,file,mime,w,h,link,start,end,is_default,created_by,created_at) VALUES(?,?,?,?,?,?,NULL,NULL,1,NULL,?)')->execute(['60 ans de gestion (bandeau actuel)', 'default-60ans.png', 'image/png', 600, 200, 'https://www.gidsas.fr/', time()]);
+        }
+        $slug = fn(string $n) => trim(preg_replace('/[^a-z0-9]+/', '-', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $n) ?: $n)), '-');
+        $admin = (int)$pdo->query("SELECT id FROM users WHERE role='admin' ORDER BY id LIMIT 1")->fetchColumn();
+        $ins = $pdo->prepare("INSERT INTO team_tasks(person,title,due,created_by,by_dir,created_at,priv) VALUES(?,?,?,?,1,?,0)");
+        foreach ($pdo->query("SELECT u.id, u.name FROM space_members m JOIN users u ON u.id=m.user_id WHERE m.space='direction'")->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            if ($pdo->query('SELECT 1 FROM survey_answers WHERE submitted_at IS NOT NULL AND user_id=' . (int)$r['id'])->fetchColumn()) continue;
+            $ins->execute([$slug($r['name']), 'Répondre au questionnaire de fonctionnement', date('Y-m-d', strtotime('+14 days')), $admin ?: 1, time()]);
+        }
+        $pdo->exec('PRAGMA user_version = 29;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
