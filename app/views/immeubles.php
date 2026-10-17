@@ -7,11 +7,12 @@ $noAssist = count(array_filter($syndic, fn($b) => !$b['assist']));
 $noEmail = array_filter($staff, fn($s) => !$s['email']);
 $gests = array_values(array_unique(array_filter(array_column($syndic, 'gest'))));
 sort($gests);
-$person = function (?string $name) use ($byName): string {
-    if (!$name) return '<span class="muted">—</span>';
+$person = function (?string $name, string $lbl = '') use ($byName): string {
+    $l = $lbl ? '<span class="m-lbl">' . e($lbl) . '</span>' : '';
+    if (!$name) return $l . '<span class="muted">—</span>';
     $s = $byName[$name] ?? null;
     $mail = $s['email'] ?? null;
-    return '<span class="pp"><span class="pp-n">' . e($name) . '</span>'
+    return $l . '<span class="pp"><span class="pp-n">' . e($name) . '</span>'
         . ($mail ? '<span class="pp-m mono">' . e($mail) . '</span>' : '<span class="pp-m warn-t">e-mail inconnu</span>') . '</span>';
 };
 ?>
@@ -45,18 +46,19 @@ $person = function (?string $name) use ($byName): string {
 
 <section class="imm-panel" data-panel="syndic">
   <div class="tbl imm-tbl"><table class="imm-table" data-filter-table>
-    <thead><tr><?php if ($fin): ?><th title="Rentabilité estimée">€</th><?php endif; ?><th>Code</th><th>Immeuble</th><th>Ville</th><th>Gestionnaire</th><th>Comptable</th><th>Assistant(e)</th><th>Exercice</th></tr></thead>
+    <thead><tr><?php if ($fin): ?><th title="Rentabilité estimée">€</th><?php endif; ?><th>Code</th><th>Immeuble</th><th>Ville</th><th>Gestionnaire</th><th>Comptable</th><th>Assistant(e)</th><th>Exercice</th><th class="c-go"></th></tr></thead>
     <tbody>
     <?php foreach ($syndic as $b): ?>
       <tr data-gest="<?= e($b['gest']) ?>" data-href="/immeubles/<?= e($b['code']) ?>" class="row-link">
-        <?php if ($fin): $f = $fin[$b['code']] ?? null; ?><td><?php if ($f): ?><span class="dot-fin <?= e($f['c']) ?>" title="<?= e($f['l'] . ($f['c'] !== 'lost' ? ' · marge estimée ' . round($f['m'] * 100) . ' %' : '')) ?>"></span><?php endif; ?></td><?php endif; ?>
-        <td class="mono code"><?= e($b['code']) ?></td>
-        <td><a class="row-a" href="/immeubles/<?= e($b['code']) ?>"><strong><?= e($b['label']) ?></strong></a><?php if ($b['addr2']): ?><br><span class="muted small"><?= e($b['addr2']) ?></span><?php endif; ?></td>
-        <td class="nowrap"><span class="mono"><?= e($b['cp']) ?></span> <?= e($b['ville']) ?></td>
-        <td><?= $person($b['gest']) ?></td>
-        <td><?= $person($b['compta']) ?></td>
-        <td><?= $person($b['assist']) ?></td>
-        <td><?= $b['exercice'] ? '<span class="chip warn">' . e($b['exercice']) . '</span>' : '' ?></td>
+        <?php if ($fin): $f = $fin[$b['code']] ?? null; ?><td class="c-dot"><?php if ($f): ?><span class="dot-fin <?= e($f['c']) ?>" title="<?= e($f['l'] . ($f['c'] !== 'lost' ? ' · marge estimée ' . round($f['m'] * 100) . ' %' : '')) ?>"></span><?php endif; ?></td><?php endif; ?>
+        <td class="mono code c-code"><?= e($b['code']) ?></td>
+        <td class="c-addr"><a class="row-a" href="/immeubles/<?= e($b['code']) ?>"><span class="m-code mono"><?= e($b['code']) ?></span><strong><?= e($b['label']) ?></strong></a><?php if ($b['addr2']): ?><br><span class="muted small"><?= e($b['addr2']) ?></span><?php endif; ?></td>
+        <td class="nowrap c-city"><span class="mono"><?= e($b['cp']) ?></span> <?= e($b['ville']) ?></td>
+        <td class="c-g"><?= $person($b['gest'], 'Gestion') ?></td>
+        <td class="c-c"><?= $person($b['compta'], 'Compta') ?></td>
+        <td class="c-a"><?= $person($b['assist'], 'Assistante') ?></td>
+        <td class="c-ex"><?= $b['exercice'] ? '<span class="chip warn">' . e($b['exercice']) . '</span>' : '' ?></td>
+        <td class="c-go" aria-hidden="true"><span class="m-go">›</span></td>
       </tr>
     <?php endforeach; ?>
     </tbody>
