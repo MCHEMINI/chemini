@@ -80,4 +80,5 @@ const VERSIONS = [
     ['2026-10-17 14:50', 'all', 'Guides du fonctionnement de Chemini', '14 guides par rôle (démarrer, Perso, Équipe, Direction, Président, Famille) avec des boutons qui ouvrent directement la bonne page ; accès rapide par catégorie ; chaque guide peut être réservé à un rôle.'],
     ['2026-10-17 14:50', 'all', 'Taille du texte dans le menu sur iPhone', 'A−/A+ passe dans le menu ☰ : la place en haut des pages revient au contenu. Menu plus rapide (moins de requêtes à chaque page).'],
     ['2026-10-17 14:50', 'direction', 'Honoraires : montants lisibles', 'Le tableau des immeubles affiche les montants au format « 12 390 € » ; la valeur exacte réapparaît dès que vous cliquez pour modifier.'],
+    ['2026-10-17 15:00', 'all', 'Bulle : choix de la personne en liste', '« Pour qui ? » s\'ouvre en liste déroulante avec photo, nom, fonction et recherche, au lieu d\'une rangée à faire défiler.'],
 ];

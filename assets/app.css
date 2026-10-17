@@ -1435,3 +1435,25 @@ body.pw-public{background:var(--bg);color:var(--ink)}
   .rail-fs button:hover{background:#222832;color:#fff}
   .rail-fs span[data-fs-val]{color:rgba(255,255,255,.6);font-size:12.5px;min-width:44px}
 }
+
+/* Bulle · Tâche équipe : « Pour qui ? » en liste déroulante */
+.fab-who{display:flex;align-items:center;gap:12px;width:100%;padding:8px 12px 8px 8px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.fab-who:hover,.fab-who[aria-expanded=true]{border-color:var(--bronze)}
+.fab-who .ag-av{width:38px;height:38px;font-size:12px;flex:none}
+.fab-who-t{flex:1;min-width:0;display:flex;flex-direction:column}.fab-who-t b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fab-who-t small{font-size:12px;color:var(--muted)}
+.fab-who svg{flex:none;color:var(--muted);transition:transform .15s}.fab-who[aria-expanded=true] svg{transform:rotate(180deg)}
+.fab-plist{border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:0 12px 30px rgba(0,0,0,.14);padding:8px;display:flex;flex-direction:column;gap:6px;animation:fabIn .14s ease-out}
+.fab-plist[hidden]{display:none}
+@keyframes fabIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.fab-plist{animation:none}}
+.fab-psearch{font:inherit;font-size:15px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);width:100%}
+.fab-plist .fab-people{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow-y:auto;overflow-x:hidden;padding:0}
+.fab-plist .fab-p{flex-direction:row;align-items:center;gap:10px;width:auto;padding:7px 8px;border-radius:9px}
+.fab-plist .fab-p[hidden]{display:none}
+.fab-plist .fab-p:hover{background:var(--bg)}
+.fab-plist .fab-p .ag-av{width:34px;height:34px;font-size:12px;flex:none}
+.fab-plist .fab-p:has(input:checked){background:var(--bronze-soft)}
+.fab-plist .fab-p:has(input:checked) .ag-av{box-shadow:none;transform:none;background:var(--bronze);color:#fff}
+.fab-p-n{display:flex;flex-direction:column;min-width:0}.fab-p-n b{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fab-p-n small{font-size:12px;color:var(--muted);max-width:none}
+.fab-plist .fab-p:has(input:checked) .fab-p-n b{font-weight:700}
+@media (max-width:820px){.fab-psearch{font-size:16px}.fab-plist .fab-p{padding:9px 8px}}

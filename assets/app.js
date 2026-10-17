@@ -678,9 +678,23 @@ function fabBurst(el) { const r = el.getBoundingClientRect(), box = document.cre
   tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.fabTab)));
   try { const k = localStorage.getItem('fabTab'); if (k === 'team') show('team'); } catch (e) {}
   const f = document.getElementById('fabTeam'); if (!f) return;
+  /* Pour qui ? : bouton + liste en popup avec recherche */
+  const wb = document.getElementById('fabWho'), pl = document.getElementById('fabPList');
+  if (wb && pl) {
+    const srch = pl.querySelector('.fab-psearch'), none = pl.querySelector('.fab-pnone');
+    const open = o => { pl.hidden = !o; wb.setAttribute('aria-expanded', String(o)); if (o) { srch.value = ''; filter(); const c = pl.querySelector('input:checked'); (c ? c.closest('.fab-p') : pl.querySelector('.fab-p'))?.scrollIntoView({ block: 'nearest' }); if (matchMedia('(hover:hover)').matches) srch.focus(); } };
+    const filter = () => { const q = srch.value.trim().toLowerCase(); let n = 0; pl.querySelectorAll('.fab-p').forEach(l => { const ok = !q || l.dataset.s.includes(q); l.hidden = !ok; n += ok; }); none.hidden = n > 0; };
+    const sync = () => { const c = pl.querySelector('input:checked'); if (!c) return; const l = c.closest('.fab-p'); wb.querySelector('[data-who-av]').textContent = l.querySelector('.ag-av').textContent; wb.querySelector('[data-who-n]').textContent = l.querySelector('.fab-p-n b').textContent; wb.querySelector('[data-who-r]').textContent = l.dataset.role || ''; };
+    wb.addEventListener('click', () => open(pl.hidden));
+    srch.addEventListener('input', filter);
+    srch.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const v = [...pl.querySelectorAll('.fab-p')].find(l => !l.hidden); if (v) { v.querySelector('input').checked = true; sync(); open(false); wb.focus(); } } if (e.key === 'Escape') { e.stopPropagation(); open(false); wb.focus(); } });
+    pl.addEventListener('change', () => { sync(); open(false); wb.focus(); });
+    pl.addEventListener('click', e => { const l = e.target.closest('.fab-p'); if (l && l.querySelector('input').checked && e.target.tagName !== 'INPUT') setTimeout(() => open(false), 0); });
+    sync();
+  }
   f.addEventListener('submit', async e => { e.preventDefault(); const err = f.querySelector('.form-error'), b = f.querySelector('.btn-primary'); err.hidden = true; b.disabled = true;
     const o = Object.fromEntries(new FormData(f).entries());
-    try { await api('team/add', o); fabBurst(b); const who = f.querySelector('[name=person]:checked'); const nm = who ? who.closest('.fab-p').querySelector('small').textContent : '';
+    try { await api('team/add', o); fabBurst(b); const who = f.querySelector('[name=person]:checked'); const nm = who ? who.closest('.fab-p').dataset.first : '';
       f.querySelector('#fabT').value = ''; b.disabled = false; toast(nm === 'Moi' ? '✅ Tâche ajoutée à votre liste' : '🚀 Tâche affectée à ' + nm); }
     catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });
 })();

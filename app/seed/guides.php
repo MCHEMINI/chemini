@@ -429,7 +429,7 @@ MD, 'famille'],
 ## Créer la tâche
 1. **Touchez la bulle** en bas à droite de n'importe quelle page.
 2. **Choisissez « Tâche équipe ».**
-3. **Touchez la personne** (Moi ou un collègue), écrivez la tâche, choisissez l'échéance.
+3. **Touchez « Pour qui ? »** et choisissez la personne dans la liste (Moi ou un collègue, avec recherche), écrivez la tâche, choisissez l'échéance.
 4. **Touchez « Affecter ».** La tâche apparaît aussitôt dans ses tâches.
 
 ## Suivre et terminer

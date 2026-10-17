@@ -360,6 +360,11 @@ SQL);
         }
         $pdo->exec('PRAGMA user_version = 42;');
     }
+    if ($v < 43) { // Guide « Créer une tâche » : la personne se choisit dans une liste déroulante (bulle)
+        $seed = is_file(APP_DIR . '/seed/guides.php') ? require APP_DIR . '/seed/guides.php' : [];
+        foreach ($seed as $g) if ($g[0] === 'chemini-taches') $pdo->prepare('UPDATE guides SET body=?, updated_at=? WHERE slug=? AND updated_by IS NULL')->execute([$g[7], time(), $g[0]]);
+        $pdo->exec('PRAGMA user_version = 43;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

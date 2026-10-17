@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=64">
+<link rel="stylesheet" href="/assets/app.css?v=65">
 </head>
 <body>
 <div id="app">
@@ -113,10 +113,18 @@
     </form>
     <form class="fab-pane fab-team" id="fabTeam" data-fab-pane="team" hidden>
       <?php $fp = team_people(); $fme = team_me($u); $ini2 = fn(string $n) => mb_strtoupper(mb_substr($n, 0, 1) . (mb_substr(strrchr(' ' . $n, ' '), 1, 1) ?: '')); ?>
-      <div class="fab-lbl">Pour qui ?</div>
-      <div class="fab-people" role="radiogroup" aria-label="Personne">
-        <?php if ($fme && isset($fp[$fme])): ?><label class="fab-p me"><input type="radio" name="person" value="<?= e($fme) ?>" checked><span class="ag-av">Moi</span><small>Moi</small></label><?php endif; ?>
-        <?php foreach ($fp as $pk => $pp): if ($pk === $fme) continue; ?><label class="fab-p" title="<?= e($pp['name'] . ' · ' . $pp['role']) ?>"><input type="radio" name="person" value="<?= e($pk) ?>"><span class="ag-av"><?= e($ini2($pp['name'])) ?></span><small><?= e(strtok($pp['name'], ' ')) ?></small></label><?php endforeach; ?>
+      <div class="fab-lbl" id="fabWhoL">Pour qui ?</div>
+      <?php $fmeP = $fme && isset($fp[$fme]) ? $fp[$fme] : null; ?>
+      <button type="button" class="fab-who" id="fabWho" aria-haspopup="listbox" aria-expanded="false" aria-controls="fabPList" aria-labelledby="fabWhoL fabWhoN">
+        <span class="ag-av" data-who-av><?= $fmeP ? 'Moi' : '?' ?></span><span class="fab-who-t"><b id="fabWhoN" data-who-n><?= $fmeP ? 'Moi' : 'Choisir une personne' ?></b><small data-who-r><?= $fmeP ? 'Mes tâches' : '' ?></small></span>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="fab-plist" id="fabPList" hidden>
+        <input type="search" class="fab-psearch" placeholder="Rechercher un collègue…" aria-label="Rechercher un collègue" autocomplete="off">
+        <div class="fab-people" role="radiogroup" aria-label="Personne">
+          <?php if ($fmeP): ?><label class="fab-p me" data-first="Moi" data-role="Mes tâches" data-s="moi <?= e(mb_strtolower($fmeP['name'])) ?>"><input type="radio" name="person" value="<?= e($fme) ?>" checked><span class="ag-av">Moi</span><span class="fab-p-n"><b>Moi</b><small>Mes tâches</small></span></label><?php endif; ?>
+          <?php foreach ($fp as $pk => $pp): if ($pk === $fme) continue; ?><label class="fab-p" data-first="<?= e(strtok($pp['name'], ' ')) ?>" data-role="<?= e($pp['role']) ?>" data-s="<?= e(mb_strtolower($pp['name'] . ' ' . $pp['role'])) ?>"><input type="radio" name="person" value="<?= e($pk) ?>"><span class="ag-av"><?= e($ini2($pp['name'])) ?></span><span class="fab-p-n"><b><?= e($pp['name']) ?></b><small><?= e($pp['role']) ?></small></span></label><?php endforeach; ?>
+          <p class="muted small fab-pnone" hidden>Aucun collègue trouvé.</p>
+        </div>
       </div>
       <label for="fabT" class="fab-lbl">Quoi ?</label>
       <input class="input" id="fabT" name="title" maxlength="300" placeholder="Ex. Rappeler le président du conseil syndical" required>
@@ -131,6 +139,6 @@
   <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Créer une tâche IA ou une tâche d'équipe"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=43"></script>
+<script src="/assets/app.js?v=44"></script>
 </body>
 </html>
