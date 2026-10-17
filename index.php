@@ -31,7 +31,7 @@ if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: ma
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
 if ($route0 === 'signature/banniere') sig_serve_image();
 if ($route0 === 'signature/lien') sig_redirect();
-if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts)$#', $route0, $m)) ingest_handle($m[1]);
+if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts|banners)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 

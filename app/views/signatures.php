@@ -3,9 +3,11 @@ $img = BASE_URL . '/signature/banniere'; $lnk = BASE_URL . '/signature/lien';
 $def = null; foreach ($list as $b) if ($b['is_default']) { $def = $b; break; }
 $hits = json_decode((string)q("SELECT v FROM kv WHERE k='sig_hits'")->fetchColumn(), true) ?: [];
 $linked = !empty($hits['ext']) && $hits['ext'] > time() - 30 * 86400;
+$cal = sig_calendar(12); $nextMonth = [];
+foreach ($cal as $m => $bs) foreach ($bs as $x) if (!isset($nextMonth[$x['id']])) $nextMonth[$x['id']] = ($m === date('Y-m') ? 'ce mois-ci' : 'en ' . MOIS_LONG[(int)substr($m, 5) - 1] . ' ' . substr($m, 0, 4));
 $fd = fn(?string $d) => $d ? date('d/m/Y', strtotime($d)) : '…';
 // Ordre : en cours, programmés (par date), défaut, inactifs, terminés
-$rank = fn($b) => ['Activé · en cours d\'envoi' => 0, 'Activé' => 0, 'En cours d\'envoi' => 0, 'Programmé' => 1, 'Par défaut' => 2, 'Brouillon' => 3, 'Terminé' => 4][sig_state($b)[0]] ?? 5;
+$rank = fn($b) => ['Activé · en cours d\'envoi' => 0, 'Activé' => 0, 'En cours d\'envoi' => 0, 'Programmé' => 1, 'Par défaut' => 2, 'Rotation mensuelle' => 2, 'Brouillon' => 3, 'Terminé' => 4][sig_state($b)[0]] ?? 5;
 usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=> [$rank($b), $b['start'] ?? '', -$b['created_at']]);
 ?>
 <header class="head">
@@ -39,8 +41,9 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
       <img id="sgPrev" alt="" hidden>
     </label>
     <div class="sg-modes" role="radiogroup" aria-label="Utilisation du visuel">
-      <label class="sg-mode"><input type="radio" name="mode" value="default" checked> <span><b>Bandeau par défaut</b><small>affiché hors périodes et hors brouillon activé</small></span></label>
+      <label class="sg-mode"><input type="radio" name="mode" value="default" checked> <span><b>Bandeau par défaut</b><small>filet de sécurité : affiché quand aucun autre visuel ne s'applique</small></span></label>
       <label class="sg-mode"><input type="radio" name="mode" value="period"> <span><b>Période programmée</b><small>fêtes, fermeture… diffusé du… au…</small></span></label>
+      <label class="sg-mode"><input type="radio" name="mode" value="rotation"> <span><b>Visuel du mois</b><small>rotation : un visuel différent chaque mois, hors périodes programmées</small></span></label>
       <label class="sg-mode"><input type="radio" name="mode" value="draft"> <span><b>Brouillon</b><small>sans période, à activer ou désactiver quand vous voulez</small></span></label>
     </div>
     <fieldset class="sg-period" id="sgPer">
@@ -73,6 +76,17 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
   </section>
 </section>
 
+<section class="panel sg-cal">
+  <div class="sec-h flat"><h2>Les 12 prochains mois</h2><span class="muted small">Priorité : brouillon activé › période programmée › visuel du mois › bandeau par défaut</span></div>
+  <ol class="sg-months">
+    <?php foreach ($cal as $m => $bs): ?>
+    <li<?= $m === date('Y-m') ? ' class="now"' : '' ?>><b><?= e(ucfirst(MOIS_LONG[(int)substr($m, 5) - 1])) ?> <small><?= substr($m, 0, 4) ?></small></b>
+      <?php foreach ($bs as $x): $md = sig_mode($x); ?><span class="sg-mi <?= $md ?>"><img src="/signatures/image/<?= (int)$x['id'] ?>" alt="" loading="lazy"><em><?= e($x['title']) ?><?= $md === 'period' ? ' · ' . e(date('d/m', strtotime($x['start']))) . '–' . e(date('d/m', strtotime($x['end']))) : '' ?></em></span><?php endforeach; ?>
+    </li>
+    <?php endforeach; ?>
+  </ol>
+</section>
+
 <?php if ($list): ?>
 <section>
   <div class="sec-h"><h2>Bandeaux</h2><span class="muted small">Statuts recalculés chaque jour selon les dates</span></div>
@@ -81,7 +95,7 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
     <article class="panel sg-card<?= $c === 'ok' ? ' on' : '' ?>">
       <div class="sg-thumb"><img src="/signatures/image/<?= (int)$b['id'] ?>" alt="" loading="lazy"></div>
       <div class="sg-meta"><b><?= e($b['title']) ?></b><span class="chip <?= $c ?>"><?= e($st) ?></span></div>
-      <p class="muted small"><?= $isPer ? 'Du ' . $fd($b['start']) . ' au ' . $fd($b['end']) : ($b['is_default'] ? 'Bandeau par défaut, hors périodes' : ($b['active_at'] ? 'Brouillon activé le ' . date('d/m/Y', (int)$b['active_at']) . ' : remplace les autres jusqu\'à désactivation' : 'Brouillon, sans période')) ?></p>
+      <p class="muted small"><?= $isPer ? 'Du ' . $fd($b['start']) . ' au ' . $fd($b['end']) : ($b['is_default'] ? 'Bandeau par défaut, hors périodes' : (sig_mode($b) === 'rotation' ? 'Visuel du mois' . (($nx = $nextMonth[$b['id']] ?? null) ? ' · ' . $nx : ' · pas de mois libre sur 12 mois') : ($b['active_at'] ? 'Brouillon activé le ' . date('d/m/Y', (int)$b['active_at']) . ' : remplace les autres jusqu\'à désactivation' : 'Brouillon, sans période'))) ?></p>
       <div class="sg-act">
         <button type="button" class="btn-link" data-sg-edit="<?= (int)$b['id'] ?>">Modifier</button>
         <?php if (sig_mode($b) === 'draft'): ?><button type="button" class="btn-link sg-tog" data-api="sig/<?= $b['active_at'] ? 'deactivate' : 'activate' ?>" data-id="<?= (int)$b['id'] ?>"><?= $b['active_at'] ? 'Désactiver' : 'Activer' ?></button>
@@ -90,7 +104,7 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
       </div>
       <form class="sg-edit" data-sg-form="<?= (int)$b['id'] ?>" hidden>
         <div class="field"><label for="se-t<?= (int)$b['id'] ?>">Nom</label><input class="input" id="se-t<?= (int)$b['id'] ?>" name="title" maxlength="120" value="<?= e($b['title']) ?>"></div>
-        <?php $md = sig_mode($b); ?><div class="sg-modes sm" role="radiogroup" aria-label="Utilisation"><?php foreach (['default' => 'Par défaut', 'period' => 'Période', 'draft' => 'Brouillon'] as $mv => $ml): ?><label class="sg-mode"><input type="radio" name="mode" value="<?= $mv ?>" data-sg-mode<?= $md === $mv ? ' checked' : '' ?>> <span><b><?= $ml ?></b></span></label><?php endforeach; ?></div>
+        <?php $md = sig_mode($b); ?><div class="sg-modes sm" role="radiogroup" aria-label="Utilisation"><?php foreach (['default' => 'Par défaut', 'period' => 'Période', 'rotation' => 'Visuel du mois', 'draft' => 'Brouillon'] as $mv => $ml): ?><label class="sg-mode"><input type="radio" name="mode" value="<?= $mv ?>" data-sg-mode<?= $md === $mv ? ' checked' : '' ?>> <span><b><?= $ml ?></b></span></label><?php endforeach; ?></div>
         <div class="sg-dates" data-sg-per><div class="field"><label for="se-s<?= (int)$b['id'] ?>">Du</label><input class="input" id="se-s<?= (int)$b['id'] ?>" name="start" type="date" value="<?= e((string)$b['start']) ?>"></div>
           <div class="field"><label for="se-e<?= (int)$b['id'] ?>">Au</label><input class="input" id="se-e<?= (int)$b['id'] ?>" name="end" type="date" value="<?= e((string)$b['end']) ?>"></div></div>
         <div class="field"><label for="se-i<?= (int)$b['id'] ?>">Remplacer l'image (facultatif)</label><input class="input" id="se-i<?= (int)$b['id'] ?>" type="file" accept="image/png,image/jpeg,image/gif"></div>

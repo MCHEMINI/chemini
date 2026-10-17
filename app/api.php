@@ -361,37 +361,8 @@ function api(string $r): never {
             if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
             $old = null;
             if ($r === 'sig/edit') { $old = q('SELECT * FROM banners WHERE id=?', [in_int('id')])->fetch(); if (!$old) json_out(['error' => 'Bandeau introuvable.'], 404); }
-            $raw = (string)(body()['data'] ?? ''); $info = null; $bin = null;
-            if ($raw !== '' || !$old) {
-                if (!preg_match('#^data:(image/(png|jpeg|gif));base64,(.+)$#s', $raw, $m)) json_out(['error' => 'Choisissez l\'image générée (PNG, JPG ou GIF).'], 400);
-                $bin = base64_decode($m[3], true); if ($bin === false || strlen($bin) > 2 * 1048576) json_out(['error' => 'Image trop lourde (2 Mo au plus).'], 400);
-                $info = @getimagesizefromstring($bin); if (!$info || !in_array($info['mime'], ['image/png', 'image/jpeg', 'image/gif'], true)) json_out(['error' => 'Image illisible.'], 400);
-            }
-            $re = '/^\d{4}-\d{2}-\d{2}$/'; $st = in_str('start', 10); $en = in_str('end', 10);
-            $st = preg_match($re, $st) ? $st : null; $en = preg_match($re, $en) ? $en : null;
-            $mode = in_str('mode', 10) ?: (in_str('is_default', 2) ? 'default' : 'period');
-            if (!in_array($mode, ['default', 'period', 'draft'], true)) $mode = 'default';
-            $def = $mode === 'default' ? 1 : 0; if ($mode === 'draft') { $st = $en = null; }
-            $otherDef = (bool)q('SELECT 1 FROM banners WHERE is_default=1 AND id<>?', [$old['id'] ?? 0])->fetchColumn();
-            if ($def || $mode === 'draft') { $st = $en = null; if ($old && $old['is_default'] && !$def && !$otherDef) json_out(['error' => 'Il faut toujours un bandeau par défaut : définissez-en un autre avant de changer celui-ci.'], 400); }
-            else {
-                if (!$st || !$en) json_out(['error' => 'Indiquez la période (du… au…) ou cochez « Bandeau par défaut ».'], 400);
-                if ($en < $st) json_out(['error' => 'La date de fin est avant la date de début.'], 400);
-                if ($en < date('Y-m-d') && (!$old || $en !== $old['end'])) json_out(['error' => 'Cette période est déjà passée.'], 400);
-                if (!$otherDef) json_out(['error' => $old && $old['is_default'] ? 'Il faut toujours un bandeau par défaut : définissez-en un autre avant de programmer celui-ci sur une période.' : 'Il faut toujours un bandeau par défaut : ajoutez d\'abord celui qui s\'affichera hors périodes.'], 400);
-            }
-            $t = in_str('title', 120);
-            if ($t === '') $t = $old['title'] ?? ($def ? 'Bandeau par défaut du ' . date('d/m/Y') : ($mode === 'draft' ? 'Brouillon du ' . date('d/m/Y') : 'Bandeau du ' . date('d/m', strtotime($st)) . ' au ' . date('d/m/Y', strtotime($en))));
-            $file = $old['file'] ?? null; $mime = $old['mime'] ?? null; $w = $old['w'] ?? 0; $h = $old['h'] ?? 0;
-            if ($bin !== null) {
-                $file = bin2hex(random_bytes(8)) . '.' . ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif'][$info['mime']];
-                file_put_contents(sig_dir() . '/' . $file, $bin); $mime = $info['mime']; $w = $info[0]; $h = $info[1];
-                if ($old) foreach (glob(sig_dir() . '/' . basename($old['file']) . '*') ?: [] as $f) @unlink($f);
-            }
-            if ($def) q('UPDATE banners SET is_default=0');
-            if ($old) q('UPDATE banners SET title=?, file=?, mime=?, w=?, h=?, link=?, start=?, end=?, is_default=?, active_at=' . ($mode === 'draft' ? 'active_at' : 'NULL') . ' WHERE id=?', [$t, $file, $mime, $w, $h, SIG_LINK, $st, $en, $def, $old['id']]);
-            else q('INSERT INTO banners(title,file,mime,w,h,link,start,end,is_default,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)', [$t, $file, $mime, $w, $h, SIG_LINK, $st, $en, $def, $uid, time()]);
-            json_out(['ok' => true]);
+            $res = sig_save($old, (string)(body()['data'] ?? ''), in_str('mode', 10) ?: (in_str('is_default', 2) ? 'default' : 'period'), in_str('start', 10), in_str('end', 10), in_str('title', 120), $uid);
+            json_out($res, isset($res['error']) ? 400 : 200);
         case 'sig/activate':
         case 'sig/deactivate':
             if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);

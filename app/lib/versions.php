@@ -62,4 +62,5 @@ const VERSIONS = [
     ['2026-10-17 04:10', 'all', 'Coordonnées des collaborateurs', 'Ligne directe, raccourci interne et e-mail sur chaque fiche (appel en un geste, e-mail ouvert dans Outlook) ; nombre de tâches affiché pour chacun.'],
     ['2026-10-17 04:45', 'direction', 'Signatures simplifiées', 'Ajouter un visuel avec sa période ou comme bandeau par défaut ; procédure et prompt Gemini à côté ; toujours un bandeau par défaut, statuts recalculés chaque jour.'],
     ['2026-10-17 05:00', 'direction', 'Signatures : brouillons et modification', 'Visuels en brouillon à activer ou désactiver à tout moment, modification de chaque bandeau, message du prompt Gemini mis en évidence tant qu\'il n\'est pas complété.'],
+    ['2026-10-17 05:20', 'direction', 'Signatures : visuel du mois et calendrier', 'Rotation mensuelle des visuels hors périodes programmées, calendrier des 12 prochains mois, visuels Institutionnel, Syndic, Gestion locative, Transaction, Fêtes, Vœux, Été et Saison des AG.'],
 ];

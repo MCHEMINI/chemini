@@ -136,6 +136,16 @@ function ingest_handle(string $kind): never {
         }
         $send(['ok' => true, 'n' => $n]);
     }
+    if ($kind === 'banners') { // bandeaux de signature : {items:[{title, mode: default|period|rotation|draft, start, end, data: dataURL}]}
+        $out = [];
+        foreach (array_slice((array)($d['items'] ?? []), 0, 20) as $it) {
+            if (!is_array($it)) continue; $t = mb_substr(trim((string)($it['title'] ?? '')), 0, 120);
+            if ($t !== '' && q('SELECT 1 FROM banners WHERE title=?', [$t])->fetchColumn()) { $out[] = [$t, 'déjà présent']; continue; }
+            $r = sig_save(null, (string)($it['data'] ?? ''), (string)($it['mode'] ?? 'draft'), (string)($it['start'] ?? ''), (string)($it['end'] ?? ''), $t, null);
+            $out[] = [$t, $r['error'] ?? 'ajouté'];
+        }
+        $send(['ok' => true, 'items' => $out]);
+    }
     if ($kind === 'contacts') { // coordonnées : {rows:[{email, phone, ext}]} — ne touche qu'aux numéros, jamais à l'annuaire
         $n = 0;
         foreach ((array)($d['rows'] ?? []) as $r) if (is_array($r) && contact_set((string)($r['email'] ?? ''), (string)($r['phone'] ?? ''), (string)($r['ext'] ?? ''))) $n++;

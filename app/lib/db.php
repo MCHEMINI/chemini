@@ -293,6 +293,20 @@ SQL);
     }
     if ($v < 32) { $pdo->exec("UPDATE banners SET link='https://www.gidsas.fr/'; PRAGMA user_version = 32;"); }
     if ($v < 33) { $pdo->exec("ALTER TABLE banners ADD COLUMN active_at INTEGER; PRAGMA user_version = 33;"); } // brouillons activés à la main
+    if ($v < 34) { $pdo->exec("ALTER TABLE banners ADD COLUMN rotation INTEGER NOT NULL DEFAULT 0; ALTER TABLE banners ADD COLUMN rot_order INTEGER NOT NULL DEFAULT 0; PRAGMA user_version = 34;"); } // visuel différent chaque mois
+    if ($v < 35) { // visuels fournis le 17/10/2026 : 4 en rotation mensuelle, fêtes, vœux, été programmés, saison des AG en brouillon
+        $dir = DATA_DIR . '/banners'; if (!is_dir($dir)) @mkdir($dir, 0700, true); $o = 0;
+        $ins = $pdo->prepare('INSERT INTO banners(title,file,mime,w,h,link,start,end,is_default,rotation,rot_order,created_at) VALUES(?,?,?,1200,400,?,?,?,0,?,?,?)');
+        foreach ([['institutionnel', 'Institutionnel · Administrateur de biens', 'rotation'], ['syndic', 'Syndic · Gestion de proximité', 'rotation'], ['locative', 'Gestion locative · Valorisez votre patrimoine', 'rotation'], ['transaction', 'Transaction · Vendre ou louer à Paris', 'rotation'],
+                  ['fetes', 'Belles fêtes de fin d\'année', '2026-12-15|2026-12-31'], ['voeux-2027', 'Meilleurs vœux 2027', '2027-01-01|2027-01-31'], ['ete', 'Bel été', '2027-07-14|2027-08-31'], ['saison-ag', 'Saison des assemblées générales', 'draft']] as [$f, $t, $m]) {
+            $src = APP_DIR . '/seed/banners/' . $f . '.jpg'; if (!is_file($src)) continue;
+            $chk = $pdo->prepare('SELECT 1 FROM banners WHERE title=?'); $chk->execute([$t]); if ($chk->fetchColumn()) continue;
+            $file = 'seed-' . $f . '.jpg'; if (!@copy($src, $dir . '/' . $file)) continue;
+            [$st, $en] = str_contains($m, '|') ? explode('|', $m) : [null, null];
+            $ins->execute([$t, $file, 'image/jpeg', 'https://www.gidsas.fr/', $st, $en, $m === 'rotation' ? 1 : 0, $m === 'rotation' ? ++$o : 0, time()]);
+        }
+        $pdo->exec('PRAGMA user_version = 35;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
