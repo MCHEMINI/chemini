@@ -15,8 +15,11 @@ function api(string $r): never {
     if ($r === 'login/password') {
         $email = strtolower(in_str('email', 190));
         $u = q('SELECT * FROM users WHERE email=?', [$email])->fetch();
+        if ($u && rate_limited('acct:' . $u['id'], 10, 1800)) { audit((int)$u['id'], 'account_locked'); json_out(['error' => 'Trop de tentatives sur ce compte : réessayez dans 30 minutes ou utilisez le lien par e-mail.'], 429); }
         $ok = $u && $u['password_hash'] && password_verify((string)(body()['password'] ?? ''), $u['password_hash']);
+        if ($ok && password_needs_rehash($u['password_hash'], pw_algo())) q('UPDATE users SET password_hash=? WHERE id=?', [pw_hash((string)body()['password']), $u['id']]);
         if (!$ok) {
+            if ($u) rate_hit('acct:' . $u['id']);
             if (!$u) password_verify('x', '$2y$10$65KTt1rntwzVlz1Ta3xogeE8ue36leMFTeMtegj4e./2fx0eQ5sne'); // temps constant
             ip_fail($u ? (int)$u['id'] : null, 'password');
             json_out(['error' => $u && !$u['password_hash'] ? 'Aucun mot de passe défini pour ce compte. Utilisez Face ID ou le lien par e-mail.' : 'Adresse ou mot de passe incorrect.'], 401);
@@ -41,11 +44,11 @@ function api(string $r): never {
         $uid = (int)($_SESSION['chg_uid'] ?? 0);
         if (!$uid || time() - (int)($_SESSION['chg_t'] ?? 0) > 900) json_out(['error' => 'Session expirée, reconnectez-vous.'], 401);
         $pw = (string)(body()['password'] ?? '');
-        if (mb_strlen($pw) < 10) json_out(['error' => 'Au moins 10 caractères.'], 400);
-        if ($pw !== (string)(body()['confirm'] ?? '')) json_out(['error' => 'Les deux saisies ne correspondent pas.'], 400);
         $u = q('SELECT * FROM users WHERE id=?', [$uid])->fetch();
+        if ($e = pw_check($pw, $u ?: null)) json_out(['error' => $e], 400);
+        if ($pw !== (string)(body()['confirm'] ?? '')) json_out(['error' => 'Les deux saisies ne correspondent pas.'], 400);
         if (password_verify($pw, (string)$u['password_hash'])) json_out(['error' => 'Choisissez un mot de passe différent du mot de passe provisoire.'], 400);
-        q('UPDATE users SET password_hash=?, must_change=0, default_expires=NULL WHERE id=?', [password_hash($pw, PASSWORD_DEFAULT), $uid]);
+        q('UPDATE users SET password_hash=?, must_change=0, default_expires=NULL WHERE id=?', [pw_hash($pw), $uid]);
         audit($uid, 'password_initial_change');
         unset($_SESSION['chg_uid'], $_SESSION['chg_t']);
         if ((int)$u['totp_enabled']) { $_SESSION['pw_uid'] = $uid; $_SESSION['pw_t'] = time(); json_out(['ok' => true, 'next' => 'totp']); }
@@ -85,9 +88,9 @@ function api(string $r): never {
         $row = $tok !== '' ? q('SELECT * FROM password_resets WHERE token_hash=? AND used_at IS NULL AND expires_at>?', [hash('sha256', $tok), time()])->fetch() : null;
         if (!$row) json_out(['error' => 'Ce lien a expiré ou a déjà servi. Faites une nouvelle demande.'], 410);
         $pw = (string)(body()['password'] ?? '');
-        if (mb_strlen($pw) < 10) json_out(['error' => 'Au moins 10 caractères.'], 400);
+        if ($e = pw_check($pw, q('SELECT * FROM users WHERE id=?', [$row['user_id']])->fetch() ?: null)) json_out(['error' => $e], 400);
         if ($pw !== (string)(body()['confirm'] ?? '')) json_out(['error' => 'Les deux saisies ne correspondent pas.'], 400);
-        q('UPDATE users SET password_hash=? WHERE id=?', [password_hash($pw, PASSWORD_DEFAULT), $row['user_id']]);
+        q('UPDATE users SET password_hash=? WHERE id=?', [pw_hash($pw), $row['user_id']]);
         q('UPDATE password_resets SET used_at=? WHERE user_id=? AND used_at IS NULL', [time(), $row['user_id']]);
         audit((int)$row['user_id'], 'password_reset');
         $email = q('SELECT email FROM users WHERE id=?', [$row['user_id']])->fetchColumn();
@@ -126,7 +129,7 @@ function api(string $r): never {
         if (!$e || time() - $e['t'] > 1800) json_out(['error' => 'Lien expiré, rouvrez le lien d\'activation.'], 400);
 
         $pw = (string)(body()['password'] ?? '');
-        if (mb_strlen($pw) < 10) json_out(['error' => 'Choisissez un mot de passe d\'au moins 10 caractères.'], 400);
+        if ($e = pw_check($pw)) json_out(['error' => $e], 400);
         $step = totp_verify($e['secret'], in_str('code', 10));
         if (!$step) { ip_fail(null, 'enroll'); json_out(['error' => 'Code incorrect. Vérifiez l\'heure de votre téléphone.'], 401); }
         db()->beginTransaction();
@@ -138,7 +141,7 @@ function api(string $r): never {
             db()->rollBack(); json_out(['error' => 'Compte déjà activé.'], 400);
         }
         $ex = q('SELECT id FROM users WHERE email=?', [$e['email']])->fetchColumn();
-        $hash = password_hash($pw, PASSWORD_DEFAULT);
+        $hash = pw_hash($pw);
         if ($ex) q('UPDATE users SET totp_secret=?, totp_enabled=1, totp_last_step=?, password_hash=? WHERE id=?', [$e['secret'], $step, $hash, $ex]);
         else q('INSERT INTO users(email,name,initials,role,totp_secret,totp_enabled,totp_last_step,password_hash,created_at) VALUES(?,?,?,?,?,1,?,?,?)',
             [$e['email'], $e['name'], $e['initials'], $e['role'], $e['secret'], $step, $hash, time()]);
@@ -190,17 +193,20 @@ function api(string $r): never {
             audit($uid, 'totp_enabled');
             json_out(['ok' => true]);
         case 'totp/disable':
-            if (!$u['password_hash'] || !password_verify((string)(body()['password'] ?? ''), $u['password_hash'])) json_out(['error' => 'Mot de passe incorrect.'], 401);
+            ip_block_guard();
+            if (!$u['password_hash'] || !password_verify((string)(body()['password'] ?? ''), $u['password_hash'])) { ip_fail($uid, 'totp_disable'); json_out(['error' => 'Mot de passe incorrect.'], 401); }
             q('UPDATE users SET totp_enabled=0, totp_secret=NULL WHERE id=?', [$uid]);
             audit($uid, 'totp_disabled');
             json_out(['ok' => true]);
 
         case 'password/set':
+            ip_block_guard();
             $new = (string)(body()['password'] ?? '');
-            if (mb_strlen($new) < 10) json_out(['error' => 'Au moins 10 caractères.'], 400);
+            if ($u['password_hash'] && !password_verify((string)(body()['current'] ?? ''), $u['password_hash'])) { ip_fail($uid, 'password_change'); json_out(['error' => 'Mot de passe actuel incorrect.'], 401); }
+            if ($e = pw_check($new, $u)) json_out(['error' => $e], 400);
             if ($new !== (string)(body()['confirm'] ?? '')) json_out(['error' => 'Les deux saisies ne correspondent pas.'], 400);
-            if ($u['password_hash'] && !password_verify((string)(body()['current'] ?? ''), $u['password_hash'])) json_out(['error' => 'Mot de passe actuel incorrect.'], 401);
-            q('UPDATE users SET password_hash=? WHERE id=?', [password_hash($new, PASSWORD_DEFAULT), $uid]);
+            if ($u['password_hash'] && password_verify($new, $u['password_hash'])) json_out(['error' => 'Choisissez un mot de passe différent de l\'actuel.'], 400);
+            q('UPDATE users SET password_hash=? WHERE id=?', [pw_hash($new), $uid]);
             audit($uid, 'password_set');
             json_out(['ok' => true]);
 
@@ -317,6 +323,22 @@ function api(string $r): never {
             $allowed = $task && ($task['space'] === null ? (int)$task['user_id'] === $uid : can_space($u, $task['space']));
             if (!$allowed) json_out(['error' => 'Accès refusé.'], 403);
             q($r === 'tasks/toggle' ? 'UPDATE tasks SET done = 1 - done WHERE id=?' : 'DELETE FROM tasks WHERE id=?', [$task['id']]);
+            json_out(['ok' => true]);
+        case 'team/add':
+            $who = in_str('person', 80); $t = in_str('title', 300); $due = in_str('due', 10);
+            if (!isset(team_people()[$who])) json_out(['error' => 'Collaborateur introuvable.'], 404);
+            if ($t === '') json_out(['error' => 'Indiquez la tâche.'], 400);
+            if ($due !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $due)) json_out(['error' => 'Échéance invalide.'], 400);
+            q('INSERT INTO team_tasks(person,title,due,created_by,by_dir,created_at) VALUES(?,?,?,?,?,?)', [$who, $t, $due ?: null, $uid, can_space($u, 'direction') ? 1 : 0, time()]);
+            json_out(['ok' => true]);
+        case 'team/toggle':
+        case 'team/delete':
+            $task = q('SELECT * FROM team_tasks WHERE id=?', [in_int('id')])->fetch();
+            if (!$task || !team_can_edit($u, $task)) json_out(['error' => 'Accès refusé.'], 403);
+            if ($r === 'team/delete') {
+                if (!can_space($u, 'direction') && (int)$task['created_by'] !== $uid) json_out(['error' => 'Seule la personne qui a affecté la tâche peut la supprimer.'], 403);
+                q('DELETE FROM team_tasks WHERE id=?', [$task['id']]);
+            } else q('UPDATE team_tasks SET done_at = CASE WHEN done_at IS NULL THEN ? ELSE NULL END, done_by = CASE WHEN done_at IS NULL THEN ? ELSE NULL END WHERE id=?', [time(), $uid, $task['id']]);
             json_out(['ok' => true]);
         case 'consignes/create':
             $b = in_str('body', 4000);

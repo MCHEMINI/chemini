@@ -202,6 +202,14 @@ CREATE INDEX IF NOT EXISTS hono_changes_at ON hono_changes(at);
 PRAGMA user_version = 19;
 SQL);
     }
+    if ($v < 20) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS team_tasks (id INTEGER PRIMARY KEY, person TEXT NOT NULL, title TEXT NOT NULL, due TEXT,
+  created_by INTEGER NOT NULL, by_dir INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, done_at INTEGER, done_by INTEGER);
+CREATE INDEX IF NOT EXISTS team_tasks_person ON team_tasks(person, done_at);
+PRAGMA user_version = 20;
+SQL);
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

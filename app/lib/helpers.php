@@ -86,3 +86,30 @@ function space_members(string $space): array {
     if ($space === 'gid') return users_all();
     return q('SELECT u.id,u.name,u.initials,u.email,u.role FROM space_members m JOIN users u ON u.id=m.user_id WHERE m.space=? ORDER BY u.id', [$space])->fetchAll();
 }
+
+/* ---------- Politique de mots de passe ---------- */
+const PW_MIN = 12;
+const PW_COMMON = ['password', 'motdepasse', 'azerty', 'qwerty', 'soleil', 'bonjour', 'chemini', 'gidsas', 'syndic', 'copropriete', 'paris', 'admin', 'welcome', 'letmein', 'iloveyou', 'marseille', 'football', 'princesse', 'doudou', 'loulou', 'nicolas', 'jetaime'];
+
+/** Message d'erreur si le mot de passe est trop faible, null s'il est acceptable. */
+function pw_check(string $pw, ?array $u = null): ?string {
+    $len = mb_strlen($pw);
+    if ($len < PW_MIN) return 'Au moins ' . PW_MIN . ' caractères.';
+    if ($len > 200) return 'Mot de passe trop long.';
+    $cls = (int)preg_match('/[a-z]/u', $pw) + (int)preg_match('/[A-Z]/u', $pw) + (int)preg_match('/\d/', $pw) + (int)preg_match('/[^a-zA-Z\d]/u', $pw);
+    if ($cls < 3 && $len < 16) return 'Mélangez au moins trois types de caractères (minuscules, majuscules, chiffres, symboles), ou choisissez une phrase de 16 caractères ou plus.';
+    if (preg_match('/(.)\1{3,}/u', $pw)) return 'Évitez les caractères répétés (aaaa, 1111…).';
+    $low = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $pw) ?: $pw);
+    foreach (['0123', '1234', '2345', '3456', '4567', '5678', '6789', 'abcd', 'azer', 'qwer'] as $seq) if (str_contains($low, $seq) && $len < 16) return 'Évitez les suites évidentes (1234, abcd, azer…).';
+    $core = preg_replace('/[^a-z]/', '', $low);
+    foreach (PW_COMMON as $w) if ($core === $w || (strlen($core) - strlen($w) <= 3 && str_contains($core, $w))) return 'Ce mot de passe est trop courant. Choisissez-en un plus personnel.';
+    if ($u) {
+        $parts = array_filter(array_merge(preg_split('/[\s.@_-]+/', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', (string)($u['name'] ?? '')) ?: '')), [strtolower(strtok((string)($u['email'] ?? ''), '@') ?: '')]), fn($p) => strlen((string)$p) >= 4);
+        foreach ($parts as $p) if (str_contains($low, $p)) return 'Le mot de passe ne doit pas contenir votre nom ou votre adresse e-mail.';
+    }
+    return null;
+}
+
+/** Hachage : Argon2id quand il est disponible, sinon bcrypt. */
+function pw_hash(string $pw): string { return defined('PASSWORD_ARGON2ID') ? password_hash($pw, PASSWORD_ARGON2ID) : password_hash($pw, PASSWORD_DEFAULT); }
+function pw_algo(): string|int|null { return defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT; }

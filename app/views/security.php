@@ -60,12 +60,12 @@ $next = (int)date('N') === 6 && (int)date('G') < 12 ? strtotime('today 12:00') :
       <h3>Méthodes de connexion</h3>
       <details class="sc-row">
         <summary><span class="sc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
-          <span class="sc-t"><b>Mot de passe</b><small>10 caractères minimum</small></span><span class="chip <?= $u['password_hash'] ? 'ok' : 'warn' ?>"><?= $u['password_hash'] ? 'Actif' : 'À définir' ?></span><span class="sc-act"><?= $u['password_hash'] ? 'Changer' : 'Définir' ?></span></summary>
+          <span class="sc-t"><b>Mot de passe</b><small>12 caractères minimum, trois types de caractères</small></span><span class="chip <?= $u['password_hash'] ? 'ok' : 'warn' ?>"><?= $u['password_hash'] ? 'Actif' : 'À définir' ?></span><span class="sc-act"><?= $u['password_hash'] ? 'Changer' : 'Définir' ?></span></summary>
         <form class="stack sc-body" data-api="password/set">
           <?php if ($u['password_hash']): ?><div class="field"><label for="pw-cur">Mot de passe actuel</label><input class="input" id="pw-cur" name="current" type="password" autocomplete="current-password" required></div><?php endif; ?>
           <div class="two">
-            <div class="field"><label for="pw-new">Nouveau mot de passe</label><input class="input" id="pw-new" name="password" type="password" autocomplete="new-password" minlength="10" required></div>
-            <div class="field"><label for="pw-conf">Confirmation</label><input class="input" id="pw-conf" name="confirm" type="password" autocomplete="new-password" minlength="10" required></div>
+            <div class="field"><label for="pw-new">Nouveau mot de passe</label><input class="input" id="pw-new" name="password" type="password" autocomplete="new-password" minlength="12" required></div>
+            <div class="field"><label for="pw-conf">Confirmation</label><input class="input" id="pw-conf" name="confirm" type="password" autocomplete="new-password" minlength="12" required></div>
           </div>
           <p class="form-error" hidden></p>
           <button class="btn btn-primary"><?= $u['password_hash'] ? 'Changer le mot de passe' : 'Définir le mot de passe' ?></button>

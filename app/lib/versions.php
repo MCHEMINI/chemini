@@ -47,5 +47,7 @@ const VERSIONS = [
     ['2026-10-17 02:40', 'direction', 'Stratégies mises à jour le 1er de chaque mois', 'Évolution par rapport au mois précédent.'],
     ['2026-10-17 02:50', 'all', 'Page Sécurité réorganisée', 'Méthodes de connexion regroupées, appareils et messagerie à côté.'],
     ['2026-10-17 02:50', 'direction', 'Audit hebdomadaire de la plateforme', 'Fonctionnement et sécurité chaque samedi à 12 h, sauvegarde de la base, nettoyage des accès expirés.'],
+    ['2026-10-17 03:00', 'all', 'Collaborateurs : tâches d\'équipe', 'Un bloc par collaborateur et par service, fiche avec tâches à cocher, échéances et tâches du jour.'],
+    ['2026-10-17 03:00', 'all', 'Mots de passe renforcés', '12 caractères et trois types de caractères minimum, jauge de robustesse, blocage après 5 échecs sur toutes les saisies sensibles.'],
     ['2026-10-17 02:45', 'all', 'Versioning', 'Historique de tout ce qui a été fait sur la plateforme ; Tâches IA limitées à 10 lignes par bloc.'],
 ];

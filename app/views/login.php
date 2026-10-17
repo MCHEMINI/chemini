@@ -36,9 +36,9 @@
   </div>
 
   <div data-step="newpw" class="stack lg" hidden>
-    <div><div class="eyebrow">Première connexion</div><h2>Choisissez votre mot de passe</h2><p class="sub">Le mot de passe provisoire doit être remplacé. 10 caractères minimum.</p></div>
-    <div class="field"><label for="np1">Nouveau mot de passe</label><input class="input" id="np1" type="password" autocomplete="new-password" minlength="10"></div>
-    <div class="field"><label for="np2">Confirmation</label><input class="input" id="np2" type="password" autocomplete="new-password" minlength="10"></div>
+    <div><div class="eyebrow">Première connexion</div><h2>Choisissez votre mot de passe</h2><p class="sub">Le mot de passe provisoire doit être remplacé. 12 caractères minimum, avec au moins trois types de caractères.</p></div>
+    <div class="field"><label for="np1">Nouveau mot de passe</label><input class="input" id="np1" type="password" autocomplete="new-password" minlength="12"></div>
+    <div class="field"><label for="np2">Confirmation</label><input class="input" id="np2" type="password" autocomplete="new-password" minlength="12"></div>
     <p class="form-error" hidden></p>
     <button type="button" class="btn btn-primary" id="npOk">Continuer</button>
   </div>

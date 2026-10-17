@@ -15,6 +15,7 @@ require APP_DIR . '/lib/ingest.php';
 require APP_DIR . '/lib/building.php';
 require APP_DIR . '/lib/hono_log.php';
 require APP_DIR . '/lib/sec_audit.php';
+require APP_DIR . '/lib/team.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -65,6 +66,10 @@ try {
             if ($route === 'assistant/historique') page_assistant_history($u);
             if ($route === 'versioning') page_versioning($u);
             page_assistant($u);
+        case 'equipe':
+            $u = require_user();
+            require APP_DIR . '/pages/team.php';
+            page_team($u);
         case 'strategies':
             $u = require_user();
             require_once APP_DIR . '/pages/strategies.php';
@@ -107,14 +112,16 @@ try {
             if (current_user()) redirect('/');
             render('login', ['title' => 'Connexion', 'startStep' => 'main'], false);
         case 'connexion/reinitialiser':
+            if (ip_blocked()) { http_response_code(429); render('notfound', ['title' => 'Accès bloqué', 'message' => 'Trop de tentatives échouées depuis cette adresse : réessayez dans 30 minutes.'], false); }
             $tok = (string)($_GET['t'] ?? '');
             $ok = $tok !== '' && q('SELECT 1 FROM password_resets WHERE token_hash=? AND used_at IS NULL AND expires_at>?', [hash('sha256', $tok), time()])->fetchColumn();
-            if (!$ok) { http_response_code(410); render('notfound', ['title' => 'Lien expiré', 'message' => 'Ce lien de réinitialisation a expiré ou a déjà servi. Faites une nouvelle demande depuis la page de connexion.'], false); }
+            if (!$ok) { if ($tok !== '') ip_fail(null, 'reset_link'); http_response_code(410); render('notfound', ['title' => 'Lien expiré', 'message' => 'Ce lien de réinitialisation a expiré ou a déjà servi. Faites une nouvelle demande depuis la page de connexion.'], false); }
             render('reset', ['title' => 'Nouveau mot de passe', 'token' => $tok], false);
         case 'connexion/lien':
+            if (ip_blocked()) { http_response_code(429); render('notfound', ['title' => 'Accès bloqué', 'message' => 'Trop de tentatives échouées depuis cette adresse : réessayez dans 30 minutes.'], false); }
             $tok = (string)($_GET['t'] ?? '');
             $row = $tok !== '' ? q('SELECT * FROM magic_links WHERE token_hash=? AND used_at IS NULL AND expires_at>?', [hash('sha256', $tok), time()])->fetch() : null;
-            if (!$row) { http_response_code(410); render('notfound', ['title' => 'Lien expiré', 'message' => 'Ce lien de connexion a expiré ou a déjà été utilisé. Demandez-en un nouveau.'], false); }
+            if (!$row) { if ($tok !== '') ip_fail(null, 'magic_link'); http_response_code(410); render('notfound', ['title' => 'Lien expiré', 'message' => 'Ce lien de connexion a expiré ou a déjà été utilisé. Demandez-en un nouveau.'], false); }
             q('UPDATE magic_links SET used_at=? WHERE id=?', [time(), $row['id']]);
             login_session((int)$row['user_id']);
             audit((int)$row['user_id'], 'login_magic_link');
@@ -144,6 +151,11 @@ try {
                 $u = require_user();
                 if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès refusé', 'u' => $u]); }
                 render('hono_changes', ['title' => 'Modifications des honoraires', 'nav' => 'honoraires', 'u' => $u, 'changes' => hono_changes(0, 20000)]);
+            }
+            if (preg_match('#^equipe/([a-z0-9-]{1,80})$#', $route, $m)) {
+                $u = require_user();
+                require APP_DIR . '/pages/team.php';
+                page_team_person($u, $m[1]);
             }
             if (preg_match('#^mes-livres(?:/(\d+)(/fichier)?)?$#', $route, $m)) {
                 $u = require_user();

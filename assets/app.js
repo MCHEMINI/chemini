@@ -203,7 +203,7 @@
     }
     $('#npOk').addEventListener('click', async () => {
       const scope = $('[data-step=newpw]', login), a = $('#np1').value, b = $('#np2').value;
-      if (a.length < 10) return showError(scope, 'Au moins 10 caractères.');
+      if (a.length < 12) return showError(scope, 'Au moins 12 caractères.');
       if (a !== b) return showError(scope, 'Les deux saisies ne correspondent pas.');
       try { nextStep(await api('login/newpw', { password: a, confirm: b })); $('#np1').value = $('#np2').value = ''; }
       catch (err) { showError(scope, err.message); }
@@ -252,7 +252,7 @@
       const code = otp.value();
       if (code.length !== 6) return showError(scope, 'Saisissez les 6 chiffres.');
       const pw = $('#newPw').value, pw2 = $('#newPw2').value;
-      if (pw.length < 10) return showError(scope, 'Choisissez un mot de passe d\'au moins 10 caractères.');
+      if (pw.length < 12) return showError(scope, 'Choisissez un mot de passe d\'au moins 12 caractères.');
       if (pw !== pw2) return showError(scope, 'Les deux mots de passe ne correspondent pas.');
       try { await api('enroll/verify', { code, password: pw }); steps(enroll, 'trust'); }
       catch (err) { showError(scope, err.message); otp.clear(); }
@@ -271,7 +271,7 @@
       e.preventDefault();
       const scope = $('[data-step=form]', reset);
       const a = $('#rp1').value, b = $('#rp2').value;
-      if (a.length < 10) return showError(scope, 'Au moins 10 caractères.');
+      if (a.length < 12) return showError(scope, 'Au moins 12 caractères.');
       if (a !== b) return showError(scope, 'Les deux saisies ne correspondent pas.');
       try {
         const r = await api('reset/confirm', { token: reset.dataset.token, password: a, confirm: b });
@@ -575,3 +575,16 @@ document.addEventListener('click', e => {
   b.textContent = open ? b.dataset.more0 : (b.dataset.less || 'Réduire');
   b.dataset.open = open ? '0' : '1';
 });
+
+/* Jauge de robustesse sous chaque premier champ « nouveau mot de passe » */
+(function(){
+  const score = v => { if (!v) return 0; let c = (/[a-z]/.test(v)) + (/[A-Z]/.test(v)) + (/\d/.test(v)) + (/[^a-zA-Z\d]/.test(v)); let s = 0;
+    if (v.length >= 12) s++; if (v.length >= 16) s++; if (c >= 3) s++; if (c === 4) s++; if (/(.)\1{3,}|1234|abcd|azer|qwer|password|motdepasse|azerty/i.test(v)) s = Math.min(s, 1); return Math.min(4, s); };
+  const lab = ['Trop court', 'Faible', 'Moyen', 'Solide', 'Très solide'];
+  document.querySelectorAll('form, .login-card, .stack').forEach(f => {
+    const inp = f.querySelector('input[autocomplete="new-password"]'); if (!inp || inp.dataset.meter) return; inp.dataset.meter = '1';
+    const m = document.createElement('div'); m.className = 'pw-meter'; m.innerHTML = '<i></i><i></i><i></i><i></i><span>12 caractères minimum, trois types de caractères</span>';
+    inp.insertAdjacentElement('afterend', m);
+    inp.addEventListener('input', () => { const s = inp.value ? Math.max(1, score(inp.value)) : 0; m.dataset.s = s; m.querySelector('span').textContent = inp.value ? lab[inp.value.length < 12 ? 0 : s] : '12 caractères minimum, trois types de caractères'; });
+  });
+})();
