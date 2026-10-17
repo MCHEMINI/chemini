@@ -18,6 +18,8 @@ $set = static function (string $name, $value): void { if (!defined($name)) defin
 // Valeurs par défaut (développement local) — remplacées par le fichier privé en production.
 $set('APP_NAME', 'GID Chemini');
 $set('BASE_URL', getenv('CHEMINI_BASE_URL') ?: 'https://chemini.gidsas.fr');
+// Adresses publiques de la plateforme : dashboard.gidsas.fr (communiquée aux équipes) et chemini.gidsas.fr pointent au même endroit
+$set('APP_HOSTS', ['dashboard.gidsas.fr', 'chemini.gidsas.fr']);
 $set('DATA_DIR', dirname(__DIR__) . '/data');
 $set('APP_KEY', getenv('CHEMINI_APP_KEY') ?: '');
 $set('ADMIN_EMAIL', 'mchemini@gidsas.fr');

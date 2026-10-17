@@ -28,6 +28,7 @@ mb_internal_encoding('UTF-8');
 header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
+header('X-Robots-Tag: noindex, nofollow, noarchive, nosnippet'); // plateforme privée : jamais référencée (dashboard.gidsas.fr comme chemini.gidsas.fr)
 header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self' https://login.microsoftonline.com");
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 

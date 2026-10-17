@@ -67,8 +67,9 @@ function cose_to_pem(array $k): array {
 }
 
 /* ---------- Cérémonies ---------- */
-function wa_rp_id(): string { return parse_url(BASE_URL, PHP_URL_HOST); }
-function wa_origin(): string { $u = parse_url(BASE_URL); return $u['scheme'] . '://' . $u['host'] . (isset($u['port']) ? ':' . $u['port'] : ''); }
+// Clés d'accès (Face ID) liées à l'adresse utilisée : une clé créée sur dashboard.gidsas.fr sert sur dashboard.gidsas.fr
+function wa_rp_id(): string { return parse_url(site_url(), PHP_URL_HOST); }
+function wa_origin(): string { $u = parse_url(site_url()); return $u['scheme'] . '://' . $u['host'] . (isset($u['port']) ? ':' . $u['port'] : ''); }
 
 function wa_check_client_data(string $cdj, string $type, string $challenge): void {
     $c = json_decode($cdj, true);

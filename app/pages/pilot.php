@@ -112,7 +112,7 @@ function page_pilot(array $u, string $sub = '', string $arg = ''): never {
 function ical_url(array $u): string {
     $t = (string)(user_prefs((int)$u['id'])['ical'] ?? '');
     if ($t === '') { $t = bin2hex(random_bytes(16)); q('INSERT INTO user_prefs(user_id,k,v,updated_at) VALUES(?,?,?,?) ON CONFLICT(user_id,k) DO UPDATE SET v=excluded.v', [(int)$u['id'], 'ical', json_encode($t), time()]); }
-    return BASE_URL . '/calendrier/' . $t . '.ics';
+    return site_url() . '/calendrier/' . $t . '.ics';
 }
 
 /** Flux iCal des AG (abonnement agenda iPhone) : jeton personnel, Direction uniquement. */

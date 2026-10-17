@@ -9,7 +9,7 @@
   <article class="panel ins-card">
     <div class="ins-h"><span class="ins-os">iPhone · iPad</span><small>avec Safari</small></div>
     <ol class="ins-steps">
-      <li><b>Ouvrez chemini.gidsas.fr dans Safari</b><span>Pas dans Chrome ni dans Gmail : seul Safari permet l'installation sur iPhone.</span></li>
+      <li><b>Ouvrez dashboard.gidsas.fr dans Safari</b><span>Pas dans Chrome ni dans Gmail : seul Safari permet l'installation sur iPhone.</span></li>
       <li><b>Touchez le bouton Partager</b><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> en bas de l'écran (en haut sur iPad).</span></li>
       <li><b>Choisissez « Sur l'écran d'accueil »</b><span>Faites défiler la liste si besoin.</span></li>
       <li><b>Touchez « Ajouter »</b><span>L'icône Chemini apparaît sur votre écran d'accueil.</span></li>
@@ -19,7 +19,7 @@
   <article class="panel ins-card">
     <div class="ins-h"><span class="ins-os">Android</span><small>avec Chrome</small></div>
     <ol class="ins-steps">
-      <li><b>Ouvrez chemini.gidsas.fr dans Chrome</b></li>
+      <li><b>Ouvrez dashboard.gidsas.fr dans Chrome</b></li>
       <li><b>Touchez le menu ⋮</b><span>en haut à droite.</span></li>
       <li><b>« Installer l'application »</b><span>ou « Ajouter à l'écran d'accueil ».</span></li>
     </ol>

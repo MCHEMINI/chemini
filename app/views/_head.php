@@ -28,7 +28,7 @@
       <h1>Le cabinet,<br><em>en un regard.</em></h1>
       <p>Copropriétés, échéances, courriers et veille juridique réunis dans un espace privé, réservé à l'équipe.</p>
     </div>
-    <div class="brand-foot">chemini.gidsas.fr · Accès restreint</div>
+    <div class="brand-foot">dashboard.gidsas.fr · Accès restreint</div>
   </aside>
   <div class="login-side">
     <div class="login-theme"><div class="theme-switch" role="group" aria-label="Thème"><button type="button" data-theme-set="light">Clair</button><button type="button" data-theme-set="dark">Sombre</button><button type="button" data-theme-set="auto">Auto</button></div></div>

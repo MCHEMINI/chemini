@@ -26,6 +26,8 @@ RewriteRule ^ index.php [L,QSA]
 </FilesMatch>
 
 <IfModule mod_headers.c>
+  # Plateforme privée : aucun référencement, fichiers compris
+  Header always set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
   <FilesMatch "\.(css|js|svg|png)$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>

@@ -14,6 +14,11 @@ function json_out(array $data, int $code = 200): never {
     exit;
 }
 
+/** Adresse du site telle que la personne l'utilise (dashboard.gidsas.fr ou chemini.gidsas.fr) ; BASE_URL hors requête ou pour un hôte inconnu. */
+function site_url(): string {
+    $h = strtolower(preg_replace('/:\d+$/', '', (string)($_SERVER['HTTP_HOST'] ?? '')));
+    return ($h !== '' && in_array($h, defined('APP_HOSTS') ? APP_HOSTS : [], true)) ? 'https://' . $h : BASE_URL;
+}
 function body(): array {
     static $b = null;
     if ($b === null) { $b = json_decode(file_get_contents('php://input') ?: '[]', true); if (!is_array($b)) $b = []; }

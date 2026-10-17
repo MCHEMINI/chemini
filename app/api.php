@@ -78,7 +78,7 @@ function api(string $r): never {
         if ($u) {
             $tok = b64u_enc(random_bytes(32));
             q('INSERT INTO password_resets(user_id,token_hash,expires_at) VALUES(?,?,?)', [$u['id'], hash('sha256', $tok), time() + 1800]);
-            $sent = send_reset_link($u, BASE_URL . '/connexion/reinitialiser?t=' . $tok);
+            $sent = send_reset_link($u, site_url() . '/connexion/reinitialiser?t=' . $tok);
             audit((int)$u['id'], $sent ? 'reset_sent' : 'reset_mail_failed');
         }
         json_out(['ok' => true]); // réponse identique, que le compte existe ou non
@@ -104,7 +104,7 @@ function api(string $r): never {
         if ($u) {
             $tok = b64u_enc(random_bytes(32));
             q('INSERT INTO magic_links(user_id,token_hash,expires_at) VALUES(?,?,?)', [$u['id'], hash('sha256', $tok), time() + 900]);
-            $sent = send_magic_link($u, BASE_URL . '/connexion/lien?t=' . $tok);
+            $sent = send_magic_link($u, site_url() . '/connexion/lien?t=' . $tok);
             audit((int)$u['id'], $sent ? 'magic_link_sent' : 'magic_link_failed');
         }
         json_out(['ok' => true]); // réponse identique, que le compte existe ou non
@@ -229,7 +229,7 @@ function api(string $r): never {
             q('INSERT INTO invites(email,name,initials,role,token_hash,expires_at) VALUES(?,?,?,?,?,?)',
                 [$email, $name, $ini, 'member', hash('sha256', $tok), time() + 7 * 86400]);
             audit($uid, 'invite_created:' . $email);
-            json_out(['ok' => true, 'link' => BASE_URL . '/activation?t=' . $tok]);
+            json_out(['ok' => true, 'link' => site_url() . '/activation?t=' . $tok]);
 
         case 'team/contact':
             if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
@@ -247,7 +247,7 @@ function api(string $r): never {
                 $tok = b64u_enc(random_bytes(24)); $email = strtolower((string)$s['email']);
                 $ini = mb_strtoupper(implode('', array_map(fn($p) => mb_substr($p, 0, 1), array_slice(preg_split('/\s+/', trim($s['name'])), 0, 2))));
                 q('INSERT INTO invites(email,name,initials,role,token_hash,expires_at) VALUES(?,?,?,?,?,?)', [$email, $s['name'], $ini, 'member', hash('sha256', $tok), time() + 30 * 86400]);
-                $link = BASE_URL . '/activation?t=' . $tok; $sent = send_invite($email, $s['name'], $link);
+                $link = site_url() . '/activation?t=' . $tok; $sent = send_invite($email, $s['name'], $link);
                 audit($uid, 'invite_created:' . $email);
                 $out[] = ['name' => $s['name'], 'link' => $link, 'sent' => $sent];
             }
@@ -306,7 +306,7 @@ function api(string $r): never {
             $tok = $t['share_token'] ?: rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
             q('UPDATE trips SET share_token=? WHERE id=?', [$tok, $t['id']]);
             audit($uid, 'trip_share_on:' . $t['id']);
-            json_out(['ok' => true, 'url' => BASE_URL . '/partage/' . $tok]);
+            json_out(['ok' => true, 'url' => site_url() . '/partage/' . $tok]);
         case 'prefs/set': // préférences d'affichage de l'utilisateur connecté uniquement
             $k = in_str('k', 40);
             if (!in_array($k, PREF_KEYS, true)) json_out(['error' => 'Préférence inconnue'], 400);

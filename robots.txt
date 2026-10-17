@@ -1,0 +1,3 @@
+# Plateforme privée de GID SAS (dashboard.gidsas.fr, chemini.gidsas.fr) : aucun référencement
+User-agent: *
+Disallow: /

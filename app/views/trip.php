@@ -4,7 +4,7 @@ $list = fn($v) => array_values(array_filter(is_array($v) ? $v : [], fn($x) => $x
 $url = fn($s) => preg_match('#^https://#', (string)$s) ? (string)$s : null;
 $txt = function ($v): string { return is_array($v) ? implode(' · ', array_map('strval', array_filter($v, 'is_scalar'))) : (string)$v; };
 ?>
-<?php $public = !empty($public); $shareUrl = !$public && !empty($t['share_token']) ? BASE_URL . '/partage/' . $t['share_token'] : ''; ?>
+<?php $public = !empty($public); $shareUrl = !$public && !empty($t['share_token']) ? site_url() . '/partage/' . $t['share_token'] : ''; ?>
 <header class="head">
   <div>
     <div class="eyebrow"><?php if ($public): ?>Voyage partagé<?php else: ?><a href="/voyages">Voyages</a><?php endif; ?> · <?= e($t['duration']) ?></div>

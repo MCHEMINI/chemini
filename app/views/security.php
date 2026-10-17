@@ -130,7 +130,7 @@ $next = (int)date('N') === 6 && (int)date('G') < 12 ? strtotime('today 12:00') :
       </div>
       <div class="panel sc-box">
         <h3>Application iPhone</h3>
-        <ol class="ac-ul"><li>Ouvrez chemini.gidsas.fr dans Safari.</li><li>Touchez le bouton Partager, puis « Sur l'écran d'accueil ».</li><li>Chemini s'ouvre alors en plein écran comme une application, avec Face ID et une pastille indiquant vos tâches en cours.</li></ol>
+        <ol class="ac-ul"><li>Ouvrez dashboard.gidsas.fr dans Safari.</li><li>Touchez le bouton Partager, puis « Sur l'écran d'accueil ».</li><li>Chemini s'ouvre alors en plein écran comme une application, avec Face ID et une pastille indiquant vos tâches en cours.</li></ol>
       </div>
       <div class="panel sc-box">
         <h3>Messagerie Outlook <span class="chip <?= $msConnected ? 'ok' : 'warn' ?>"><?= $msConnected ? 'Connectée' : 'Non connectée' ?></span></h3>
