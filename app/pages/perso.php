@@ -11,10 +11,12 @@ function page_perso(array $u): never {
 }
 
 function page_tasks(array $u): never {
-    render('perso_tasks', [
-        'title' => 'Mes tâches', 'nav' => 'tasks', 'u' => $u,
-        'tasks' => q('SELECT * FROM tasks WHERE user_id=? AND space IS NULL ORDER BY done ASC, created_at DESC', [(int)$u['id']])->fetchAll(),
-    ]);
+    require_once APP_DIR . '/pages/team.php';
+    $me = team_me($u);
+    $all = $me ? team_load($u, $me) : [];
+    $open = array_values(array_filter($all, fn($t) => !$t['done_at'])); $done = array_values(array_filter($all, fn($t) => $t['done_at']));
+    usort($done, fn($a, $b) => $b['done_at'] <=> $a['done_at']);
+    render('perso_tasks', ['title' => 'Mes tâches', 'nav' => 'tasks', 'u' => $u, 'me' => $me, 'open' => $open, 'done' => $done, 'isDir' => can_space($u, 'direction')]);
 }
 
 function page_notes(array $u): never {

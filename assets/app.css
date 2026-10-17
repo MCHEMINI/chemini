@@ -909,3 +909,4 @@ a.agn:hover{border-color:var(--bronze)}
 @media (max-width:640px){.tm-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.tm-n{flex-wrap:wrap;gap:2px 6px}}
 .agn-d{gap:3px}.agn-d b,.agn-d small{line-height:1}
 .sa-ring{gap:4px}.sa-ring b,.sa-ring small{line-height:1}
+.tt-priv{background:var(--line);color:var(--ink)}

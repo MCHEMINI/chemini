@@ -210,6 +210,22 @@ CREATE INDEX IF NOT EXISTS team_tasks_person ON team_tasks(person, done_at);
 PRAGMA user_version = 20;
 SQL);
     }
+    if ($v < 21) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS board_posts (id INTEGER PRIMARY KEY, title TEXT NOT NULL, body TEXT NOT NULL DEFAULT '', cat TEXT NOT NULL DEFAULT 'annonce',
+  pinned INTEGER NOT NULL DEFAULT 0, link TEXT, author INTEGER, created_at INTEGER NOT NULL, until TEXT);
+PRAGMA user_version = 21;
+SQL);
+    }
+    if ($v < 22) {
+        // Tâches perso fusionnées avec les tâches d'équipe : privées (visibles par la seule personne concernée)
+        $pdo->exec('ALTER TABLE team_tasks ADD COLUMN priv INTEGER NOT NULL DEFAULT 0');
+        $slug = fn(string $n) => trim(preg_replace('/[^a-z0-9]+/', '-', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $n) ?: $n)), '-');
+        $rows = $pdo->query('SELECT t.*, u.name FROM tasks t JOIN users u ON u.id=t.user_id WHERE t.space IS NULL')->fetchAll(PDO::FETCH_ASSOC);
+        $ins = $pdo->prepare('INSERT INTO team_tasks(person,title,due,created_by,by_dir,created_at,done_at,done_by,priv) VALUES(?,?,NULL,?,0,?,?,?,1)');
+        foreach ($rows as $r) $ins->execute([$slug($r['name']), $r['title'], $r['user_id'], $r['created_at'], $r['done'] ? $r['created_at'] : null, $r['done'] ? $r['user_id'] : null]);
+        $pdo->exec('DELETE FROM tasks WHERE space IS NULL; PRAGMA user_version = 22;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

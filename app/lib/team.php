@@ -37,11 +37,12 @@ function team_me(array $u): ?string {
 
 /** Filtre SQL de visibilité pour l'utilisateur. */
 function team_where(array $u): array {
-    if (can_space($u, 'direction')) return ['1=1', []];
-    $me = team_me($u);
-    return ['(person=? OR created_by=?)', [$me ?? '-', (int)$u['id']]];
+    $me = team_me($u) ?? '-';
+    if (can_space($u, 'direction')) return ['(t.priv=0 OR t.person=? OR t.created_by=?)', [$me, (int)$u['id']]];
+    return ['(t.person=? OR t.created_by=?)', [$me, (int)$u['id']]];
 }
 
 function team_can_edit(array $u, array $t): bool {
+    if ((int)($t['priv'] ?? 0)) return $t['person'] === team_me($u) || (int)$t['created_by'] === (int)$u['id'];
     return can_space($u, 'direction') || (int)$t['created_by'] === (int)$u['id'] || $t['person'] === team_me($u);
 }

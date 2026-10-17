@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 function team_load(array $u, ?string $person = null): array {
     [$w, $p] = team_where($u);
-    if ($person !== null) { $w .= ' AND person=?'; $p[] = $person; }
+    if ($person !== null) { $w .= ' AND t.person=?'; $p[] = $person; }
     return q("SELECT t.*, uc.name AS by_name, ud.name AS done_name FROM team_tasks t LEFT JOIN users uc ON uc.id=t.created_by LEFT JOIN users ud ON ud.id=t.done_by
               WHERE $w ORDER BY t.done_at IS NOT NULL, CASE WHEN t.due IS NULL THEN 1 ELSE 0 END, t.due, t.created_at DESC", $p)->fetchAll();
 }

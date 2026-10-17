@@ -51,7 +51,7 @@
       <?php endif; ?>
       <?= $grp('Personnel', 'perso', [$u]) ?>
       <a class="<?= $cls('perso') ?>" href="/espace"><?= avatar($u, 'sm') ?>Mon espace</a>
-      <a class="<?= $cls('tasks') ?>" href="/mes-taches"><i class="dot"></i>Mes tâches<?php $nT = (int)q('SELECT COUNT(*) FROM tasks WHERE user_id=? AND space IS NULL AND done=0', [(int)$u['id']])->fetchColumn(); if ($nT): ?> <span class="nav-n"><?= $nT ?></span><?php endif; ?></a>
+      <a class="<?= $cls('tasks') ?>" href="/mes-taches"><i class="dot"></i>Mes tâches<?php $nT = ($meK = team_me($u)) ? (int)q('SELECT COUNT(*) FROM team_tasks WHERE person=? AND done_at IS NULL', [$meK])->fetchColumn() : 0; if ($nT): ?> <span class="nav-n"><?= $nT ?></span><?php endif; ?></a>
       <a class="<?= $cls('notes') ?>" href="/bloc-notes"><i class="dot"></i>Bloc-notes</a>
       <a class="<?= $cls('books') ?>" href="/mes-livres"><i class="dot"></i>Mes livres</a>
       <a href="/assistant" class="nav-ia <?= $cls('ia') ?>"><i class="dot"></i>Tâches IA<?php $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nIa): ?> <span class="nav-n"><?= $nIa ?></span><?php endif; ?></a>

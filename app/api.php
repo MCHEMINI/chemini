@@ -314,7 +314,13 @@ function api(string $r): never {
             $t = in_str('title', 200);
             if ($t === '') json_out(['error' => 'Indiquez une tâche.'], 400);
             $sp = in_str('space', 20) ?: null;
-            if ($sp !== null && (!isset(SPACES[$sp]) || !can_space($u, $sp))) json_out(['error' => 'Accès refusé.'], 403);
+            if ($sp === null) { // Mes tâches = tâches d'équipe privées de la personne
+                $me = team_me($u); if (!$me) json_out(['error' => 'Compte absent de l\'annuaire des collaborateurs.'], 400);
+                $due = in_str('due', 10); if ($due !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $due)) $due = '';
+                q('INSERT INTO team_tasks(person,title,due,created_by,by_dir,created_at,priv) VALUES(?,?,?,?,0,?,1)', [$me, $t, $due ?: null, $uid, time()]);
+                json_out(['ok' => true]);
+            }
+            if (!isset(SPACES[$sp]) || !can_space($u, $sp)) json_out(['error' => 'Accès refusé.'], 403);
             q('INSERT INTO tasks(user_id,title,space,created_at) VALUES(?,?,?,?)', [$uid, $t, $sp, time()]);
             json_out(['ok' => true]);
         case 'tasks/toggle':
@@ -329,14 +335,15 @@ function api(string $r): never {
             if (!isset(team_people()[$who])) json_out(['error' => 'Collaborateur introuvable.'], 404);
             if ($t === '') json_out(['error' => 'Indiquez la tâche.'], 400);
             if ($due !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $due)) json_out(['error' => 'Échéance invalide.'], 400);
-            q('INSERT INTO team_tasks(person,title,due,created_by,by_dir,created_at) VALUES(?,?,?,?,?,?)', [$who, $t, $due ?: null, $uid, can_space($u, 'direction') ? 1 : 0, time()]);
+            $self = $who === team_me($u);
+            q('INSERT INTO team_tasks(person,title,due,created_by,by_dir,created_at,priv) VALUES(?,?,?,?,?,?,?)', [$who, $t, $due ?: null, $uid, !$self && can_space($u, 'direction') ? 1 : 0, time(), $self ? 1 : 0]);
             json_out(['ok' => true]);
         case 'team/toggle':
         case 'team/delete':
             $task = q('SELECT * FROM team_tasks WHERE id=?', [in_int('id')])->fetch();
             if (!$task || !team_can_edit($u, $task)) json_out(['error' => 'Accès refusé.'], 403);
             if ($r === 'team/delete') {
-                if (!can_space($u, 'direction') && (int)$task['created_by'] !== $uid) json_out(['error' => 'Seule la personne qui a affecté la tâche peut la supprimer.'], 403);
+                if ((int)$task['created_by'] !== $uid && ((int)$task['priv'] || !can_space($u, 'direction'))) json_out(['error' => 'Seule la personne qui a affecté la tâche peut la supprimer.'], 403);
                 q('DELETE FROM team_tasks WHERE id=?', [$task['id']]);
             } else q('UPDATE team_tasks SET done_at = CASE WHEN done_at IS NULL THEN ? ELSE NULL END, done_by = CASE WHEN done_at IS NULL THEN ? ELSE NULL END WHERE id=?', [time(), $uid, $task['id']]);
             json_out(['ok' => true]);
