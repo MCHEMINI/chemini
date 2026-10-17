@@ -54,5 +54,8 @@ const VERSIONS = [
     ['2026-10-17 03:15', 'direction', 'Top 20 des immeubles et classement complet', 'Page de tous les immeubles triable.'],
     ['2026-10-17 03:30', 'direction', 'Pilotage du cabinet', 'Renouvellements de mandat chiffrés, prévision d\'encaissement, gestionnaires et charge, préparation des AG, agenda iPhone, travaux votés, sinistres, contrats, demandes, échéancier réglementaire, conformité, impayés.'],
     ['2026-10-17 03:30', 'all', 'Application iPhone', 'Chemini s\'installe sur l\'écran d\'accueil, avec une pastille indiquant les tâches en cours.'],
+    ['2026-10-17 03:40', 'all', 'Questionnaire de fonctionnement', 'Enquête auprès des équipes : tâches récurrentes, demandes des copropriétaires, recherches dans ImmOpen, automatisations souhaitées.'],
+    ['2026-10-17 03:40', 'direction', 'Direction › Enquête', 'Résultats de l\'enquête et outils à développer classés selon les réponses.'],
+    ['2026-10-17 03:40', 'all', 'Tâches partagées', 'Une tâche peut rester perso ou être partagée avec tout le monde, la Direction ou la Famille.'],
     ['2026-10-17 02:45', 'all', 'Versioning', 'Historique de tout ce qui a été fait sur la plateforme ; Tâches IA limitées à 10 lignes par bloc.'],
 ];

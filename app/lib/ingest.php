@@ -11,7 +11,7 @@ function ingest_key(): string { return hash_hmac('sha256', 'chemini-ingest-v1', 
 function ingest_handle(string $kind): never {
     $send = function (array $d, int $c = 200): never { http_response_code($c); header('Content-Type: application/json'); header('Cache-Control: no-store'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; };
     $method = $_SERVER['REQUEST_METHOD'] ?? '';
-    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes', 'pv'], true))) $send(['error' => 'POST attendu'], 405);
+    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes', 'pv', 'mails'], true))) $send(['error' => 'POST attendu'], 405);
     if (ip_blocked()) $send(['error' => 'IP bloquée'], 429);
     if (!hash_equals(ingest_key(), (string)($_SERVER['HTTP_X_INGEST_KEY'] ?? ''))) { ip_fail(null, 'ingest'); $send(['error' => 'clé invalide'], 403); }
     if ($kind === 'pv' && $method === 'GET') { // PV déjà traités (identifiants de message) pour ne pas les relire
@@ -37,10 +37,18 @@ function ingest_handle(string $kind): never {
     if (!is_array($d)) $send(['error' => 'JSON invalide'], 400);
     $str = fn($v, int $max) => mb_substr(trim((string)($v ?? '')), 0, $max);
 
+    if ($kind === 'mails' && $method === 'GET') { // mails encore à traiter (pour repérer ceux auxquels une réponse a été envoyée)
+        $u = q('SELECT id FROM users WHERE email=?', [strtolower((string)($_GET['user_email'] ?? ''))])->fetchColumn();
+        if (!$u) $send(['error' => 'utilisateur inconnu'], 404);
+        $send(['items' => q('SELECT msg_id AS id, from_email, subject, received_at FROM mail_items WHERE user_id=? AND done=0 ORDER BY received_at DESC LIMIT 300', [$u])->fetchAll()]);
+    }
     if ($kind === 'mails') {
         $u = q('SELECT id FROM users WHERE email=?', [strtolower($str($d['user_email'] ?? '', 190))])->fetchColumn();
         if (!$u) $send(['error' => 'utilisateur inconnu'], 404);
-        $added = 0;
+        $added = 0; $closed = 0;
+        foreach ((array)($d['done'] ?? []) as $mid) { // réponse envoyée : le mail sort de la liste « à traiter »
+            $closed += q('UPDATE mail_items SET done=1, done_at=? WHERE user_id=? AND msg_id=? AND done=0', [time(), $u, $str((string)$mid, 400)])->rowCount();
+        }
         foreach ((array)($d['items'] ?? []) as $it) {
             if (!is_array($it) || $str($it['id'] ?? '', 400) === '') continue;
             $prio = in_array($it['priority'] ?? '', ['crit', 'warn', 'ok'], true) ? $it['priority'] : 'warn';
@@ -52,7 +60,7 @@ function ingest_handle(string $kind): never {
                  $str($it['summary'] ?? '', 600), $str($it['reason'] ?? '', 300), $prio, strtotime((string)($it['received'] ?? '')) ?: time(), $link ?: null, time()]);
             $added += $st->rowCount();
         }
-        $send(['ok' => true, 'saved' => $added]);
+        $send(['ok' => true, 'saved' => $added, 'closed' => $closed]);
     }
 
     if ($kind === 'trip') {

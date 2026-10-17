@@ -16,7 +16,9 @@ function page_tasks(array $u): never {
     $all = $me ? team_load($u, $me) : [];
     $open = array_values(array_filter($all, fn($t) => !$t['done_at'])); $done = array_values(array_filter($all, fn($t) => $t['done_at']));
     usort($done, fn($a, $b) => $b['done_at'] <=> $a['done_at']);
-    render('perso_tasks', ['title' => 'Mes tâches', 'nav' => 'tasks', 'u' => $u, 'me' => $me, 'open' => $open, 'done' => $done, 'isDir' => can_space($u, 'direction')]);
+    $spaces = array_values(array_filter(array_keys(SPACES), fn($s) => can_space($u, $s)));
+    $shared = $spaces ? q('SELECT t.*, u.name AS by_name FROM tasks t LEFT JOIN users u ON u.id=t.user_id WHERE t.space IN (' . implode(',', array_fill(0, count($spaces), '?')) . ') ORDER BY t.done, t.created_at DESC LIMIT 200', $spaces)->fetchAll() : [];
+    render('perso_tasks', ['title' => 'Mes tâches', 'nav' => 'tasks', 'u' => $u, 'me' => $me, 'open' => $open, 'done' => $done, 'isDir' => can_space($u, 'direction'), 'spaces' => $spaces, 'shared' => $shared]);
 }
 
 function page_notes(array $u): never {

@@ -4,6 +4,7 @@ $cats = BOARD_CATS;
 $used = array_unique(array_column($posts, 'cat'));
 ?>
 <section class="bd">
+  <a class="sv-cta" href="/enquete"><span class="pl-ic" aria-hidden="true">📝</span><span><b>Questionnaire de fonctionnement</b><small>10 minutes pour dire comment vous travaillez et ce que vous aimeriez automatiser</small></span><span class="btn btn-primary">Répondre</span></a>
   <?php if ($isDir): ?>
   <details class="panel bd-new">
     <summary><span class="btn btn-primary">Publier une information</span><span class="muted small">Visible immédiatement par toute l'équipe</span></summary>

@@ -16,6 +16,7 @@
     if (!res.ok || json.error) throw new Error(json.error || 'Erreur réseau. Réessayez.');
     return json;
   }
+  window.api = api;
 
   function showError(scope, msg) {
     const el = $('.form-error', scope);
@@ -635,3 +636,14 @@ document.querySelectorAll('table[data-sortable]').forEach(t => {
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 (function(){ const n = document.querySelector('.nav-ia .nav-n'), t = [...document.querySelectorAll('.rail nav a')].find(a => a.getAttribute('href') === '/mes-taches')?.querySelector('.nav-n');
   const c = (parseInt(t?.textContent || '0', 10) || 0); if ('setAppBadge' in navigator) { try { c ? navigator.setAppBadge(c) : navigator.clearAppBadge(); } catch (e) {} } })();
+
+/* Questionnaire des équipes : enregistrement automatique, limites de choix, envoi */
+(function(){ const f = document.getElementById('svForm'); if (!f) return; const st = document.getElementById('svState');
+  const data = () => { const d = {}; f.querySelectorAll('input,textarea').forEach(i => { if (i.type === 'radio' || i.type === 'checkbox') { if (i.checked) (d[i.name] = d[i.name] || []).push(i.value); } else if (i.value.trim()) d[i.name] = i.value; }); return d; };
+  let t; const save = async (submit) => { try { await api('survey/save', Object.assign(data(), submit ? { submit: 1 } : {})); st.textContent = submit ? 'Merci, questionnaire envoyé.' : 'Enregistré · ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); return true; } catch (e) { st.textContent = e.message; return false; } };
+  f.addEventListener('change', e => { const box = e.target.closest('[data-max]'); const mx = box ? +box.dataset.max : 0;
+    if (mx && e.target.checked && box.querySelectorAll('input:checked').length > mx) { e.target.checked = false; st.textContent = mx + ' choix maximum pour cette question.'; return; }
+    clearTimeout(t); t = setTimeout(() => save(false), 600); });
+  f.addEventListener('input', e => { if (e.target.matches('textarea,input[type=text],.sv-o')) { clearTimeout(t); t = setTimeout(() => save(false), 1200); } });
+  document.getElementById('svSend').addEventListener('click', async () => { if (await save(true)) location.href = '/mes-taches'; });
+})();

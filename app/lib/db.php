@@ -248,6 +248,14 @@ SQL);
             $ins->execute([json_encode(['objet' => $o, 'personne' => '', 'echeance' => '', 'note' => $n], JSON_UNESCAPED_UNICODE), 'seed-' . md5($o), time(), time()]);
         $pdo->exec('PRAGMA user_version = 25;');
     }
+    if ($v < 26) { // enquête de fonctionnement : réponses + tâche « répondre au questionnaire » pour chaque collaborateur
+        $pdo->exec('CREATE TABLE IF NOT EXISTS survey_answers (user_id INTEGER PRIMARY KEY, data TEXT NOT NULL, updated_at INTEGER NOT NULL, submitted_at INTEGER)');
+        $slug = fn(string $n) => trim(preg_replace('/[^a-z0-9]+/', '-', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $n) ?: $n)), '-');
+        $admin = (int)$pdo->query("SELECT id FROM users WHERE role='admin' ORDER BY id LIMIT 1")->fetchColumn();
+        $ins = $pdo->prepare("INSERT INTO team_tasks(person,title,due,created_by,by_dir,created_at,priv) VALUES(?,?,?,?,1,?,0)");
+        foreach ($pdo->query('SELECT name FROM staff')->fetchAll(PDO::FETCH_COLUMN) as $n) $ins->execute([$slug($n), 'Répondre au questionnaire de fonctionnement', date('Y-m-d', strtotime('+14 days')), $admin ?: 1, time()]);
+        $pdo->exec('PRAGMA user_version = 26;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

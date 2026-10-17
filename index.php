@@ -16,6 +16,7 @@ require APP_DIR . '/lib/building.php';
 require APP_DIR . '/lib/hono_log.php';
 require APP_DIR . '/lib/sec_audit.php';
 require APP_DIR . '/lib/team.php';
+require APP_DIR . '/lib/survey.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -70,6 +71,12 @@ try {
             $u = require_user();
             require APP_DIR . '/pages/team.php';
             page_team($u);
+        case 'enquete':
+        case 'enquete/resultats':
+            $u = require_user();
+            require APP_DIR . '/pages/survey.php';
+            if ($route === 'enquete') page_survey($u);
+            page_survey_results($u);
         case 'organigramme':
         case 'accueil':
         case 'accueil/presentation':

@@ -7,7 +7,7 @@ $fd = fn($d) => date('d/m/Y', is_numeric($d) ? (int)$d : strtotime($d));
 <li class="tt<?= $tDone ? ' done' : '' ?><?= $late ? ' late' : '' ?>"<?= !empty($hidden) ? ' hidden data-more-x' : '' ?>>
   <input type="checkbox" id="tt<?= (int)$t['id'] ?>" <?= $tDone ? 'checked' : '' ?> <?= $can ? 'data-api="team/toggle" data-id="' . (int)$t['id'] . '"' : 'disabled' ?> aria-label="<?= $tDone ? 'Marquer à faire' : 'Marquer comme faite' ?>">
   <label for="tt<?= (int)$t['id'] ?>">
-    <span class="tt-t"><?= e($t['title']) ?></span>
+    <span class="tt-t"><?= e($t['title']) ?><?php if (!$tDone && $t['title'] === SURVEY_TASK && $t['person'] === team_me($u)): ?> <a class="btn btn-primary tt-go" href="/enquete">Répondre</a><?php endif; ?></span>
     <span class="tt-m">
       <?php if (!empty($showWho)): ?><a href="/equipe/<?= e($t['person']) ?>"><?= e($people[$t['person']]['name'] ?? $t['person']) ?></a> · <?php endif; ?>
       <?php if ((int)($t['priv'] ?? 0)): ?>Ajoutée le <?= $fd($t['created_at']) ?><?php else: ?>Demandée le <?= $fd($t['created_at']) ?><?= $t['by_name'] ? ' par ' . e($t['by_name']) : '' ?><?php endif; ?><?= (int)$t['by_dir'] ? ' <span class="tt-dir">Direction</span>' : '' ?><?= (int)($t['priv'] ?? 0) ? ' <span class="tt-dir tt-priv">Perso</span>' : '' ?>

@@ -314,6 +314,11 @@ function api(string $r): never {
             $t = in_str('title', 200);
             if ($t === '') json_out(['error' => 'Indiquez une tâche.'], 400);
             $sp = in_str('space', 20) ?: null;
+            $share = in_str('share', 20);
+            if ($sp === null && $share !== '' && $share !== 'perso') { // tâche partagée avec une section : visible dans son tableau de bord
+                if (!isset(SPACES[$share]) || !can_space($u, $share)) json_out(['error' => 'Accès refusé.'], 403);
+                $sp = $share;
+            }
             if ($sp === null) { // Mes tâches = tâches d'équipe privées de la personne
                 $me = team_me($u); if (!$me) json_out(['error' => 'Compte absent de l\'annuaire des collaborateurs.'], 400);
                 $due = in_str('due', 10); if ($due !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $due)) $due = '';
@@ -329,6 +334,21 @@ function api(string $r): never {
             $allowed = $task && ($task['space'] === null ? (int)$task['user_id'] === $uid : can_space($u, $task['space']));
             if (!$allowed) json_out(['error' => 'Accès refusé.'], 403);
             q($r === 'tasks/toggle' ? 'UPDATE tasks SET done = 1 - done WHERE id=?' : 'DELETE FROM tasks WHERE id=?', [$task['id']]);
+            json_out(['ok' => true]);
+        case 'survey/save':
+            $b = body(); $d = [];
+            foreach (SURVEY as [$g, $qs]) foreach ($qs as $k => [$label, $type, $opts]) {
+                $v = $b[$k] ?? null;
+                if ($type === 'text') { $t = mb_substr(trim((string)(is_array($v) ? '' : $v)), 0, 3000); if ($t !== '') $d[$k] = $t; continue; }
+                $v = array_values(array_intersect(array_map('strval', is_array($v) ? $v : ($v === null || $v === '' ? [] : [$v])), $opts));
+                if ($type === 'check3') $v = array_slice($v, 0, 3); if ($type === 'check5') $v = array_slice($v, 0, 5); if ($type === 'radio') $v = array_slice($v, 0, 1);
+                if ($v) $d[$k] = $v;
+                if (trim((string)($b['o_' . $k] ?? '')) !== '') $d['o_' . $k] = mb_substr(trim((string)$b['o_' . $k]), 0, 500);
+            }
+            $submit = !empty($b['submit']);
+            q('INSERT INTO survey_answers(user_id,data,updated_at,submitted_at) VALUES(?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET data=excluded.data, updated_at=excluded.updated_at, submitted_at=COALESCE(excluded.submitted_at, survey_answers.submitted_at)',
+              [$uid, json_encode($d, JSON_UNESCAPED_UNICODE), time(), $submit ? time() : null]);
+            if ($submit && ($me = team_me($u))) q('UPDATE team_tasks SET done_at=?, done_by=? WHERE person=? AND title=? AND done_at IS NULL', [time(), $uid, $me, SURVEY_TASK]);
             json_out(['ok' => true]);
         case 'reg/save':
         case 'reg/delete':
