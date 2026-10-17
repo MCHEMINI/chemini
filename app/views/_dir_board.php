@@ -16,6 +16,7 @@
 
 <?php require __DIR__ . '/_aiq.php'; ?>
 <?php require __DIR__ . '/_mq.php'; ?>
+<?php require __DIR__ . '/_rq_dir.php'; ?>
 
 <?php require __DIR__ . '/_overview.php'; ?>
 

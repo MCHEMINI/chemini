@@ -1001,3 +1001,25 @@ document.addEventListener('click', async e => {
     r.innerHTML = ''; r.append(x.sent ? '✓ Invitation envoyée par e-mail. Lien de secours : ' : 'L’e-mail n’a pas pu partir : transmettez ce lien : ');
     const i = document.createElement('input'); i.className = 'input'; i.readOnly = true; i.value = x.link; i.onclick = () => i.select(); r.append(i); }
   catch (x) { r.hidden = false; r.textContent = x.message; } b.disabled = false; }); })();
+/* Demandes à la Direction : envoi et retrait (collaborateur), choix et publication de la réponse (Direction) */
+(function(){
+  const toast = m => { const t = document.getElementById('toast'); if (t) { t.textContent = m; t.hidden = false; setTimeout(() => (t.hidden = true), 2200); } };
+  document.querySelectorAll('.rq-form').forEach(f => f.addEventListener('submit', async e => { e.preventDefault(); const b = f.querySelector('button'), err = f.querySelector('.form-error'); b.disabled = true; err.hidden = true;
+    try { await window.api('requests/create', Object.fromEntries(new FormData(f).entries())); toast('✓ Demande envoyée à la Direction'); setTimeout(() => location.reload(), 700); }
+    catch (x) { err.textContent = x.message; err.hidden = false; b.disabled = false; } }));
+  document.addEventListener('click', async e => { const w = e.target.closest('[data-rq-withdraw]'); if (!w) return;
+    if (!w.dataset.armed) { w.dataset.armed = 1; w.textContent = 'Confirmer le retrait'; return; }
+    try { await window.api('requests/withdraw', { id: Number(w.dataset.rqWithdraw) }); location.reload(); } catch (x) { w.textContent = x.message; } });
+  if (document.querySelector('[data-rq-unseen]')) setTimeout(() => window.api('requests/seen', {}).catch(() => {}), 2500);
+  document.querySelectorAll('.rqd-card').forEach(c => {
+    const ed = c.querySelector('.rqd-edit'), ta = ed && ed.querySelector('textarea'); if (!ed) return;
+    c.addEventListener('change', e => { const r = e.target.closest('input[type=radio]'); if (!r) return;
+      c.querySelectorAll('.rqd-pick .aiq-opt').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
+      if (!ta.dataset.touched || !ta.value.trim()) ta.value = r.dataset.text || ''; ed.hidden = false; ta.focus(); });
+    ta.addEventListener('input', () => { ta.dataset.touched = 1; });
+    c.querySelector('[data-rq-post]').addEventListener('click', async ev => { const b = ev.currentTarget, err = ed.querySelector('.form-error'), d = c.querySelector('.rqd-pick input:checked');
+      b.disabled = true; err.hidden = true;
+      try { await window.api('requests/answer', { id: Number(c.dataset.id), decision: d ? d.value : 'other', text: ta.value }); toast('✓ Réponse publiée'); setTimeout(() => location.reload(), 700); }
+      catch (x) { err.textContent = x.message; err.hidden = false; b.disabled = false; } });
+  });
+})();

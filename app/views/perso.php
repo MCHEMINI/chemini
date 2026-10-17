@@ -41,6 +41,8 @@
     <?php endif; ?>
   </section>
 
+  <?php require __DIR__ . '/_rq_mine.php'; ?>
+
   <section class="col-12">
     <div class="sec-h"><h2>Mes points communs</h2><a href="/">Tableau de bord</a></div>
     <?php if (!$mine): ?>

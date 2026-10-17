@@ -424,6 +424,10 @@ SQL);
                     CREATE TABLE IF NOT EXISTS maquettes(id INTEGER PRIMARY KEY, slug TEXT NOT NULL UNIQUE, title TEXT NOT NULL, description TEXT, html TEXT NOT NULL, task TEXT, status TEXT NOT NULL DEFAULT 'pending', comment TEXT, decided_by INTEGER, decided_at INTEGER, consigne_id INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
                     PRAGMA user_version = 53;");
     }
+    if ($v < 54) { // Demandes des collaborateurs à la Direction (réponses préparées par l'IA, choisies et publiées par la Direction)
+        $pdo->exec("CREATE TABLE IF NOT EXISTS staff_requests(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, cat TEXT NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'new', ai_analysis TEXT, ai_accept TEXT, ai_refuse TEXT, consigne_id INTEGER, decision TEXT, answer TEXT, answered_by INTEGER, answered_at INTEGER, seen_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+                    CREATE INDEX IF NOT EXISTS staff_requests_user ON staff_requests(user_id, status); PRAGMA user_version = 54;");
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

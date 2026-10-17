@@ -160,6 +160,13 @@ function api(string $r): never {
 
     if (preg_match('#^(items|deadlines|building)/#', $r) && !can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
     if (str_starts_with($r, 'books/')) { require APP_DIR . '/pages/books.php'; books_api($r, $u); }
+    if ($r === 'requests/create') { $res = rq_create($u, in_str('cat', 20), in_str('subject', 160), in_str('body', 4000)); json_out($res, isset($res['error']) ? 400 : 200); }
+    if ($r === 'requests/withdraw') { q("UPDATE staff_requests SET status='withdrawn', updated_at=? WHERE id=? AND user_id=? AND status IN ('new','drafted')", [time(), in_int('id'), $uid]); json_out(['ok' => true]); }
+    if ($r === 'requests/seen') { q('UPDATE staff_requests SET seen_at=? WHERE user_id=? AND status=\'answered\' AND seen_at IS NULL', [time(), $uid]); json_out(['ok' => true]); }
+    if ($r === 'requests/answer') {
+        if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+        $res = rq_answer($u, in_int('id'), in_str('decision', 10), in_str('text', 6000)); json_out($res, isset($res['error']) ? 400 : 200);
+    }
     if ($r === 'maquettes/decide') { // Valider / demander des modifications / refuser une maquette
         if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
         $res = mq_decide($u, in_int('id'), in_str('decision', 10), in_str('comment', 3000));

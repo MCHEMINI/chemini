@@ -1674,3 +1674,17 @@ img[data-zoom]{cursor:zoom-in}
 .ws-inv-row{display:flex;gap:10px;flex-wrap:wrap}.ws-inv-row select{flex:1;min-width:220px}.ws-inv-r{display:grid;gap:6px;margin:0}
 .mail-run{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;margin:0 0 14px;border:1px solid var(--line);border-left:3px solid var(--bronze);border-radius:8px;background:var(--surface);font-size:14.5px;line-height:1.5}
 .mail-run .mr-i{font-size:18px;line-height:1.3}.mail-run div{display:grid;gap:2px}.mail-run b{font-weight:600;color:var(--ink)}.mail-run span{color:var(--muted)}.mail-run .mr-t{color:var(--ink);font-weight:500}
+/* Demandes à la Direction */
+.rq-new{padding:0}.rq-new>summary{cursor:pointer;padding:14px 18px;font-weight:600;color:var(--ink);list-style:none}.rq-new>summary::-webkit-details-marker{display:none}
+.rq-form{display:grid;gap:12px;padding:0 18px 18px}.rq-row{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:12px}.rq-form textarea{resize:vertical}
+.rq-act{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.rq-list,.rqd-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+.rq-item,.rqd-card{padding:16px 18px;display:grid;gap:10px}.rq-fresh{border-left:3px solid var(--ok)}
+.rq-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.rq-h b{display:block;color:var(--ink);font-weight:600}.rq-h small{color:var(--muted);font-size:13px}
+.rq-body summary,.rqd-an summary{cursor:pointer;color:var(--muted);font-size:14px}.rq-body p,.rqd-an p{margin:8px 0 0;font-size:14.5px;line-height:1.55}
+.rq-ans{border-radius:8px;padding:12px 14px;background:var(--bronze-soft)}.rq-ans.rq-accept{background:var(--ok-bg)}.rq-ans.rq-refuse{background:var(--crit-bg)}
+.rq-ans p{margin:6px 0 0;font-size:15px;line-height:1.55;color:var(--ink)}
+.rqd{margin:0 0 28px}.rqd-q{margin:0;padding:10px 14px;border-left:3px solid var(--line);color:var(--ink);font-size:14.5px;line-height:1.55;background:var(--bg)}
+.rqd-pick{display:flex;flex-wrap:wrap;gap:8px}.rqd-pick .aiq-opt{flex:0 1 auto}
+.rqd-edit{display:grid;gap:8px}.rqd-edit textarea{width:100%;resize:vertical;line-height:1.55}
+@media (max-width:640px){.rq-row{grid-template-columns:minmax(0,1fr)}}

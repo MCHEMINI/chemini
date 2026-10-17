@@ -25,6 +25,7 @@ require APP_DIR . '/lib/stats.php';
 require APP_DIR . '/lib/news.php';
 require APP_DIR . '/lib/search.php';
 require APP_DIR . '/lib/aiq.php';
+require APP_DIR . '/lib/requests.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -42,7 +43,7 @@ if ($route0 === 'signature/banniere') sig_serve_image();
 if ($route0 === 'signature/lien') sig_redirect();
 if ($route0 === 't') stats_collect(); // mesure d'audience du site gidsas.fr (public, sans cookie)
 if ($route0 === 't.js') stats_script();
-if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts|banners|president|ocr|questions|maquettes|users)$#', $route0, $m)) ingest_handle($m[1]);
+if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts|banners|president|ocr|questions|maquettes|users|requests)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 

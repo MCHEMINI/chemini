@@ -11,7 +11,7 @@ function ingest_key(): string { return hash_hmac('sha256', 'chemini-ingest-v1', 
 function ingest_handle(string $kind): never {
     $send = function (array $d, int $c = 200): never { http_response_code($c); header('Content-Type: application/json'); header('Cache-Control: no-store'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; };
     $method = $_SERVER['REQUEST_METHOD'] ?? '';
-    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes', 'pv', 'mails', 'ocr', 'banners', 'questions', 'users'], true))) $send(['error' => 'POST attendu'], 405);
+    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes', 'pv', 'mails', 'ocr', 'banners', 'questions', 'users', 'requests'], true))) $send(['error' => 'POST attendu'], 405);
     if (ip_blocked()) $send(['error' => 'IP bloquée'], 429);
     if (!hash_equals(ingest_key(), (string)($_SERVER['HTTP_X_INGEST_KEY'] ?? ''))) { ip_fail(null, 'ingest'); $send(['error' => 'clé invalide'], 403); }
     if ($kind === 'pv' && $method === 'GET') { // PV déjà traités (identifiants de message) pour ne pas les relire
@@ -28,6 +28,10 @@ function ingest_handle(string $kind): never {
         foreach (sig_all() as $b) { $f = sig_dir() . '/' . basename($b['file']); $out[] = ['id' => (int)$b['id'], 'title' => $b['title'], 'mode' => sig_mode($b), 'start' => $b['start'], 'end' => $b['end'], 'w' => (int)$b['w'], 'h' => (int)$b['h'],
             'data' => isset($_GET['img']) && is_file($f) ? 'data:' . $b['mime'] . ';base64,' . base64_encode((string)file_get_contents($f)) : null]; }
         $send(['ok' => true, 'items' => $out]);
+    }
+    if ($kind === 'requests' && $method === 'GET') { // demandes des collaborateurs à préparer (nouvelles, ou toutes avec ?all=1)
+        $rows = q("SELECT r.id, r.cat, r.subject, r.body, r.status, r.created_at, u.name AS user_name, s.role AS user_role FROM staff_requests r JOIN users u ON u.id=r.user_id LEFT JOIN staff s ON lower(s.email)=lower(u.email) WHERE " . (isset($_GET['all']) ? "r.status<>'withdrawn'" : "r.status='new'") . " ORDER BY r.created_at")->fetchAll();
+        $send(['ok' => true, 'cats' => RQ_CATS, 'items' => $rows]);
     }
     if ($kind === 'users' && $method === 'GET') { // comptes (nom, rôle, sections, accès Site Web) : jamais d'e-mail ni de secret
         $send(['ok' => true, 'items' => array_map(fn($x) => ['id' => (int)$x['id'], 'name' => $x['name'], 'role' => $x['role'], 'spaces' => user_spaces($x), 'site_web' => wp_poster($x), 'disabled' => !empty($x['disabled_at'])], q('SELECT * FROM users ORDER BY id')->fetchAll())]);
@@ -63,6 +67,9 @@ function ingest_handle(string $kind): never {
     }
     if ($kind === 'maquettes') { // maquettes HTML à valider par la Direction : {items:[{slug, title, description, html, task}]}
         $send(['ok' => true, 'items' => mq_store((array)($d['items'] ?? []))]);
+    }
+    if ($kind === 'requests') { // réponses préparées : {items:[{id, analysis, accept, refuse}]}
+        $send(['ok' => true, 'items' => rq_drafts((array)($d['items'] ?? []))]);
     }
     if ($kind === 'ocr') { // texte reconnu d'un document (OCR) : {id, text}
         $id = (int)($d['id'] ?? 0);
