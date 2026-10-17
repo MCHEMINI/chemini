@@ -317,6 +317,15 @@ SQL);
         foreach ($seed as $i => [$slug, $cat, $icon, $title, $sum, $dur, $lvl, $body]) $ins->execute([$slug, $cat, $icon, $title, $sum, $dur, $lvl, $body, $i, time(), time()]);
         $pdo->exec('PRAGMA user_version = 37;');
     }
+    if ($v < 38) { // Guides : aide intégrée d'ImmOpen (Immeubles, Planning AG) ; ne remplace pas un guide déjà modifié par la Direction
+        $seed = is_file(APP_DIR . '/seed/guides.php') ? require APP_DIR . '/seed/guides.php' : [];
+        foreach ($seed as $i => [$slug, $cat, $icon, $title, $sum, $dur, $lvl, $body]) {
+            if (!in_array($slug, ['immopen-planning-ag', 'immopen-fiche-immeuble'], true)) continue;
+            $up = $pdo->prepare('UPDATE guides SET title=?, summary=?, duration=?, body=?, updated_at=? WHERE slug=? AND updated_by IS NULL'); $up->execute([$title, $sum, $dur, $body, time(), $slug]);
+            $pdo->prepare('INSERT OR IGNORE INTO guides(slug,cat,icon,title,summary,duration,level,body,pos,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)')->execute([$slug, $cat, $icon, $title, $sum, $dur, $lvl, $body, $i, time(), time()]);
+        }
+        $pdo->exec('PRAGMA user_version = 38;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

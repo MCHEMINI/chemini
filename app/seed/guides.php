@@ -30,21 +30,52 @@ MD],
 
 > Astuce : un export est une photo à l'instant T. Pour des chiffres à jour, refaites l'export plutôt que de rouvrir un ancien fichier.
 MD],
-['immopen-planning-ag', 'ImmOpen', '📅', 'Consulter le planning des AG', 'Voir les AG à venir, les dates limites de convocation et les fins de mandat de chaque immeuble.', '4 min', 'Débutant', <<<'MD'
+['immopen-planning-ag', 'ImmOpen', '📅', 'Consulter le planning des AG', 'Planifier les AG ordinaires et calculer automatiquement les dates de convocation, de conseil syndical et de devis.', '5 min', 'Débutant', <<<'MD'
 ## Ouvrir le planning
-1. **Menu A.G. › Planning AG.**
+1. **Menu A.G. › Planning AG.** Ce programme planifie les futures AG ordinaires, indépendamment des préparations en cours dans la gestion d'assemblée.
 2. **Choisissez la sélection** : un gestionnaire, un comptable, ou tous les gestionnaires pour la vue du cabinet.
 3. **Cochez « Syndic »** pour n'afficher que les immeubles en syndic.
 
-## Lire les colonnes
-- **Dernière AG et AG planifiée** : date et heure de la prochaine assemblée.
-- **Date limite de convocation** : au-delà, la convocation est en retard.
-- **Fin de mandat** : à surveiller pour inscrire le renouvellement à l'ordre du jour.
-- **Convocation, notification, PV** : cases cochées quand l'étape est faite.
+## Lire les colonnes (aide ImmOpen)
+- **Dernière AG** : date de la dernière assemblée générale, reprise de la fiche Immeuble.
+- **Nomination et Durée** : date de nomination du syndic et durée de son mandat.
+- **Début et fin d'exercice** : exercice en cours, tel qu'il apparaît dans la fiche Immeuble.
+- **Délai maximum** : date limite pour tenir l'AG (6 mois par défaut, réglable avec le bouton Paramètres).
+- **AG souhaitée** : date de la prochaine AG ordinaire, à saisir.
+- **Limite convoc.** : date limite d'envoi de la convocation, calculée d'après l'AG souhaitée (23 jours par défaut).
+- **Prép. charges, Conseil, Rech. devis** : dates calculées d'après l'AG souhaitée et les délais paramétrés.
+
+## Planifier une AG
+1. **Sélectionnez l'immeuble** dans la liste.
+2. **Cliquez sur « Modifie »** et saisissez la date d'AG souhaitée : les autres dates se calculent seules.
+3. **Pour imprimer le planning**, utilisez le bouton « Edite » (plusieurs critères de sélection et de tri).
 
 ! Sur un poste partagé, notez les filtres d'origine avant de les changer et remettez-les à la fin.
 
 > Astuce : Chemini reprend ce planning chaque mois (Direction › Planning des AG) avec des filtres rapides et l'agenda sur iPhone.
+MD],
+['immopen-fiche-immeuble', 'ImmOpen', '🏢', 'Gérer la fiche d\'un immeuble', 'Rechercher un immeuble, consulter ses informations, lots, clés de répartition, charges, digicodes et bips.', '6 min', 'Débutant', <<<'MD'
+## Trouver l'immeuble
+1. **Menu Patrimoine › Immeubles.** Tout lot devant être rattaché à un immeuble, c'est le premier fichier de la copropriété.
+2. **Recherchez avec les zones du haut** : Code (recherche directe), Commence par (ordre alphabétique), Contient (nom), Adresse, Ville. Majuscules et minuscules indifférentes.
+3. **Sélectionnez la ligne** de l'immeuble voulu.
+
+## Consulter sans modifier
+- **Info** : toutes les informations de l'immeuble (adresse, copropriétaires, contrats, carnet d'entretien, évènements, affaires, archives).
+- **Lots** et **Bât et Esc** : lots, bâtiments et escaliers.
+- **Clés répartition** : clés de 001 à 999 ; la clé générale est la 001, les clés par index (compteurs) à partir de 949 (949 eau froide, 950 eau chaude, 951 autre compteur d'eau, 952 calories).
+- **Charges** : groupes de charges (rubriques de dépenses) ; le 48 pour les factures d'eau, 49 à 52 pour les consommations aux index.
+- **Digicodes**, **Bips** et **Recherche Bip** (retrouver le détenteur d'un bip par son numéro, tous immeubles confondus).
+- **Calendrier** : calendrier métier de l'immeuble. **Fiche** : fiche Word de l'immeuble.
+
+## Les trois niveaux de clés de répartition
+- **Niveau général (1)** : un seul tantième pour tout l'immeuble.
+- **Niveau bâtiment (2)** : un tantième par bâtiment ; chaque dépense doit être affectée à un bâtiment.
+- **Niveau escalier (3)** : un tantième par escalier ; chaque dépense doit être affectée à un escalier.
+
+! Les boutons Ajoute, Modifie et Supprime changent la fiche pour tout le cabinet : ne les utilisez que si c'est votre rôle.
+
+> Astuce : un seul groupe de charges « Entretien escalier » relié à une clé de niveau 3 suffit ; ImmOpen crée lui-même un compte par escalier (015 A, 015 B).
 MD],
 ['immopen-balance-fournisseurs', 'ImmOpen', '🧾', 'Balance fournisseurs et honoraires annexes', 'Retrouver les montants facturés par fournisseur et par immeuble sur un exercice (du 1er avril au 31 mars).', '6 min', 'Intermédiaire', <<<'MD'
 ## Lancer la balance
