@@ -30,7 +30,7 @@ $evIcon = ['mail' => 'Mail', 'note' => 'Note', 'ag' => 'AG', 'immopen' => 'ImmOp
   <div><span>Lots</span><b><?= $h ? $fmt($fin['lots']) : '—' ?></b><?php if ($h && $fin['perdus']): ?><em><?= $fmt($fin['perdus']) ?> perdus</em><?php endif; ?></div>
   <div><span>Contrat</span><b><?= !empty($fin['contr']['contrat']) ? 'N° ' . e((string)$fin['contr']['contrat']) : '—' ?></b><?php if (!empty($fin['contr']['ht'])): ?><em><?= $fmt($fin['contr']['ht']) ?> € HT / an</em><?php endif; ?></div>
   <div><span>Dernière AG</span><b><?= !empty($h['dateAG']) ? e(date('d/m/Y', strtotime($h['dateAG']))) : 'À tenir' ?></b><?php if (!empty($h['datePV'])): ?><em>PV remis le <?= e(date('d/m/Y', strtotime($h['datePV']))) ?></em><?php endif; ?></div>
-  <div><span>Exercice</span><b><?= e($b['exercice'] ?: 'En cours') ?></b><?php if (!empty($h['plage'])): ?><em>Plage AG <?= e($h['plage']) ?></em><?php endif; ?></div>
+  <div><span>Exercice</span><b><?= e($b['exercice'] ?: 'En cours') ?></b><?php if (!empty($h['plage'])): ?><em>Plage AG <span class="nowrap"><?= e($h['plage']) ?></span></em><?php endif; ?></div>
 </div>
 
 <div class="grid">

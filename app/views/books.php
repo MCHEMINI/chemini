@@ -1,6 +1,6 @@
 <header class="head">
   <div>
-    <div class="eyebrow">Espace personnel · privé</div>
+    <div class="eyebrow">Perso · privé</div>
     <h1>Mes livres</h1>
     <div class="date">Votre bibliothèque, visible uniquement par <?= e($u['name']) ?> · EPUB et PDF</div>
   </div>

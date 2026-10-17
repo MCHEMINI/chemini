@@ -7,7 +7,7 @@ $short = fn(string $s, int $n) => mb_strlen($s) > $n ? rtrim(mb_substr($s, 0, $n
 ?>
 <header class="head">
   <div>
-    <div class="eyebrow">Personnel · selon vos espaces</div>
+    <div class="eyebrow">Perso · selon vos espaces</div>
     <h1>Versioning</h1>
     <div class="date">Tout ce qui a été fait depuis le lancement de la plateforme : Tâches IA traitées, évolutions de l'outil<?= $dir ? ', mises à jour des honoraires' : '' ?>. Mis à jour en direct et chaque matin à 8 h. Vos tâches Perso ne sont visibles que par vous ; celles de Famille et de Direction par les membres de ces espaces.</div>
   </div>

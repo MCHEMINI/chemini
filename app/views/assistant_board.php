@@ -1,6 +1,6 @@
 <header class="head">
   <div>
-    <div class="eyebrow">Personnel · visible par vous seul</div>
+    <div class="eyebrow">Perso · visible par vous seul</div>
     <h1>Tâches IA</h1>
     <div class="date">Consignes vérifiées et traitées toutes les heures · nouvelle consigne : pastille en bas à droite</div>
   </div>

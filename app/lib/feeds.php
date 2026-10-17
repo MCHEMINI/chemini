@@ -28,6 +28,8 @@ function feed_items(string $url, int $limit = 6): array {
         if ($fresh) {
             $body = $fresh;
             q('INSERT INTO feed_cache(url,fetched_at,body) VALUES(?,?,?) ON CONFLICT(url) DO UPDATE SET fetched_at=excluded.fetched_at, body=excluded.body', [$url, time(), $fresh]);
+        } else { // échec : on note l'essai (le corps précédent est gardé) pour ne pas refaire l'appel réseau à chaque chargement du tableau de bord
+            q('INSERT INTO feed_cache(url,fetched_at,body) VALUES(?,?,?) ON CONFLICT(url) DO UPDATE SET fetched_at=excluded.fetched_at', [$url, time(), (string)$body]);
         }
     }
     if (!$body) return [];

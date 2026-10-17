@@ -1,7 +1,7 @@
 <?php $people = team_people(); $showWho = false; ?>
 <header class="head">
   <div>
-    <div class="eyebrow">Espace personnel</div>
+    <div class="eyebrow">Perso · vos tâches</div>
     <h1>Mes tâches</h1>
     <div class="date">Vos tâches perso (visibles par vous seul), celles qui vous sont affectées et celles partagées avec vos sections · aussi dans <a href="/equipe<?= $me ? '/' . e($me) : '' ?>">Collaborateurs</a></div>
   </div>
