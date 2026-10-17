@@ -19,15 +19,16 @@ function team_people(): array {
     static $cache = null; if ($cache !== null) return $cache;
     $out = [];
     foreach (space_members('direction') as $m) $out[team_slug($m['name'])] = ['key' => team_slug($m['name']), 'name' => $m['name'], 'role' => 'Direction', 'email' => strtolower((string)$m['email']), 'uid' => (int)$m['id']];
-    foreach (q('SELECT name, role, email FROM staff WHERE archived_at IS NULL ORDER BY name')->fetchAll() as $s) {
+    $staff = q('SELECT name, role, email, phone, archived_at FROM staff ORDER BY name')->fetchAll();
+    foreach ($staff as $s) { if ($s['archived_at'] !== null) continue;
         $k = team_slug($s['name']); if (isset($out[$k])) continue;
         $out[$k] = ['key' => $k, 'name' => $s['name'], 'role' => $s['role'] ?: 'Assistant(e)', 'email' => strtolower((string)$s['email']), 'uid' => 0];
     }
     $ct = []; foreach (q('SELECT * FROM contacts')->fetchAll() as $c) $ct[$c['email']] = $c;
-    $ph = []; foreach (q('SELECT lower(email) e, phone FROM staff WHERE phone IS NOT NULL')->fetchAll() as $x) $ph[$x['e']] = $x['phone'];
+    $ph = []; foreach ($staff as $x) if ($x['phone'] !== null) $ph[strtolower((string)$x['email'])] = $x['phone'];
     foreach ($out as &$p) { $c = $ct[$p['email']] ?? []; $p['phone'] = ($c['phone'] ?? '') ?: ($ph[$p['email']] ?? ''); $p['ext'] = $c['ext'] ?? ''; }
     unset($p);
-    $users = q('SELECT id, email FROM users')->fetchAll();
+    $users = users_all();
     foreach ($out as &$p) if (!$p['uid'] && $p['email']) foreach ($users as $x) if (strtolower($x['email']) === $p['email']) $p['uid'] = (int)$x['id'];
     unset($p);
     return $cache = $out;

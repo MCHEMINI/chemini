@@ -199,7 +199,233 @@ MD],
 
 > Astuce : les relances facturées sont suivies dans Honoraires (compte 400009).
 MD],
-['chemini-taches', 'Chemini', '🤝', 'Créer une tâche pour vous ou un collègue', 'La bulle en bas à droite : une tâche en trois touches, depuis l\'ordinateur ou l\'iPhone.', '1 min', 'Débutant', <<<'MD'
+['chemini-demarrer', 'Chemini · Démarrer', '🧭', 'Chemini selon votre rôle', 'Le point de départ : ce que vous voyez dans Chemini selon votre rôle, et le bon guide pour chaque besoin.', '3 min', 'Débutant', <<<'MD'
+## Ce que vous voyez selon votre rôle
+- **Toute l'équipe :** les sections **Perso** (votre espace privé) et **Équipe** (la vie du cabinet).
+- **Direction :** en plus, la section **Direction** (immeubles, honoraires, comptabilité, pilotage, signatures).
+- **Famille :** la section **Famille** pour les personnes concernées.
+- Les pictos en bas du menu (sécurité, nouveautés, installation, thème) sont pour tout le monde.
+
+## Par où commencer
+1. **Installez Chemini sur votre iPhone** pour l'ouvrir comme une application. [[Installer sur iPhone|/installer]]
+2. **Faites le tour du menu et de la bulle.** [[Guide : se repérer|/guides/chemini-se-reperer]]
+3. **Sécurisez votre connexion** (Face ID, appareils de confiance). [[Guide : connexion et sécurité|/guides/chemini-connexion-securite]]
+4. **Découvrez votre espace Perso.** [[Guide : mon espace Perso|/guides/chemini-perso]]
+5. **Découvrez la section Équipe.** [[Guide : la section Équipe|/guides/chemini-equipe]]
+
+## Guides par rôle
+- **Toute l'équipe :** [[Créer une tâche|/guides/chemini-taches]] [[Tâches IA|/guides/chemini-taches-ia]] [[Utiliser les guides|/guides/chemini-utiliser-guides]]
+- **Direction :** [[Vue d'ensemble Direction|/guides/chemini-direction]] [[Honoraires|/guides/chemini-honoraires]] [[Pilotage et AG|/guides/chemini-pilotage]] [[Signatures e-mail|/guides/chemini-signatures]]
+- **Président :** [[Mot du Président|/guides/chemini-mot-president]]
+- **Famille :** [[Espace Famille|/guides/chemini-famille]]
+
+> Astuce : la barre de recherche de la page Guides retrouve un guide par n'importe quel mot (« AG », « facture », « signature »…).
+MD, 'tous'],
+['chemini-se-reperer', 'Chemini · Démarrer', '🗺️', 'Se repérer : menu, onglets et bulle', 'Le menu latéral, les onglets en haut des pages, la bulle de création rapide et les réglages d\'affichage.', '3 min', 'Débutant', <<<'MD'
+## Le menu
+1. **Les sections se replient.** Touchez le titre d'une section (Perso, Direction, Équipe, Famille) pour l'ouvrir ou la fermer ; Chemini s'en souvient.
+2. **Par défaut, seule Perso est ouverte**, ainsi que la section de la page affichée.
+3. **Le chiffre à droite d'une section** indique combien de personnes y ont accès : touchez-le pour voir la liste.
+4. **Sur iPhone**, le menu s'ouvre avec le bouton ☰ en haut à droite.
+
+## Les onglets en haut des pages
+- Certaines entrées du menu regroupent plusieurs pages : **Tâches** (Mes tâches, Tâches IA), **Notes et livres**, **Informations** (Informations, Accueil) et, pour la Direction, **Immeubles** (+ Planning des AG), **Honoraires** (+ Stratégies), **Pilotage** (+ Enquête).
+- Passez d'une page à l'autre avec les onglets juste sous la barre du haut.
+
+## La bulle en bas à droite
+1. **Touchez la bulle** sur n'importe quelle page.
+2. **« Tâche équipe »** : une tâche pour vous ou un collègue. [[Guide : créer une tâche|/guides/chemini-taches]]
+3. **« Tâche IA »** : une consigne confiée à l'assistant. [[Guide : tâches IA|/guides/chemini-taches-ia]]
+
+## Affichage
+- **A− / A+** (en haut des pages, ou dans le menu sur iPhone) agrandit ou réduit le texte.
+- **Les pictos en bas du menu :** Sécurité, Nouveautés (versioning), Installer sur iPhone, puis le thème clair, sombre ou automatique.
+
+[[Installer sur iPhone|/installer]] [[Voir les nouveautés|/versioning]]
+MD, 'tous'],
+['chemini-connexion-securite', 'Chemini · Démarrer', '🔐', 'Connexion et sécurité', 'Se connecter, reconnaître ses appareils, utiliser Face ID et se déconnecter proprement.', '4 min', 'Débutant', <<<'MD'
+## Se connecter
+1. **Saisissez votre e-mail GID** sur la page de connexion.
+2. **Choisissez votre méthode :** mot de passe puis code à 6 chiffres, Face ID (clé d'accès) ou lien de connexion reçu par e-mail.
+3. **Lien par e-mail :** ouvrez-le puis touchez « Se connecter ». Il ne sert qu'une fois et expire rapidement.
+4. **« Faire confiance à cet appareil »** évite de tout ressaisir pendant 90 jours, uniquement sur votre téléphone ou votre poste personnel.
+
+! Ne cochez jamais « faire confiance » sur un ordinateur partagé, et ne transmettez jamais un lien de connexion.
+
+## Gérer ses appareils
+1. **Ouvrez la page Sécurité** (premier picto en bas du menu). [[Ouvrir Sécurité|/securite]]
+2. **Activez Face ID** sur votre iPhone pour vous connecter sans mot de passe.
+3. **Retirez un appareil** que vous n'utilisez plus ou que vous avez perdu.
+
+## Se déconnecter
+- Bouton à droite de votre nom, en bas du menu.
+
+> Astuce : après plusieurs essais erronés, l'adresse est bloquée 30 minutes ; patientez ou demandez à la Direction.
+MD, 'tous'],
+['chemini-perso', 'Chemini · Perso', '🏠', 'Mon espace Perso', 'Votre tableau de bord, vos mails à traiter, le Mot du Président, vos tâches, vos notes et vos livres.', '4 min', 'Débutant', <<<'MD'
+## Tableau de bord
+1. **C'est la page d'accueil de Chemini.** Elle s'adapte à votre rôle et affiche vos compteurs du jour (tâches, mails, AG…).
+2. **Chaque bloc mène au détail** : touchez-le pour ouvrir la page correspondante. [[Ouvrir mon tableau de bord|/]]
+
+## Mails à traiter
+1. **Les e-mails qui demandent une action** sont listés ici ; le chiffre rouge dans le menu indique combien il en reste.
+2. **Cochez un mail une fois traité.** Vos points communs du tableau de bord apparaissent aussi sur cette page. [[Ouvrir Mails à traiter|/espace]]
+
+## Mot du Président
+- Chaque 1er du mois, l'actualité du mois écoulé et l'analyse de nos trois métiers. [[Lire le Mot du Président|/mot-du-president]]
+
+## Tâches
+1. **Mes tâches** : vos tâches perso, celles qui vous sont affectées et celles partagées avec vos sections. [[Ouvrir Mes tâches|/mes-taches]]
+2. **Tâches IA** : le suivi des consignes confiées à l'assistant. [[Ouvrir Tâches IA|/assistant]]
+
+## Notes et livres
+- **Bloc-notes** : vos notes privées, visibles par vous seul. [[Ouvrir le bloc-notes|/bloc-notes]]
+- **Mes livres** : votre bibliothèque EPUB ou PDF, lisible sur ordinateur et iPhone. [[Ouvrir Mes livres|/mes-livres]]
+
+> Astuce : tout ce qui est dans Perso est privé ; rien n'est visible par vos collègues sauf une tâche que vous choisissez de partager.
+MD, 'tous'],
+['chemini-taches-ia', 'Chemini · Perso', '🤖', 'Confier une tâche à l\'IA', 'Une recherche, un courrier, un tableau : décrivez le besoin, l\'assistant s\'en charge et vous suivez l\'avancement.', '2 min', 'Débutant', <<<'MD'
+## Confier la tâche
+1. **Touchez la bulle** en bas à droite puis **« Tâche IA »**.
+2. **Décrivez le résultat attendu** : le sujet, le format (courrier, tableau, synthèse) et l'échéance éventuelle.
+3. **Envoyez.** Les consignes sont vérifiées et traitées toutes les heures.
+
+## Suivre le résultat
+1. **Ouvrez Tâches IA** pour voir où en est chaque consigne. [[Ouvrir Tâches IA|/assistant]]
+2. **Le résultat** est déposé avec la consigne ; les tâches terminées apparaissent aussi dans les nouveautés. [[Voir les nouveautés|/versioning]]
+
+! N'indiquez jamais de mot de passe ni de coordonnées bancaires dans une consigne.
+MD, 'tous'],
+['chemini-equipe', 'Chemini · Équipe', '👥', 'La section Équipe', 'Le tableau de bord de l\'équipe, les informations générales, les collaborateurs, l\'accueil, les guides et le questionnaire.', '4 min', 'Débutant', <<<'MD'
+## Tableau de bord Équipe
+- **Les prochaines AG, la veille juridique et les dernières actualités** du secteur. [[Ouvrir le tableau de bord Équipe|/tableau-de-bord]]
+
+## Informations et Accueil
+1. **Informations** : les tâches partagées, le bloc-notes commun et les outils de l'équipe. [[Ouvrir Informations|/gid]]
+2. **Accueil** : la société, l'organisation, les équipes et les bonnes pratiques, idéal pour un nouvel arrivant. [[Ouvrir Accueil|/accueil]]
+
+## Collaborateurs
+1. **L'organigramme** présente chaque personne avec son nombre de tâches en cours. [[Ouvrir Collaborateurs|/organigramme]]
+2. **La fiche d'une personne** donne sa ligne directe, son raccourci (4 derniers chiffres) et un lien e-mail qui ouvre Outlook.
+
+## Guides et questionnaire
+- **Guides** : les procédures ImmOpen et Chemini, à cocher étape par étape. [[Tous les guides|/guides]]
+- **Questionnaire** : 10 minutes pour dire vos tâches récurrentes et ce que vous aimeriez automatiser. [[Répondre au questionnaire|/enquete]]
+MD, 'tous'],
+['chemini-utiliser-guides', 'Chemini · Équipe', '📘', 'Utiliser et enrichir les guides', 'Suivre un guide en cochant les étapes ; pour la Direction, créer et modifier les guides.', '3 min', 'Débutant', <<<'MD'
+## Suivre un guide
+1. **Ouvrez un guide** depuis la page Guides ou la recherche. [[Tous les guides|/guides]]
+2. **Cochez chaque étape** au fur et à mesure : la barre de progression avance et votre avancement est gardé sur cet appareil.
+3. **« Recommencer »** remet les cases à zéro.
+4. **Une étape a changé ?** Signalez-le à la Direction avec la bulle « Tâche équipe ».
+
+## Créer ou modifier (Direction)
+1. **« Nouveau guide »** en haut de la page Guides, ou **« Modifier le guide »** sur un guide.
+2. **Choisissez qui le voit** : toute l'équipe, Direction, Président ou Famille.
+3. **Mise en forme :** « ## » pour une partie, « 1. » pour une étape à cocher, « - » pour une liste, « > Astuce : » et « ! » pour un avertissement.
+4. **Bouton vers une page :** écrivez `[[Libellé|/adresse]]`, par exemple `[[Ouvrir Mes tâches|/mes-taches]]`.
+MD, 'tous'],
+['chemini-direction', 'Chemini · Direction', '🏛️', 'Vue d\'ensemble Direction', 'Les outils réservés à la Direction et le bon réflexe pour chacun.', '4 min', 'Débutant', <<<'MD'
+## Tableau de bord Direction
+- **Les indicateurs du cabinet** et les alertes du jour. [[Ouvrir le tableau de bord Direction|/direction]]
+
+## Immeubles et Planning des AG
+1. **Immeubles** : la fiche de chaque copropriété (lots, exercice, plage d'AG, contacts). [[Ouvrir Immeubles|/immeubles]]
+2. **Planning des AG** : AG à planifier, convocations en retard, mandats à renouveler, par gestionnaire. [[Ouvrir le planning|/planning-ag]]
+
+## Honoraires et Stratégies
+1. **Honoraires** : le suivi des honoraires par immeuble, voté et à voter. [[Guide Honoraires|/guides/chemini-honoraires]]
+2. **Stratégies** : les immeubles non rentables ou fragiles et les leviers de marge. [[Ouvrir Stratégies|/strategies]]
+
+## Comptabilité, Pilotage et Enquête
+1. **Comptabilité** : le contrôle des factures et le suivi par comptable. [[Ouvrir Comptabilité|/comptabilite]]
+2. **Pilotage** : finances, AG, registres et conformité. [[Guide Pilotage|/guides/chemini-pilotage]]
+3. **Enquête** : les réponses de l'équipe au questionnaire. [[Voir les résultats|/enquete/resultats]]
+
+## Signatures
+- **Le visuel du bas des signatures e-mail**, programmé selon les périodes. [[Guide Signatures|/guides/chemini-signatures]]
+
+! Ces données sont confidentielles : ne les copiez pas dans l'espace Équipe.
+MD, 'direction'],
+['chemini-honoraires', 'Chemini · Direction', '💶', 'Honoraires : suivre et mettre à jour', 'Lire le tableau des honoraires par immeuble, filtrer, ouvrir une fiche et exporter, sur ordinateur et sur iPhone.', '5 min', 'Intermédiaire', <<<'MD'
+## Ouvrir le tableau
+1. **Menu Direction › Honoraires**, puis l'onglet **Immeubles** du document. [[Ouvrir Honoraires|/honoraires]]
+2. **Choisissez une vue** : Essentiel, AG et prestations, Budgets, Travaux votés ou Tout. Votre choix est mémorisé.
+3. **Recherchez** un immeuble par nom ou numéro ; filtrez par portefeuille et par statut (actifs, perdus, AG tenues).
+4. **Les filtres rapides** (pastilles colorées) isolent les alertes : voté sous le proposé, PV en retard…
+
+## Ouvrir la fiche d'un immeuble
+1. **Touchez « › »** au bout de la ligne (ou la carte sur iPhone) : la fiche s'ouvre avec les montants et l'évolution.
+2. **Les champs de la fiche** se modifient directement ; chaque modification est enregistrée pour toute l'équipe.
+3. **L'historique des changements** est dans Modifications. [[Voir les modifications|/honoraires/modifications]]
+
+## Sur iPhone
+- **La recherche et la liste** s'affichent d'abord.
+- **Premier picto** (à gauche de A−/A+) : titre, menu Fichier et onglets. **Second picto** : filtres et boutons ; une pastille rouge indique les filtres actifs.
+
+## Exporter
+- **Menu Fichier** : export de l'onglet en CSV pour Excel, sauvegarde ou impression.
+
+> Astuce : la modification des montants est réservée à Mehdi Chemini ; les autres membres de la Direction consultent.
+MD, 'direction'],
+['chemini-pilotage', 'Chemini · Direction', '🧭', 'Pilotage et préparation des AG', 'Le tableau de pilotage, la préparation des AG et les registres du cabinet.', '4 min', 'Intermédiaire', <<<'MD'
+## Le tableau de pilotage
+1. **Menu Direction › Pilotage.** Chaque bloc (finances et équipes, assemblées générales, registres) mène au détail. [[Ouvrir Pilotage|/pilotage]]
+2. **Renouvellements de mandat, charge des gestionnaires, prévision d'encaissement** : un bloc chacun.
+
+## Préparer les AG
+1. **Pilotage › Préparation des AG** liste les AG à venir avec leur état. [[Ouvrir la préparation des AG|/pilotage/ag]]
+2. **La fiche d'une AG** regroupe les points à préparer ; **« Imprimer la fiche »** la sort sur papier.
+3. **Le calendrier des AG** peut s'abonner sur votre iPhone (adresse donnée sur la page).
+4. **Planning des AG** (onglet d'Immeubles) : la vue par gestionnaire tirée d'ImmOpen. [[Ouvrir le planning|/planning-ag]]
+
+## Enquête
+- **Les réponses au questionnaire** de l'équipe, avec impression. [[Voir l'enquête|/enquete/resultats]]
+MD, 'direction'],
+['chemini-signatures', 'Chemini · Direction', '✉️', 'Signatures e-mail : programmer les visuels', 'Ajouter un visuel, choisir quand il s\'affiche et vérifier qu\'Exclaimer est bien relié.', '5 min', 'Intermédiaire', <<<'MD'
+## Ajouter un visuel
+1. **Menu Direction › Signatures**, puis « Ajouter un visuel ». [[Ouvrir Signatures|/signatures]]
+2. **Image au format 600 × 200** (PNG ou JPEG) ; elle est recadrée au centre si besoin.
+3. **Choisissez le mode :** par défaut, période (dates de début et de fin), rotation (visuel du mois) ou brouillon.
+4. **Le lien au clic** mène toujours à www.gidsas.fr.
+
+## Comprendre les priorités
+- **Un brouillon activé** passe avant tout ; puis **les périodes** (fêtes, vœux, été) ; puis **la rotation** du mois ; sinon **le bandeau par défaut**.
+- **Il y a toujours un bandeau par défaut** : il ne peut pas être supprimé.
+- **Le calendrier des 12 prochains mois** montre quel visuel partira chaque mois.
+
+## Créer le visuel avec Gemini
+1. **Remplissez les champs du message** (surlignés tant qu'ils sont vides).
+2. **Copiez le prompt** et collez-le dans Gemini, puis importez l'image obtenue.
+
+## Vérifier Exclaimer
+- **L'indicateur « relié »** passe au vert dès qu'Exclaimer ou une messagerie lit le bandeau.
+
+! Changer les réglages d'Exclaimer se fait dans Exclaimer lui-même ; Chemini ne fournit que l'image du moment.
+MD, 'direction'],
+['chemini-mot-president', 'Chemini · Président', '🖋️', 'Mot du Président : relire, publier, partager', 'Le cycle mensuel du Mot du Président, de la rédaction automatique au partage par lien.', '3 min', 'Débutant', <<<'MD'
+## Chaque mois
+1. **Le 25, un brouillon est rédigé** d'après les actualités du mois ; une alerte apparaît sur votre tableau de bord. [[Ouvrir le Mot du Président|/mot-du-president]]
+2. **Relisez et modifiez** avec « Modifier » : l'article garde sa mise en page, la barre d'outils propose intertitre, paragraphe, gras et liste.
+3. **« Valider la publication »** : il paraît le 1er du mois pour toute l'équipe. Sans validation, il reste en brouillon.
+4. **« Repasser en brouillon »** annule la validation si besoin.
+
+## Partager par lien
+1. **Encadré « Partager par lien »** sur la page du mot : « Créer le lien » le copie aussitôt.
+2. **Le lien est non répertorié**, en lecture seule, sans compte, et non indexé par les moteurs de recherche.
+3. **« Désactiver le lien »** le rend immédiatement inutilisable.
+
+! Un lien créé sur un brouillon montre la version actuelle, avant publication.
+MD, 'president'],
+['chemini-famille', 'Chemini · Famille', '🧳', 'Espace Famille et voyages', 'Le tableau de bord Famille et les guides de voyage préparés par Claude.', '2 min', 'Débutant', <<<'MD'
+## L'espace Famille
+1. **Menu Famille › Tableau de bord** : les voyages, les tâches partagées et le bloc-notes commun. [[Ouvrir l'espace Famille|/famille]]
+
+## Les voyages
+1. **Menu Famille › Voyages** : chaque guide donne la meilleure période, les vols Air France ou Transavia, la météo, les préparatifs et le programme jour par jour. [[Ouvrir Voyages|/voyages]]
+2. **Partager un voyage** : depuis sa fiche, créez un lien en lecture seule ; il se désactive à tout moment.
+MD, 'famille'],
+['chemini-taches', 'Chemini · Perso', '🤝', 'Créer une tâche pour vous ou un collègue', 'La bulle en bas à droite : une tâche en trois touches, depuis l\'ordinateur ou l\'iPhone.', '1 min', 'Débutant', <<<'MD'
 ## Créer la tâche
 1. **Touchez la bulle** en bas à droite de n'importe quelle page.
 2. **Choisissez « Tâche équipe ».**

@@ -100,6 +100,7 @@
         tr.classList.toggle('hv-off', !show);
       });
       renderChips(counts);
+      fmtEur(t);
     } finally { busy = false; }
     if (MOBILE.matches) renderCards();
     requestAnimationFrame(stick);
@@ -246,6 +247,8 @@
       '.hv-f input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}.hv-f input.saved{border-color:#4f7a5a;box-shadow:0 0 0 3px rgba(79,122,90,.2)}.hv-f input.bad{border-color:#c0392b}',
       '.hv-note{margin:0;font-size:12.5px;color:var(--muted)}',
       '#hvCards{display:none}',
+      '#immTbl td.hv-eur{position:relative}#immTbl td.hv-eur input:not(:focus){color:transparent;caret-color:var(--text)}#immTbl td.hv-eur input:focus+.hv-fmt{visibility:hidden}',
+      '.hv-fmt{position:absolute;top:0;bottom:0;right:10px;left:4px;display:flex;align-items:center;justify-content:flex-end;pointer-events:none;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;font-size:inherit}',
       '.hv-card{content-visibility:auto;contain-intrinsic-size:auto 150px}',
       '[data-theme="dark"] .hv-chip.crit,[data-theme="dark"] .hv-tag.crit{color:#f09a8d}[data-theme="dark"] .hv-tag.ok,[data-theme="dark"] .hv-pill.up{color:#7fcf9a}[data-theme="dark"] .hv-pill.dn{color:#f09a8d}',
       '@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hv-chip.crit,:root:not([data-theme="light"]) .hv-tag.crit,:root:not([data-theme="light"]) .hv-pill.dn{color:#f09a8d}:root:not([data-theme="light"]) .hv-tag.ok,:root:not([data-theme="light"]) .hv-pill.up{color:#7fcf9a}}',
@@ -316,6 +319,20 @@
     document.addEventListener('click', function (e) { if (e.target.closest('nav.tabs [data-tab]')) setTimeout(function () { B.classList.remove('hv-head-open'); sync(); }, 30); else if (e.target.closest('.hv-chip')) setTimeout(badge, 30); });
     document.addEventListener('change', function (e) { if (e.target.id === 'immPort' || e.target.id === 'immStatus') badge(); });
     sync();
+  }
+
+  /* Montants du tableau affichés « 12 390 € » ; la valeur exacte reste dans le champ et réapparaît à la saisie */
+  var fEur = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  function eurKeys() { try { return COLS.filter(function (c) { return c.t === 'eur'; }).map(function (c) { return c.k; }); } catch (e) { return ['h2526', 'h2627v', 'h2627e', 'h2728', 'h2829']; } }
+  function fmtOne(inp) {
+    var sp = inp.nextElementSibling; if (!sp || !sp.classList.contains('hv-fmt')) { sp = h('span', 'hv-fmt'); sp.setAttribute('aria-hidden', 'true'); inp.parentNode.insertBefore(sp, inp.nextSibling); inp.parentNode.classList.add('hv-eur'); }
+    var raw = String(inp.value || '').replace(/\s/g, '').replace(',', '.'), v = parseFloat(raw), tx = raw === '' || !isFinite(v) ? '' : fEur.format(v);
+    if (sp.textContent !== tx) sp.textContent = tx;
+  }
+  function fmtEur(t) {
+    var ks = eurKeys(); if (!ks.length) return;
+    t.querySelectorAll(ks.map(function (k) { return 'tbody input[data-k="' + k + '"]'; }).join(',')).forEach(fmtOne);
+    if (!t._hvEur) { t._hvEur = 1; t.addEventListener('input', function (e) { var i = e.target; if (i.tagName === 'INPUT' && ks.indexOf(i.dataset.k) >= 0) fmtOne(i); }); }
   }
   function groupHeads() { document.querySelectorAll('#immTbl thead th[data-col]').forEach(function (th) { var g = GROUP[th.dataset.col]; if (g) th.classList.add('hv-' + g); }); }
   function start() { setTimeout(setup, 120); }

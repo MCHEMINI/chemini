@@ -25,6 +25,7 @@ function in_int(string $k): int { return (int)(body()[$k] ?? 0); }
 function render(string $view, array $vars = [], bool $layout = true): never {
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: no-store');
+    if ($view === 'notfound') $layout = false; // page d'erreur autonome (elle a sa propre en-tête)
     extract($vars);
     ob_start();
     require APP_DIR . '/views/' . $view . '.php';
@@ -56,7 +57,7 @@ function greeting(): string { $h = (int)date('G'); return ($h >= 18 || $h < 5) ?
 
 const SEVERITY = ['crit' => 'Urgent', 'warn' => 'Cette semaine', 'ok' => 'À suivre'];
 
-function users_all(): array { return q('SELECT id,name,initials,email,role FROM users ORDER BY id')->fetchAll(); }
+function users_all(): array { static $c = null; return $c ??= q('SELECT id,name,initials,email,role FROM users ORDER BY id')->fetchAll(); }
 
 function avatar(array $u, string $size = ''): string {
     $cls = ((int)$u['id'] % 2) ? 'av-a' : 'av-b';
@@ -84,7 +85,9 @@ function user_spaces(array $u): array {
 function can_space(array $u, string $space): bool { return in_array($space, user_spaces($u), true); }
 function space_members(string $space): array {
     if ($space === 'gid') return users_all();
-    return q('SELECT u.id,u.name,u.initials,u.email,u.role FROM space_members m JOIN users u ON u.id=m.user_id WHERE m.space=? ORDER BY u.id', [$space])->fetchAll();
+    static $all = null; // une seule requête par page pour toutes les sections
+    if ($all === null) { $all = []; foreach (q('SELECT m.space, u.id,u.name,u.initials,u.email,u.role FROM space_members m JOIN users u ON u.id=m.user_id ORDER BY u.id')->fetchAll() as $r) { $sp = $r['space']; unset($r['space']); $all[$sp][] = $r; } }
+    return $all[$space] ?? [];
 }
 
 /* ---------- Politique de mots de passe ---------- */

@@ -376,10 +376,11 @@ function api(string $r): never {
             if ($r === 'guides/delete') { if ($old) q('DELETE FROM guides WHERE id=?', [$id]); json_out(['ok' => true, 'go' => '/guides']); }
             $t = in_str('title', 120); $b = trim((string)(body()['body'] ?? '')); $cat = in_str('cat', 40) ?: 'Divers';
             if ($t === '' || $b === '') json_out(['error' => 'Le titre et la procédure sont obligatoires.'], 400);
-            $vals = [$cat, in_str('icon', 8) ?: '📘', $t, in_str('summary', 240), in_str('duration', 20), in_str('level', 20), $b, $uid, time()];
-            if ($old) { q('UPDATE guides SET cat=?, icon=?, title=?, summary=?, duration=?, level=?, body=?, updated_by=?, updated_at=? WHERE id=?', array_merge($vals, [$id])); $slug = $old['slug']; }
+            $aud = in_str('audience', 12); if (!isset(GUIDE_AUD[$aud])) $aud = 'tous';
+            $vals = [$cat, in_str('icon', 8) ?: '📘', $t, in_str('summary', 240), in_str('duration', 20), in_str('level', 20), $b, $aud, $uid, time()];
+            if ($old) { q('UPDATE guides SET cat=?, icon=?, title=?, summary=?, duration=?, level=?, body=?, audience=?, updated_by=?, updated_at=? WHERE id=?', array_merge($vals, [$id])); $slug = $old['slug']; }
             else { $slug = guide_slug($t); $base = $slug; $i = 2; while (q('SELECT 1 FROM guides WHERE slug=?', [$slug])->fetchColumn()) $slug = $base . '-' . $i++;
-                q('INSERT INTO guides(cat,icon,title,summary,duration,level,body,updated_by,updated_at,slug,pos,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,99,?)', array_merge($vals, [$slug, time()])); }
+                q('INSERT INTO guides(cat,icon,title,summary,duration,level,body,audience,updated_by,updated_at,slug,pos,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,99,?)', array_merge($vals, [$slug, time()])); }
             json_out(['ok' => true, 'go' => '/guides/' . $slug]);
         case 'president/share': // créer (on=1) ou désactiver (on=0) le lien non répertorié d'un mot
             if (!pw_editor($u)) json_out(['error' => 'Réservé au Président.'], 403);

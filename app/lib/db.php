@@ -347,6 +347,19 @@ SQL);
         if (!in_array('ag_type', $cols, true)) $pdo->exec("ALTER TABLE pv_votes ADD COLUMN ag_type TEXT; UPDATE pv_votes SET ag_type='AGO' WHERE gc_ttc IS NOT NULL;");
         $pdo->exec('PRAGMA user_version = 41;');
     }
+    if ($v < 42) { // Guides : public visé (toute l'équipe, Direction, Président, Famille) + guides du fonctionnement de Chemini par rôle
+        $cols = array_column($pdo->query('PRAGMA table_info(guides)')->fetchAll(), 'name');
+        if (!in_array('audience', $cols, true)) $pdo->exec("ALTER TABLE guides ADD COLUMN audience TEXT NOT NULL DEFAULT 'tous'");
+        $seed = is_file(APP_DIR . '/seed/guides.php') ? require APP_DIR . '/seed/guides.php' : [];
+        $ins = $pdo->prepare('INSERT OR IGNORE INTO guides(slug,cat,icon,title,summary,duration,level,body,audience,pos,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)');
+        $up = $pdo->prepare('UPDATE guides SET cat=?, audience=? WHERE slug=? AND updated_by IS NULL');
+        foreach ($seed as $i => $g) {
+            if (!str_starts_with($g[0], 'chemini-')) continue;
+            $ins->execute([$g[0], $g[1], $g[2], $g[3], $g[4], $g[5], $g[6], $g[7], $g[8] ?? 'tous', $i, time(), time()]);
+            $up->execute([$g[1], $g[8] ?? 'tous', $g[0]]);
+        }
+        $pdo->exec('PRAGMA user_version = 42;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

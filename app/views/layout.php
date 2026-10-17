@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=63">
+<link rel="stylesheet" href="/assets/app.css?v=64">
 </head>
 <body>
 <div id="app">
@@ -39,9 +39,9 @@
       }; ?>
       <?= $grp('Perso', 'perso', [$u]) ?>
       <a class="<?= $cls('home') ?>" href="/"><i class="dot"></i>Tableau de bord</a>
-      <a class="<?= $cls('perso') ?>" href="/espace"><i class="dot"></i>Mails à traiter<?php $nM = (int)q('SELECT COUNT(*) FROM mail_items WHERE user_id=? AND done=0', [(int)$u['id']])->fetchColumn(); if ($nM): ?> <span class="nav-n crit"><?= $nM ?></span><?php endif; ?></a>
+      <a class="<?= $cls('perso') ?>" href="/espace"><i class="dot"></i>Mails à traiter<?php $meK = team_me($u); [$nM, $nT, $nIa] = array_map('intval', q("SELECT (SELECT COUNT(*) FROM mail_items WHERE user_id=:u AND done=0), (SELECT COUNT(*) FROM team_tasks WHERE person=:p AND done_at IS NULL), (SELECT COUNT(*) FROM consignes WHERE user_id=:u AND status<>'done')", [':u' => (int)$u['id'], ':p' => (string)$meK])->fetch(PDO::FETCH_NUM)); if ($nM): ?> <span class="nav-n crit"><?= $nM ?></span><?php endif; ?></a>
       <a class="<?= $cls('mot') ?>" href="/mot-du-president"><i class="dot"></i>Mot du Président</a>
-      <a class="<?= in_array($n, ['tasks', 'ia'], true) ? 'active' : '' ?>" href="/mes-taches"><i class="dot"></i>Tâches<?php $nT = ($meK = team_me($u)) ? (int)q('SELECT COUNT(*) FROM team_tasks WHERE person=? AND done_at IS NULL', [$meK])->fetchColumn() : 0; $nIa = (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status<>'done'", [(int)$u['id']])->fetchColumn(); if ($nT + $nIa): ?> <span class="nav-n"><?= $nT + $nIa ?></span><?php endif; ?></a>
+      <a class="<?= in_array($n, ['tasks', 'ia'], true) ? 'active' : '' ?>" href="/mes-taches"><i class="dot"></i>Tâches<?php if ($nT + $nIa): ?> <span class="nav-n"><?= $nT + $nIa ?></span><?php endif; ?></a>
       <a class="<?= in_array($n, ['notes', 'books'], true) ? 'active' : '' ?>" href="/bloc-notes"><i class="dot"></i>Notes et livres</a>
       <?php if (in_array('direction', $sp, true)): ?>
       <?= $grp('Direction', 'direction', space_members('direction')) ?>
@@ -74,6 +74,7 @@
         <button type="button" data-theme-set="auto" title="Automatique (selon l'appareil)" aria-label="Thème automatique"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
       </span>
     </div>
+    <div class="rail-fs fs-switch" role="group" aria-label="Taille du texte"><span class="rail-fs-l">Taille du texte</span><button type="button" data-fs="-1" aria-label="Réduire le texte">A−</button><span data-fs-val>100 %</span><button type="button" data-fs="1" aria-label="Agrandir le texte">A+</button></div>
     <div class="me"><?= avatar($u) ?><div class="me-id"><?= e($u['name']) ?><small><?= e($u['email']) ?></small></div><form method="post" action="/deconnexion" class="me-out-f"><input type="hidden" name="csrf" value="<?= e($_SESSION['csrf'] ?? '') ?>"><button type="submit" class="me-out" title="Se déconnecter" aria-label="Se déconnecter"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button></form></div>
   </aside>
   <main class="<?= !empty($wide) ? 'wide' : '' ?>"><div class="page-tools"><div class="fs-switch" role="group" aria-label="Taille du texte"><button type="button" data-fs="-1" aria-label="Réduire le texte">A−</button><span data-fs-val>100 %</span><button type="button" data-fs="1" aria-label="Agrandir le texte">A+</button></div></div><?php /* Pages regroupées en onglets : une entrée de menu, plusieurs pages (toutes les adresses restent valables) */
