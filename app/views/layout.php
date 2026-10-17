@@ -122,7 +122,8 @@
         <input type="search" class="fab-psearch" placeholder="Rechercher un collègue…" aria-label="Rechercher un collègue" autocomplete="off">
         <div class="fab-people" role="radiogroup" aria-label="Personne">
           <?php if ($fmeP): ?><label class="fab-p me" data-first="Moi" data-role="Mes tâches" data-s="moi <?= e(mb_strtolower($fmeP['name'])) ?>"><input type="radio" name="person" value="<?= e($fme) ?>" checked><span class="ag-av">Moi</span><span class="fab-p-n"><b>Moi</b><small>Mes tâches</small></span></label><?php endif; ?>
-          <?php foreach ($fp as $pk => $pp): if ($pk === $fme) continue; ?><label class="fab-p" data-first="<?= e(strtok($pp['name'], ' ')) ?>" data-role="<?= e($pp['role']) ?>" data-s="<?= e(mb_strtolower($pp['name'] . ' ' . $pp['role'])) ?>"><input type="radio" name="person" value="<?= e($pk) ?>"><span class="ag-av"><?= e($ini2($pp['name'])) ?></span><span class="fab-p-n"><b><?= e($pp['name']) ?></b><small><?= e($pp['role']) ?></small></span></label><?php endforeach; ?>
+          <?php $fpA = $fp; $fkey = fn($x) => strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $x['name']) ?: $x['name']); uasort($fpA, fn($a, $b) => strcmp($fkey($a), $fkey($b))); // ordre alphabétique (accents ignorés)
+          foreach ($fpA as $pk => $pp): if ($pk === $fme) continue; ?><label class="fab-p" data-first="<?= e(strtok($pp['name'], ' ')) ?>" data-role="<?= e($pp['role']) ?>" data-s="<?= e(mb_strtolower($pp['name'] . ' ' . $pp['role'])) ?>"><input type="radio" name="person" value="<?= e($pk) ?>"><span class="ag-av"><?= e($ini2($pp['name'])) ?></span><span class="fab-p-n"><b><?= e($pp['name']) ?></b><small><?= e($pp['role']) ?></small></span></label><?php endforeach; ?>
           <p class="muted small fab-pnone" hidden>Aucun collègue trouvé.</p>
         </div>
       </div>
