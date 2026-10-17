@@ -36,7 +36,7 @@
     <div>
       <ul class="sg-spec">
         <li><b>600 × 200 px</b><span>taille affichée dans les mails (format 3:1)</span></li>
-        <li><b>1200 × 400 px</b><span>taille à générer et à importer, pour un rendu net sur les écrans haute définition</span></li>
+        <li><b>1200 × 400 px</b><span>taille conseillée à générer et à importer ; Chemini envoie automatiquement à Exclaimer une version 600 × 200 recadrée au centre si le format diffère</span></li>
         <li><b>PNG ou JPG</b><span>moins de 300 Ko conseillé (2 Mo au plus)</span></li>
         <li><b>Marges</b><span>textes à 40 px des bords au moins ; pas de texte sous 24 px de haut</span></li>
         <li><b>Charte</b><span>bleu nuit #2B2A6B, orange #F07D1A, blanc ; titres en capitales, police sans empattement grasse</span></li>
