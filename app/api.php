@@ -376,7 +376,7 @@ function api(string $r): never {
             if ($t === '') $t = $def ? 'Bandeau par défaut du ' . date('d/m/Y') : 'Bandeau du ' . date('d/m', strtotime($st)) . ' au ' . date('d/m/Y', strtotime($en));
             $file = bin2hex(random_bytes(8)) . '.' . ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif'][$info['mime']];
             file_put_contents(sig_dir() . '/' . $file, $bin);
-            $link = in_str('link', 500); if ($link !== '' && !preg_match('#^https?://#', $link)) $link = 'https://' . $link;
+            $link = SIG_LINK;
             if ($def) q('UPDATE banners SET is_default=0');
             q('INSERT INTO banners(title,file,mime,w,h,link,start,end,is_default,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)', [$t, $file, $info['mime'], $info[0], $info[1], $link ?: null, $st, $en, $def, $uid, time()]);
             json_out(['ok' => true]);

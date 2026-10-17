@@ -291,6 +291,7 @@ SQL);
             $pdo->exec("UPDATE banners SET is_default=1 WHERE id=(SELECT id FROM banners WHERE start IS NULL AND end IS NULL ORDER BY created_at DESC LIMIT 1)");
         $pdo->exec('PRAGMA user_version = 31;');
     }
+    if ($v < 32) { $pdo->exec("UPDATE banners SET link='https://www.gidsas.fr/'; PRAGMA user_version = 32;"); }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

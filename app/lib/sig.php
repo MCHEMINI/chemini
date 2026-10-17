@@ -44,6 +44,7 @@ function sig_serve_image(): never {
 }
 /** Version au format exact de la signature (600 × 200, recadrée au centre si le ratio diffère) : Exclaimer affiche l'image liée à sa taille réelle. */
 const SIG_W = 600, SIG_H = 200;
+const SIG_LINK = 'https://www.gidsas.fr/';
 function sig_fit(string $f, string $mime): string {
     if (!is_file($f) || !function_exists('imagecreatefromstring')) return $f;
     $out = $f . '.' . SIG_W . 'x' . SIG_H . ($mime === 'image/jpeg' ? '.jpg' : '.png');
@@ -61,6 +62,6 @@ function sig_fit(string $f, string $mime): string {
     return $ok ? $out : $f;
 }
 function sig_redirect(): never {
-    $b = sig_current(); $u = $b && $b['link'] ? $b['link'] : 'https://www.gidsas.fr/';
+    $u = SIG_LINK; // lien au clic : toujours le site de GID
     header('Location: ' . $u, true, 302); header('Cache-Control: no-cache'); exit;
 }

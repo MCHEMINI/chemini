@@ -45,10 +45,10 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
       <div class="field"><label for="sg-e">Au</label><input class="input" id="sg-e" name="end" type="date"></div></div>
       <p class="muted small">Décochez « Bandeau par défaut » pour programmer une période. À la fin de la période, le bandeau par défaut<?= $def ? ' (« ' . e($def['title']) . ' »)' : '' ?> reprend automatiquement.</p>
     </fieldset>
-    <details class="sg-opt"><summary>Nom et lien (facultatif)</summary>
+    <details class="sg-opt"><summary>Nom (facultatif)</summary>
       <div class="field"><label for="sg-t">Nom</label><input class="input" id="sg-t" name="title" maxlength="120" placeholder="Rempli automatiquement si vide"></div>
-      <div class="field"><label for="sg-l">Lien au clic</label><input class="input" id="sg-l" name="link" maxlength="500" placeholder="https://www.gidsas.fr/"></div>
     </details>
+    <p class="muted small">Au clic, le bandeau ouvre toujours https://www.gidsas.fr/</p>
     <p class="form-error" hidden></p>
     <button class="btn btn-primary">Ajouter le visuel</button>
   </form>
@@ -77,7 +77,7 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
     <article class="panel sg-card<?= $c === 'ok' ? ' on' : '' ?>">
       <div class="sg-thumb"><img src="/signatures/image/<?= (int)$b['id'] ?>" alt="" loading="lazy"></div>
       <div class="sg-meta"><b><?= e($b['title']) ?></b><span class="chip <?= $c ?>"><?= e($st) ?></span></div>
-      <p class="muted small"><?= $isPer ? 'Du ' . $fd($b['start']) . ' au ' . $fd($b['end']) : ($b['is_default'] ? 'Bandeau par défaut, hors périodes' : 'Sans période') ?><?= $b['link'] ? ' · <span class="sg-l">' . e(preg_replace('#^https?://#', '', $b['link'])) . '</span>' : '' ?></p>
+      <p class="muted small"><?= $isPer ? 'Du ' . $fd($b['start']) . ' au ' . $fd($b['end']) : ($b['is_default'] ? 'Bandeau par défaut, hors périodes' : 'Sans période') ?></p>
       <div class="sg-act">
         <?php if (!$b['is_default'] && !$isPer): ?><button type="button" class="btn-link" data-api="sig/default" data-id="<?= (int)$b['id'] ?>">Définir par défaut</button><?php endif; ?>
         <?php if (!$b['is_default']): ?><button type="button" class="btn-link" data-api="sig/delete" data-id="<?= (int)$b['id'] ?>" data-confirm="Supprimer ?">Supprimer</button><?php else: ?><span class="muted small">Toujours un bandeau par défaut : définissez-en un autre pour supprimer celui-ci.</span><?php endif; ?>
