@@ -963,6 +963,7 @@ document.addEventListener('click', async e => { const b = e.target.closest('[dat
 /* Agrandir une image (data-zoom) dans une fenêtre : clic, Échap ou clic hors de l'image pour fermer */
 (function(){ const d = document.getElementById('zoomDlg'); if (!d || !d.showModal) return; const im = d.querySelector('img'), t = d.querySelector('.zoom-t');
   document.addEventListener('click', e => { const s = e.target.closest('img[data-zoom]'); if (!s) return; e.preventDefault();
+    d.style.width = ''; im.onload = () => { d.style.width = Math.min(im.naturalWidth / (window.devicePixelRatio > 1 ? 1.5 : 1), window.innerWidth - 32) + 'px'; };
     im.src = s.currentSrc || s.src; im.alt = s.alt || ''; t.textContent = s.alt || ''; t.hidden = !s.alt; d.showModal(); });
   d.addEventListener('click', e => { if (e.target === d || e.target.closest('.zoom-x')) d.close(); });
   d.addEventListener('close', () => { im.removeAttribute('src'); });
