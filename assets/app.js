@@ -935,3 +935,6 @@ document.addEventListener('click', e => { if (e.target.closest('[data-print]')) 
 
 (function(){ const f = document.getElementById('wsPos'); if (!f) return; f.addEventListener('submit', async e => { e.preventDefault(); const b = f.querySelector('button'); b.disabled = true;
   try { await window.api('site/posters', { ids: [...f.querySelectorAll('input:checked')].map(i => Number(i.value)) }); location.reload(); } catch (x) { b.disabled = false; b.textContent = x.message; } }); })();
+/* Boutons « Copier » génériques (data-copy) */
+document.addEventListener('click', async e => { const b = e.target.closest('[data-copy]'); if (!b) return; e.preventDefault(); const t = document.getElementById('toast');
+  try { await navigator.clipboard.writeText(b.dataset.copy); if (t) { t.textContent = '📋 Copié'; t.hidden = false; setTimeout(() => (t.hidden = true), 2000); } } catch (_) { const i = b.parentElement.querySelector('input'); if (i) i.select(); } });

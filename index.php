@@ -21,6 +21,7 @@ require APP_DIR . '/lib/sig.php';
 require APP_DIR . '/lib/president.php';
 require APP_DIR . '/lib/guides.php';
 require APP_DIR . '/lib/wp.php';
+require APP_DIR . '/lib/stats.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -36,6 +37,8 @@ if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: ma
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
 if ($route0 === 'signature/banniere') sig_serve_image();
 if ($route0 === 'signature/lien') sig_redirect();
+if ($route0 === 't') stats_collect(); // mesure d'audience du site gidsas.fr (public, sans cookie)
+if ($route0 === 't.js') stats_script();
 if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts|banners|president)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();

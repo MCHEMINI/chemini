@@ -1584,3 +1584,15 @@ body.aa{background:var(--bg);color:var(--ink);min-height:100vh}
 .aa .na-form{max-width:none}
 .aa #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50}
 .toast{border-radius:16px;text-align:center}
+
+/* Fréquentation (mesure Chemini) */
+.ws-per{display:inline-flex;gap:4px}.ws-per a{font-size:12.5px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted);text-decoration:none}.ws-per a.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ws-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:4px 0 14px}
+.ws-kpis>div{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:12px;background:var(--bg)}
+.ws-kpis b{font:500 28px/1.1 var(--f-display);font-variant-numeric:tabular-nums}.ws-kpis span{font-weight:600;font-size:13.5px}.ws-kpis small{font-size:12px;color:var(--muted)}.ws-kpis small.up{color:var(--ok)}.ws-kpis small.dn{color:var(--crit)}
+.ws-daily{height:120px;gap:2px;margin-bottom:16px}.ws-daily .ws-col span{white-space:nowrap;font-size:10px}
+.ws-sub{grid-template-columns:repeat(2,minmax(0,1fr))}.ws-sub>div{min-width:0}.ws-sub h3{margin:0 0 10px;font-size:15px}
+.ws-snip{display:flex;gap:8px;margin:6px 0 8px}.ws-snip input{flex:1;min-width:0;font-size:12.5px}
+.ws-how-l{margin:0;padding-left:18px;font-size:14px}
+.ws-last{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13px}
+@media (max-width:820px){.ws-kpis{grid-template-columns:1fr 1fr}.ws-sub{grid-template-columns:minmax(0,1fr)}}

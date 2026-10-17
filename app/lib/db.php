@@ -383,6 +383,10 @@ SQL);
         foreach ($seed as $g) if ($g[0] === 'chemini-site-web') $pdo->prepare('UPDATE guides SET body=?, updated_at=? WHERE slug=? AND updated_by IS NULL')->execute([$g[7], time(), $g[0]]);
         $pdo->exec('PRAGMA user_version = 47;');
     }
+    if ($v < 48) { // Mesure d'audience maison du site gidsas.fr
+        $pdo->exec("CREATE TABLE IF NOT EXISTS site_hits(id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, day TEXT NOT NULL, vid TEXT NOT NULL, kind TEXT NOT NULL, path TEXT, title TEXT, channel TEXT, source TEXT, device TEXT, label TEXT, entry INTEGER NOT NULL DEFAULT 0);
+                    CREATE INDEX IF NOT EXISTS site_hits_day ON site_hits(day, kind); CREATE INDEX IF NOT EXISTS site_hits_vid ON site_hits(day, vid); PRAGMA user_version = 48;");
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

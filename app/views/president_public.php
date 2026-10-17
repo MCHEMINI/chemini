@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=72">
+<link rel="stylesheet" href="/assets/app.css?v=73">
 </head>
 <body class="pw-public">
 <div class="pw-pub-top"><span class="seal">G</span><span>GID · Administrateur de biens</span></div>
