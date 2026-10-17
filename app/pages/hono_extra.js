@@ -27,6 +27,12 @@
   css.textContent = [
     '.ha-card{grid-column:1/-1;cursor:pointer;transition:border-color .15s}',
     ':root{--ha-ann:#C9A66B}',
+    '.ha-topmore{display:grid;gap:6px;margin-top:6px;padding-top:12px;border-top:1px dashed var(--border)}',
+    '.ha-tr{display:grid;grid-template-columns:24px minmax(0,1fr) 30% 74px;gap:10px;align-items:center;font-size:12.5px}',
+    '.ha-tr .n{color:var(--text-2);font-variant-numeric:tabular-nums;text-align:right}.ha-tr .l{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.ha-tr .t{height:8px;border-radius:3px;background:var(--surface-2);overflow:hidden}.ha-tr .t i{display:block;height:100%;background:var(--accent);opacity:.75}',
+    '.ha-tr .v{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}',
+    '.ha-allbtn{justify-self:start;margin-top:10px;padding:8px 14px;border:1px solid var(--border);border-radius:6px;color:var(--accent);font-weight:600;font-size:13px;text-decoration:none}.ha-allbtn:hover{border-color:var(--accent)}',
     '.ha-pl{display:grid;gap:8px;margin-top:12px}',
     '.ha-pr{display:grid;grid-template-columns:34px minmax(0,1fr) 92px 56px 70px;gap:10px;align-items:center;font-size:13px}',
     '.ha-pr .p{font-weight:700}.ha-pr .t{display:flex;height:14px;border-radius:3px;background:var(--surface-2);overflow:hidden}.ha-pr .t i{display:block;height:100%}.ha-pr .t .h{background:var(--accent)}.ha-pr .t .a{background:var(--ha-ann)}',
@@ -245,6 +251,24 @@
     var f = h('div', 'ha-foot'); f.appendChild(h('span', null, 'Source : ImmOpen, balance fournisseurs (crédits par immeuble) · relevé du ' + fdate(A.at)));
     f.appendChild(h('span', 'ha-link', 'Voir le détail par immeuble →')); card.appendChild(f);
     portCard();
+  }
+
+  /* ---------- Top des immeubles : suite du classement + lien vers la page complète ---------- */
+  function topMore() {
+    var ch = document.getElementById('chTop'); if (!ch) return;
+    var box = document.getElementById('haTopMore');
+    if (!box) { box = h('div', 'ha-topmore'); box.id = 'haTopMore'; ch.parentNode.insertBefore(box, ch.nextSibling); var t = ch.parentNode.querySelector('h2'); if (t) t.textContent = 'Top 20 des immeubles'; }
+    box.textContent = '';
+    var L = getState().bld.filter(function (b) { return !(num(b.perdus) > 0 && num(b.h2627v) === 0) && num(b.h2627v) > 0; })
+      .sort(function (a, b) { return num(b.h2627v) - num(a.h2627v); });
+    var mx = L.length ? num(L[0].h2627v) : 1;
+    L.slice(10, 20).forEach(function (b, i) {
+      var r = h('div', 'ha-tr'); r.appendChild(h('span', 'n', String(i + 11)));
+      r.appendChild(h('span', 'l', String(b.imm || '').trim()));
+      var t = h('span', 't'), bar = h('i'); bar.style.width = (num(b.h2627v) / mx * 100).toFixed(1) + '%'; t.appendChild(bar); r.appendChild(t);
+      r.appendChild(h('span', 'v', EUR.format(num(b.h2627v)))); box.appendChild(r);
+    });
+    var a = h('a', 'ha-allbtn', 'Voir tous les immeubles (' + L.length + ') →'); a.href = '/honoraires/classement'; a.target = '_top'; box.appendChild(a);
   }
 
   /* ---------- Honoraires TTC + annexes par portefeuille (à droite du bloc par portefeuille) ---------- */
@@ -916,7 +940,8 @@
   var MOIS_L = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 
   function init() {
-    applyHidden(); colPicker(); archPicker(); decorate(); renderCard(); crossCheck(); modifsTab(); decisionBoard();
+    applyHidden(); colPicker(); archPicker(); decorate(); renderCard(); crossCheck(); modifsTab(); decisionBoard(); topMore();
+    var cht = document.getElementById('chTop'); if (cht) new MutationObserver(function () { topMore(); }).observe(cht, { childList: true });
     window.addEventListener('load', function () { setTimeout(decisionBoard, 50); });
     var ob = document.querySelector('nav.tabs [data-tab="opti"]'); if (ob) ob.addEventListener('click', function () { setTimeout(decisionBoard, 0); });
     if (location.hash === '#annexes' && A) openDetail(true);

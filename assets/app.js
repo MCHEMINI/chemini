@@ -588,3 +588,37 @@ document.addEventListener('click', e => {
     inp.addEventListener('input', () => { const s = inp.value ? Math.max(1, score(inp.value)) : 0; m.dataset.s = s; m.querySelector('span').textContent = inp.value ? lab[inp.value.length < 12 ? 0 : s] : '12 caractères minimum, trois types de caractères'; });
   });
 })();
+
+/* Tableau d'affichage : filtre par rubrique */
+document.addEventListener('click', e => { const a = e.target.closest('[data-bd]'); if (!a) return; e.preventDefault();
+  a.parentElement.querySelectorAll('[data-bd]').forEach(x => x.classList.toggle('on', x === a));
+  document.querySelectorAll('.bd-card').forEach(c => { c.hidden = !!a.dataset.bd && c.dataset.cat !== a.dataset.bd; }); });
+
+/* Questionnaire de la Direction (Accueil) : envoi des choix multiples */
+(function(){ const f = document.getElementById('qcmForm'); if (!f) return;
+  f.addEventListener('submit', async e => { e.preventDefault(); const d = {}; const btn = f.querySelector('button');
+    f.querySelectorAll('input').forEach(i => { if (i.type === 'radio' || i.type === 'checkbox') { if (i.checked) (d[i.name] = d[i.name] || []).push(i.value); } else d[i.name] = i.value; });
+    btn.disabled = true; try { await api('accueil/qcm', d); location.reload(); } catch (err) { btn.disabled = false; const p = f.querySelector('.form-error'); p.hidden = false; p.textContent = err.message; } });
+})();
+
+/* Présentation : diapositives (flèches, balayage, plein écran) */
+(function(){ const d = document.getElementById('deck'); if (!d) return;
+  const S = [...d.querySelectorAll('.sl')], dots = [...d.querySelectorAll('[data-go]')]; let i = 0;
+  const go = n => { i = Math.max(0, Math.min(S.length - 1, n)); S.forEach((s, k) => s.hidden = k !== i); dots.forEach((b, k) => b.classList.toggle('on', k === i)); document.getElementById('deckI').textContent = i + 1; try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {} };
+  document.getElementById('deckP').addEventListener('click', () => go(i - 1)); document.getElementById('deckN').addEventListener('click', () => go(i + 1));
+  dots.forEach(b => b.addEventListener('click', () => go(+b.dataset.go)));
+  document.addEventListener('keydown', e => { if (/INPUT|TEXTAREA/.test(document.activeElement?.tagName)) return; if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(i + 1); } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1); } });
+  let x0 = null; d.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true }); d.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(i + (dx < 0 ? 1 : -1)); x0 = null; });
+  document.getElementById('deckFs').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); else d.requestFullscreen?.(); });
+  go((parseInt(location.hash.slice(1), 10) || 1) - 1);
+})();
+
+/* Tableaux triables [data-sortable] + recherche du classement */
+document.querySelectorAll('table[data-sortable]').forEach(t => {
+  const tb = t.tBodies[0];
+  t.querySelectorAll('th').forEach((th, ci) => { th.style.cursor = 'pointer'; th.addEventListener('click', () => {
+    const d = th.dataset.dir === '1' ? -1 : 1; t.querySelectorAll('th').forEach(x => { x.dataset.dir = ''; x.classList.remove('sorted'); }); th.dataset.dir = String(d); th.classList.add('sorted');
+    const rows = [...tb.rows]; rows.sort((a, b) => { const x = a.cells[ci].dataset.v ?? '', y = b.cells[ci].dataset.v ?? '', nx = parseFloat(x), ny = parseFloat(y);
+      return ((!isNaN(nx) && !isNaN(ny)) ? nx - ny : x.localeCompare(y, 'fr', { numeric: true })) * d; }); rows.forEach(r => tb.appendChild(r)); }); });
+});
+(function(){ const q = document.getElementById('rkQ'); if (!q) return; q.addEventListener('input', () => { const v = q.value.trim().toLowerCase(); document.querySelectorAll('.rk-tbl tbody tr').forEach(tr => { tr.hidden = !!v && !tr.dataset.q.includes(v); }); }); })();

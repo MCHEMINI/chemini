@@ -330,6 +330,31 @@ function api(string $r): never {
             if (!$allowed) json_out(['error' => 'Accès refusé.'], 403);
             q($r === 'tasks/toggle' ? 'UPDATE tasks SET done = 1 - done WHERE id=?' : 'DELETE FROM tasks WHERE id=?', [$task['id']]);
             json_out(['ok' => true]);
+        case 'accueil/qcm':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            require_once APP_DIR . '/pages/onboard.php';
+            $b = body(); $A = accueil_answers();
+            foreach (ACCUEIL_QCM as $k => $q) {
+                $c = $b['q_' . $k] ?? []; $c = is_array($c) ? $c : ($c === '' ? [] : [$c]);
+                $c = array_values(array_intersect(array_map('strval', $c), $q[3]));
+                $o = mb_substr(trim((string)($b['o_' . $k] ?? '')), 0, 1500);
+                if ($c || $o !== '') $A[$k] = ['c' => $c, 'o' => $o]; else unset($A[$k]);
+            }
+            q("INSERT INTO kv(k,v,updated_at) VALUES('accueil_qcm',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode($A, JSON_UNESCAPED_UNICODE), time()]);
+            json_out(['ok' => true]);
+        case 'board/add':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            $t = in_str('title', 160); if ($t === '') json_out(['error' => 'Indiquez un titre.'], 400);
+            $cat = in_str('cat', 20); if (!isset(BOARD_CATS[$cat])) $cat = 'annonce';
+            $link = in_str('link', 500); if ($link !== '' && !preg_match('#^https?://#', $link)) $link = '';
+            $until = in_str('until', 10); if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $until)) $until = '';
+            q('INSERT INTO board_posts(title,body,cat,pinned,link,author,created_at,until) VALUES(?,?,?,?,?,?,?,?)', [$t, in_str('body', 4000), $cat, in_str('pinned', 2) ? 1 : 0, $link ?: null, $uid, time(), $until ?: null]);
+            json_out(['ok' => true]);
+        case 'board/pin':
+        case 'board/delete':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            q($r === 'board/pin' ? 'UPDATE board_posts SET pinned=1-pinned WHERE id=?' : 'DELETE FROM board_posts WHERE id=?', [in_int('id')]);
+            json_out(['ok' => true]);
         case 'team/add':
             $who = in_str('person', 80); $t = in_str('title', 300); $due = in_str('due', 10);
             if (!isset(team_people()[$who])) json_out(['error' => 'Collaborateur introuvable.'], 404);

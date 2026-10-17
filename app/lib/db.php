@@ -226,6 +226,13 @@ SQL);
         foreach ($rows as $r) $ins->execute([$slug($r['name']), $r['title'], $r['user_id'], $r['created_at'], $r['done'] ? $r['created_at'] : null, $r['done'] ? $r['user_id'] : null]);
         $pdo->exec('DELETE FROM tasks WHERE space IS NULL; PRAGMA user_version = 22;');
     }
+    if ($v < 23) {
+        $t = time(); $ins = $pdo->prepare('INSERT INTO board_posts(title,body,cat,pinned,link,author,created_at) VALUES(?,?,?,?,NULL,NULL,?)');
+        $ins->execute(['Bienvenue sur Chemini', "La plateforme interne de GID réunit les informations générales du cabinet, vos tâches, l'organigramme et la page Accueil des nouveaux arrivants.\nPour vous connecter : Face ID ou mot de passe et code à 6 chiffres.", 'outils', 1, $t]);
+        $ins->execute(['Organigramme et page Accueil', "Retrouvez qui travaille avec qui (gestionnaire, assistante, comptables de chaque pôle) dans Organigramme, et la présentation de la société dans Accueil.", 'organisation', 0, $t + 1]);
+        $ins->execute(['Tâches d\'équipe', "Dans Collaborateurs, chacun peut affecter une tâche à un collègue, avec ou sans échéance. La personne la coche une fois faite : la date de traitement est enregistrée.", 'outils', 0, $t + 2]);
+        $pdo->exec('PRAGMA user_version = 23;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

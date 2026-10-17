@@ -113,3 +113,7 @@ function pw_check(string $pw, ?array $u = null): ?string {
 /** Hachage : Argon2id quand il est disponible, sinon bcrypt. */
 function pw_hash(string $pw): string { return defined('PASSWORD_ARGON2ID') ? password_hash($pw, PASSWORD_ARGON2ID) : password_hash($pw, PASSWORD_DEFAULT); }
 function pw_algo(): string|int|null { return defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT; }
+
+/* Rubriques du tableau d'affichage : libellé, couleur */
+const BOARD_CATS = ['annonce' => ['Annonce', '#8A6A3B'], 'organisation' => ['Organisation', '#3F5F8A'], 'rh' => ['Vie du cabinet', '#3F7A5A'],
+    'reglementation' => ['Réglementation', '#A6403A'], 'procedure' => ['Procédures', '#6B5B95'], 'evenement' => ['Événement', '#A8742A'], 'outils' => ['Outils', '#4A505A']];

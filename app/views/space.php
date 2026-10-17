@@ -1,13 +1,14 @@
 <header class="head">
   <div>
     <div class="eyebrow"><?= $space === 'gid' ? 'Espace partagé · toute la société' : 'Tableau de bord · espace privé' ?></div>
-    <h1><?= $space === 'gid' ? 'Espace' : 'Tableau de bord' ?> <em><?= e(SPACES[$space]) ?></em></h1>
-    <div class="date">Visible par <?= e(implode(', ', array_map(fn($m) => explode(' ', $m['name'])[0], $members))) ?></div>
+    <h1><?= $space === 'gid' ? 'Informations <em>générales</em>' : 'Tableau de bord <em>' . e(SPACES[$space]) . '</em>' ?></h1>
+    <div class="date"><?= $space === 'gid' ? 'Le tableau d\'affichage de GID : annonces, organisation, vie du cabinet · visible par toute l\'équipe' : 'Visible par ' . e(implode(', ', array_map(fn($m) => explode(' ', $m['name'])[0], $members))) ?></div>
   </div>
   <div class="head-actions members"><?php foreach ($members as $m): ?><?= avatar($m) ?><?php endforeach; ?></div>
 </header>
 
 <?php if ($space === 'direction') require __DIR__ . '/_dir_board.php'; ?>
+<?php if ($space === 'gid') require __DIR__ . '/_board.php'; ?>
 <?php if ($space === 'famille'): ?>
 <section class="fam-trips">
   <div class="sec-h"><h2>Voyages</h2><a href="/voyages">Tous les voyages</a></div>

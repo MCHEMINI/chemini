@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=35">
+<link rel="stylesheet" href="/assets/app.css?v=36">
 </head>
 <body>
 <div id="app">
@@ -33,8 +33,10 @@
       }; ?>
       <?= $grp('Équipe', 'gid', space_members('gid')) ?>
       <a class="<?= $cls('dash') ?>" href="/"><i class="dot"></i>Tableau de bord</a>
-      <a class="<?= $cls('space-gid') ?>" href="/gid"><i class="dot"></i>Espace équipe</a>
+      <a class="<?= $cls('space-gid') ?>" href="/gid"><i class="dot"></i>Informations</a>
       <a class="<?= $cls('team') ?>" href="/equipe"><i class="dot"></i>Collaborateurs</a>
+      <a class="<?= $cls('orga') ?>" href="/organigramme"><i class="dot"></i>Organigramme</a>
+      <a class="<?= $cls('accueil') ?>" href="/accueil"><i class="dot"></i>Accueil</a>
       <?php if (in_array('direction', $sp, true)): ?>
       <?= $grp('Direction', 'direction', space_members('direction')) ?>
       <a class="<?= $cls('space-direction') ?>" href="/direction"><i class="dot"></i>Tableau de bord</a>
@@ -81,6 +83,6 @@
   <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Tâches IA : donner une consigne"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=23"></script>
+<script src="/assets/app.js?v=24"></script>
 </body>
 </html>

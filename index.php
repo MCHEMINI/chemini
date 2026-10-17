@@ -70,6 +70,14 @@ try {
             $u = require_user();
             require APP_DIR . '/pages/team.php';
             page_team($u);
+        case 'organigramme':
+        case 'accueil':
+        case 'accueil/presentation':
+            $u = require_user();
+            require APP_DIR . '/pages/onboard.php';
+            if ($route === 'organigramme') page_organigramme($u);
+            if ($route === 'accueil') page_accueil($u);
+            page_presentation($u);
         case 'strategies':
             $u = require_user();
             require_once APP_DIR . '/pages/strategies.php';
@@ -146,6 +154,20 @@ try {
                 $u = require_user();
                 require APP_DIR . '/pages/immeubles.php';
                 page_building($u, $m[1]);
+            }
+            if ($route === 'honoraires/classement') {
+                $u = require_user();
+                if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès refusé', 'u' => $u]); }
+                $rows = [];
+                foreach (hono_data()['bld'] ?? [] as $b) {
+                    if (hono_lost($b)) continue;
+                    $code = str_pad((string)$b['num'], 5, '0', STR_PAD_LEFT); $f = bld_finance($code);
+                    $v = hono_num($b['h2627v']); $p = hono_num($b['h2526']); $l = (int)hono_num($b['lots']);
+                    $rows[] = ['code' => $code, 'imm' => trim((string)$b['imm']), 'port' => strtoupper(trim((string)($b['port'] ?? ''))), 'lots' => $l, 'v' => $v, 'p' => $p,
+                               'ev' => $p ? ($v / $p - 1) * 100 : null, 'pl' => $l ? $v / $l : 0, 'color' => $f['color'] ?? null, 'clabel' => $f['label'] ?? ''];
+                }
+                usort($rows, fn($a, $b) => $b['v'] <=> $a['v']);
+                render('hono_rank', ['title' => 'Classement des immeubles', 'nav' => 'honoraires', 'u' => $u, 'rows' => $rows]);
             }
             if ($route === 'honoraires/modifications') {
                 $u = require_user();
