@@ -9,21 +9,26 @@ function sig_dir(): string { $d = DATA_DIR . '/banners'; if (!is_dir($d)) @mkdir
 
 function sig_all(): array { return q('SELECT b.*, u.name AS by_name FROM banners b LEFT JOIN users u ON u.id=b.created_by ORDER BY COALESCE(b.start, \'0000\') DESC, b.created_at DESC')->fetchAll(); }
 
-/** Bandeau du jour : le plus récent dont la période couvre aujourd'hui, sinon le bandeau par défaut. */
+/** Bandeau du jour : un brouillon activé à la main, sinon le plus récent dont la période couvre aujourd'hui, sinon le bandeau par défaut. */
 function sig_current(): ?array {
+    static $c = false; if ($c !== false) return $c;
     $t = date('Y-m-d');
-    $b = q('SELECT * FROM banners WHERE (start IS NULL OR start<=?) AND (end IS NULL OR end>=?) AND (start IS NOT NULL OR end IS NOT NULL) ORDER BY COALESCE(start, \'0000\') DESC, created_at DESC LIMIT 1', [$t, $t])->fetch();
-    return $b ?: (q('SELECT * FROM banners WHERE is_default=1 ORDER BY created_at DESC LIMIT 1')->fetch() ?: null);
+    $b = q('SELECT * FROM banners WHERE active_at IS NOT NULL ORDER BY active_at DESC LIMIT 1')->fetch()
+      ?: q('SELECT * FROM banners WHERE (start IS NULL OR start<=?) AND (end IS NULL OR end>=?) AND (start IS NOT NULL OR end IS NOT NULL) ORDER BY COALESCE(start, \'0000\') DESC, created_at DESC LIMIT 1', [$t, $t])->fetch();
+    return $c = ($b ?: (q('SELECT * FROM banners WHERE is_default=1 ORDER BY created_at DESC LIMIT 1')->fetch() ?: null));
 }
 
+/** Type d'un bandeau : défaut, période ou brouillon. */
+function sig_mode(array $b): string { return $b['is_default'] ? 'default' : (($b['start'] || $b['end']) ? 'period' : 'draft'); }
+
 function sig_state(array $b): array {
-    $t = date('Y-m-d'); $cur = sig_current();
-    if ($cur && (int)$cur['id'] === (int)$b['id']) return ['En cours d\'envoi', 'ok'];
+    $t = date('Y-m-d'); $cur = sig_current(); $on = $cur && (int)$cur['id'] === (int)$b['id'];
+    if ($b['active_at']) return [$on ? 'Activé · en cours d\'envoi' : 'Activé', 'ok'];
+    if ($on) return ['En cours d\'envoi', 'ok'];
     if ($b['is_default']) return ['Par défaut', 'neutral'];
     if ($b['end'] && $b['end'] < $t) return ['Terminé', 'muted'];
-    if ($b['start'] && $b['start'] > $t) return ['Programmé', 'warn'];
-    if ($b['start'] || $b['end']) return ['Programmé', 'warn']; // période en cours masquée par une autre plus récente
-    return ['Inactif', 'muted'];
+    if ($b['start'] || $b['end']) return ['Programmé', 'warn'];
+    return ['Brouillon', 'muted'];
 }
 
 /** Image publique (adresse fixe pour Exclaimer). */

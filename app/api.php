@@ -369,9 +369,11 @@ function api(string $r): never {
             }
             $re = '/^\d{4}-\d{2}-\d{2}$/'; $st = in_str('start', 10); $en = in_str('end', 10);
             $st = preg_match($re, $st) ? $st : null; $en = preg_match($re, $en) ? $en : null;
-            $def = in_str('is_default', 2) ? 1 : 0;
+            $mode = in_str('mode', 10) ?: (in_str('is_default', 2) ? 'default' : 'period');
+            if (!in_array($mode, ['default', 'period', 'draft'], true)) $mode = 'default';
+            $def = $mode === 'default' ? 1 : 0; if ($mode === 'draft') { $st = $en = null; }
             $otherDef = (bool)q('SELECT 1 FROM banners WHERE is_default=1 AND id<>?', [$old['id'] ?? 0])->fetchColumn();
-            if ($def) { $st = $en = null; }
+            if ($def || $mode === 'draft') { $st = $en = null; if ($old && $old['is_default'] && !$def && !$otherDef) json_out(['error' => 'Il faut toujours un bandeau par défaut : définissez-en un autre avant de changer celui-ci.'], 400); }
             else {
                 if (!$st || !$en) json_out(['error' => 'Indiquez la période (du… au…) ou cochez « Bandeau par défaut ».'], 400);
                 if ($en < $st) json_out(['error' => 'La date de fin est avant la date de début.'], 400);
@@ -379,7 +381,7 @@ function api(string $r): never {
                 if (!$otherDef) json_out(['error' => $old && $old['is_default'] ? 'Il faut toujours un bandeau par défaut : définissez-en un autre avant de programmer celui-ci sur une période.' : 'Il faut toujours un bandeau par défaut : ajoutez d\'abord celui qui s\'affichera hors périodes.'], 400);
             }
             $t = in_str('title', 120);
-            if ($t === '') $t = $old['title'] ?? ($def ? 'Bandeau par défaut du ' . date('d/m/Y') : 'Bandeau du ' . date('d/m', strtotime($st)) . ' au ' . date('d/m/Y', strtotime($en)));
+            if ($t === '') $t = $old['title'] ?? ($def ? 'Bandeau par défaut du ' . date('d/m/Y') : ($mode === 'draft' ? 'Brouillon du ' . date('d/m/Y') : 'Bandeau du ' . date('d/m', strtotime($st)) . ' au ' . date('d/m/Y', strtotime($en))));
             $file = $old['file'] ?? null; $mime = $old['mime'] ?? null; $w = $old['w'] ?? 0; $h = $old['h'] ?? 0;
             if ($bin !== null) {
                 $file = bin2hex(random_bytes(8)) . '.' . ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif'][$info['mime']];
@@ -387,14 +389,21 @@ function api(string $r): never {
                 if ($old) foreach (glob(sig_dir() . '/' . basename($old['file']) . '*') ?: [] as $f) @unlink($f);
             }
             if ($def) q('UPDATE banners SET is_default=0');
-            if ($old) q('UPDATE banners SET title=?, file=?, mime=?, w=?, h=?, link=?, start=?, end=?, is_default=? WHERE id=?', [$t, $file, $mime, $w, $h, SIG_LINK, $st, $en, $def, $old['id']]);
+            if ($old) q('UPDATE banners SET title=?, file=?, mime=?, w=?, h=?, link=?, start=?, end=?, is_default=?, active_at=' . ($mode === 'draft' ? 'active_at' : 'NULL') . ' WHERE id=?', [$t, $file, $mime, $w, $h, SIG_LINK, $st, $en, $def, $old['id']]);
             else q('INSERT INTO banners(title,file,mime,w,h,link,start,end,is_default,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)', [$t, $file, $mime, $w, $h, SIG_LINK, $st, $en, $def, $uid, time()]);
+            json_out(['ok' => true]);
+        case 'sig/activate':
+        case 'sig/deactivate':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            $b = q('SELECT * FROM banners WHERE id=?', [in_int('id')])->fetch(); if (!$b) json_out(['error' => 'Bandeau introuvable.'], 404);
+            q('UPDATE banners SET active_at=NULL');
+            if ($r === 'sig/activate') q('UPDATE banners SET active_at=? WHERE id=?', [time(), $b['id']]);
             json_out(['ok' => true]);
         case 'sig/default':
         case 'sig/delete':
             if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
             $b = q('SELECT * FROM banners WHERE id=?', [in_int('id')])->fetch(); if (!$b) json_out(['error' => 'Bandeau introuvable.'], 404);
-            if ($r === 'sig/default') { q('UPDATE banners SET is_default=0'); q('UPDATE banners SET is_default=1, start=NULL, end=NULL WHERE id=?', [$b['id']]); }
+            if ($r === 'sig/default') { q('UPDATE banners SET is_default=0'); q('UPDATE banners SET is_default=1, start=NULL, end=NULL, active_at=NULL WHERE id=?', [$b['id']]); }
             else {
                 if ($b['is_default']) json_out(['error' => 'Il faut toujours un bandeau par défaut : définissez-en un autre avant de supprimer celui-ci.'], 400);
                 q('DELETE FROM banners WHERE id=?', [$b['id']]); foreach (glob(sig_dir() . '/' . basename($b['file']) . '*') ?: [] as $f) @unlink($f);

@@ -668,42 +668,48 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
   document.querySelectorAll('[data-inv]').forEach(b => b.addEventListener('click', () => run('team/invite', { name: b.dataset.inv }, b)));
 })();
 
-/* Signatures : ajouter un visuel (image lue dans le navigateur) ; défaut OU période */
-(function(){ const f = document.getElementById('sgF'); if (!f) return; const inp = document.getElementById('sg-i'), pv = document.getElementById('sgPrev'), d = document.getElementById('sg-d'), per = document.getElementById('sgPer'), s = document.getElementById('sg-s'), e = document.getElementById('sg-e'); let data = '';
-  const sync = () => { per.classList.toggle('off', d.checked); s.required = e.required = !d.checked; };
-  d.addEventListener('change', () => { if (d.checked) { s.value = e.value = ''; } sync(); });
-  [s, e].forEach(x => x.addEventListener('input', () => { if (x.value) { d.checked = false; sync(); } if (s.value && (!e.value || e.value < s.value)) e.min = s.value; }));
-  per.addEventListener('click', () => { if (d.checked) { d.checked = false; sync(); } });
-  sync();
+/* Signatures : ajouter / modifier un visuel — défaut, période ou brouillon */
+function sgModes(f, perEl) { const radios = f.querySelectorAll('[name=mode]'), dates = perEl.querySelectorAll('input[type=date]');
+  const mode = () => (f.querySelector('[name=mode]:checked') || {}).value;
+  const sync = () => { const p = mode() === 'period'; perEl.classList.toggle('off', !p); dates.forEach(x => { x.required = p; if (!p) x.value = ''; }); };
+  radios.forEach(r => r.addEventListener('change', sync));
+  dates.forEach(x => x.addEventListener('focus', () => { if (mode() !== 'period') { f.querySelector('[name=mode][value=period]').checked = true; sync(); } }));
+  sync(); return sync; }
+(function(){ const f = document.getElementById('sgF'); if (!f) return; const inp = document.getElementById('sg-i'), pv = document.getElementById('sgPrev'); let data = '';
+  sgModes(f, document.getElementById('sgPer'));
   inp.addEventListener('change', () => { const file = inp.files[0]; if (!file) return; const r = new FileReader(); r.onload = () => { data = r.result; pv.hidden = false; pv.src = data; f.querySelector('.sg-drop').classList.add('has'); }; r.readAsDataURL(file); });
   f.addEventListener('submit', async ev => { ev.preventDefault(); const err = f.querySelector('.form-error'); err.hidden = true; const btn = f.querySelector('button.btn-primary');
     const o = Object.fromEntries(new FormData(f).entries()); o.data = data; btn.disabled = true;
     try { await api('sig/add', o); location.reload(); } catch (x) { btn.disabled = false; err.hidden = false; err.textContent = x.message; } });
 })();
-
-/* Signatures : modifier un bandeau (nom, période ou défaut, image) */
-(function(){ document.querySelectorAll('[data-sg-form]').forEach(f => { const id = f.dataset.sgForm, card = f.closest('.sg-card'), btn = card.querySelector('[data-sg-edit]');
-  const d = f.querySelector('[data-sg-def]'), per = f.querySelector('[data-sg-per]'), dates = per.querySelectorAll('input'), file = f.querySelector('input[type=file]'); let data = '';
-  const sync = () => per.classList.toggle('off', d.checked);
-  d.addEventListener('change', () => { if (d.checked) dates.forEach(x => x.value = ''); sync(); });
-  dates.forEach(x => x.addEventListener('input', () => { if (x.value) { d.checked = false; sync(); } }));
+document.querySelectorAll('[data-sg-form]').forEach(f => { const id = f.dataset.sgForm, card = f.closest('.sg-card'), btn = card.querySelector('[data-sg-edit]'), file = f.querySelector('input[type=file]'); let data = '';
+  const sync = sgModes(f, f.querySelector('[data-sg-per]'));
   file.addEventListener('change', () => { const fl = file.files[0]; if (!fl) return; const r = new FileReader(); r.onload = () => { data = r.result; card.querySelector('.sg-thumb img').src = data; }; r.readAsDataURL(fl); });
-  btn.addEventListener('click', () => { f.hidden = !f.hidden; btn.textContent = f.hidden ? 'Modifier' : 'Fermer'; sync(); });
+  btn.addEventListener('click', () => { f.hidden = !f.hidden; btn.textContent = f.hidden ? 'Modifier' : 'Fermer'; });
   f.querySelector('[data-sg-cancel]').addEventListener('click', () => location.reload());
   f.addEventListener('submit', async ev => { ev.preventDefault(); const err = f.querySelector('.form-error'), b = f.querySelector('.btn-primary'); err.hidden = true;
-    const o = Object.fromEntries(new FormData(f).entries()); o.id = Number(id); o.data = data; b.disabled = true;
+    const o = Object.fromEntries(new FormData(f).entries()); o.id = Number(id); if (data) o.data = data; b.disabled = true;
     try { await api('sig/edit', o); location.reload(); } catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });
-}); })();
+});
 
-/* Signatures : consignes techniques à coller dans Gemini (le thème est décrit par l'utilisateur) */
-(function(){ const out = document.getElementById('sgPrompt'); if (!out) return;
-  out.value = `CONSIGNES TECHNIQUES — bannière de signature e-mail
-
+/* Signatures : prompt Gemini = message saisi + consignes techniques ; champs vides mis en évidence */
+(function(){ const out = document.getElementById('sgPrompt'), t = document.getElementById('sgTheme'), sub = document.getElementById('sgSub'); if (!out) return;
+  const tech = `CONSIGNES TECHNIQUES
 – Format : paysage, exactement 1200 × 400 pixels (ratio 3:1), PNG ou JPG, haute définition, moins de 2 Mo.
 – Affichage final : réduit à 600 × 200 pixels sous la signature ; tout doit rester lisible à cette taille.
 – Zone de sécurité : aucun texte ni élément important à moins de 60 pixels des bords (l'image peut être légèrement recadrée au centre).
 – Texte : 2 lignes au maximum, titre d'au moins 56 pixels de haut, police sans empattement grasse, fort contraste avec le fond, orthographe française parfaite.
 – Couleurs de la charte : bleu nuit #2B2A6B, orange #F07D1A, blanc.
 – Interdits : logo, adresse, numéro de téléphone, e-mail, site web, filigrane, texte déformé ou inventé, bordure blanche autour de l'image.`;
-  document.getElementById('sgCopy').addEventListener('click', async e => { try { await navigator.clipboard.writeText(out.value); e.target.textContent = 'Copié ✓'; } catch (x) { out.select(); document.execCommand('copy'); e.target.textContent = 'Copié ✓'; } setTimeout(() => { e.target.textContent = 'Copier les consignes'; }, 2000); });
+  const build = () => { const m = t.value.trim(), s2 = sub.value.trim();
+    [t, sub].forEach(x => x.closest('.sg-todo').classList.toggle('done', !!x.value.trim()));
+    out.value = `Crée une bannière de signature e-mail.
+
+TEXTE À ÉCRIRE SUR L'IMAGE (seul texte autorisé) :
+– Titre : « ${m || '[MESSAGE DU BANDEAU À COMPLÉTER]'} »` + (s2 ? `
+– Ligne secondaire, plus petite : « ${s2} »` : '') + `
+
+` + tech; };
+  [t, sub].forEach(x => x.addEventListener('input', build)); build();
+  document.getElementById('sgCopy').addEventListener('click', async e => { try { await navigator.clipboard.writeText(out.value); e.target.textContent = 'Copié ✓'; } catch (x) { out.select(); document.execCommand('copy'); e.target.textContent = 'Copié ✓'; } setTimeout(() => { e.target.textContent = 'Copier le prompt'; }, 2000); });
 })();

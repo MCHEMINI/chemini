@@ -292,6 +292,7 @@ SQL);
         $pdo->exec('PRAGMA user_version = 31;');
     }
     if ($v < 32) { $pdo->exec("UPDATE banners SET link='https://www.gidsas.fr/'; PRAGMA user_version = 32;"); }
+    if ($v < 33) { $pdo->exec("ALTER TABLE banners ADD COLUMN active_at INTEGER; PRAGMA user_version = 33;"); } // brouillons activés à la main
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
