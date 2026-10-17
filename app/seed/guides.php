@@ -109,6 +109,28 @@ MD],
 
 > Astuce : codes comptables ImmOpen : 02 KILAMOU, 03 SUBRA, 04 PIATTE, 05 DALOT, 06 MOUMEN. Le résultat du contrôle hebdomadaire est dans Direction › Comptabilité.
 MD],
+['immopen-nouveau-tiers', 'ImmOpen', '👤', 'Enregistrer un nouveau tiers ou copropriétaire', 'Créer la fiche d\'un copropriétaire ou d'un tiers : nom et prénom, coordonnées, accès à l\'espace client, autorisations d\'envoi.', '4 min', 'Débutant', <<<'MD'
+## Ouvrir la liste des tiers
+1. **Menu Syndic › Patrimoine › Tiers.**
+2. **Vérifiez que la personne n'existe pas déjà** : tapez le début du nom dans « Commence par » (ou un morceau dans « Contient »), ou filtrez par adresse et ville.
+3. **Cliquez sur « Ajoute »** : la fiche « Modification d'un tiers » s'ouvre sur l'onglet Informations.
+
+## Remplir la fiche
+4. **Civilité** : M., Mme, M. ou Mme, Mlle, Etab.
+5. **Nom : saisissez le NOM puis le prénom sur la même ligne « Nom »** (ex. DUPONT MARIE). Sinon le prénom n'apparaît pas dans les éditions d'adresse (courriers, convocations).
+6. **Adresse, code postal, localité** (et pays si l'adresse est à l'étranger).
+7. **Téléphones et e-mails** : une ligne par numéro ou adresse dans le tableau « N° tél, fax ou e-mail », avec un commentaire (portable, bureau…).
+8. **Détail** (si connu) : profession, langue, date et lieu de naissance.
+
+## Accès à l'espace client et autorisations
+9. **Cliquez sur le petit ordinateur au bout de la ligne « Mot de passe site Web »** : ImmOpen génère le mot de passe ; avec le « Code accès site Web », le client peut se connecter à son espace client.
+10. **Cochez « Envoi SMS » et « Envoi Email en masse ».** Cela n'envoie rien automatiquement : le compte est simplement prêt si la personne demande à recevoir ses documents par e-mail ou SMS.
+11. **Cliquez sur « OK »** pour enregistrer la fiche.
+
+> Astuce : dans la liste des tiers, le pavé rouge « Contentieux ou affaire en cours » signale un tiers en contentieux ; vérifiez-le avant tout envoi.
+
+! Ne communiquez le code d'accès et le mot de passe du site Web qu'au copropriétaire lui-même.
+MD],
 ['immopen-preparer-reglements', 'ImmOpen', '💶', 'Préparer les règlements fournisseurs', 'Sélectionner les factures à payer par immeuble et par banque avant l\'émission des règlements.', '8 min', 'Avancé', <<<'MD'
 ! Écran réservé aux personnes habilitées à régler les factures. Sans habilitation, ImmOpen affiche « Vous n'êtes pas habilité(e) à régler les factures ».
 

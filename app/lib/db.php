@@ -387,6 +387,11 @@ SQL);
         $pdo->exec("CREATE TABLE IF NOT EXISTS site_hits(id INTEGER PRIMARY KEY, ts INTEGER NOT NULL, day TEXT NOT NULL, vid TEXT NOT NULL, kind TEXT NOT NULL, path TEXT, title TEXT, channel TEXT, source TEXT, device TEXT, label TEXT, entry INTEGER NOT NULL DEFAULT 0);
                     CREATE INDEX IF NOT EXISTS site_hits_day ON site_hits(day, kind); CREATE INDEX IF NOT EXISTS site_hits_vid ON site_hits(day, vid); PRAGMA user_version = 48;");
     }
+    if ($v < 49) { // Guide ImmOpen : enregistrer un nouveau tiers / copropriétaire (mode d'emploi du cabinet)
+        $seed = is_file(APP_DIR . '/seed/guides.php') ? require APP_DIR . '/seed/guides.php' : [];
+        foreach ($seed as $i => $g) if ($g[0] === 'immopen-nouveau-tiers') $pdo->prepare('INSERT OR IGNORE INTO guides(slug,cat,icon,title,summary,duration,level,body,pos,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)')->execute([$g[0], $g[1], $g[2], $g[3], $g[4], $g[5], $g[6], $g[7], $i, time(), time()]);
+        $pdo->exec('PRAGMA user_version = 49;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
