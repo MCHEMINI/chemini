@@ -1464,3 +1464,10 @@ body.pw-public{background:var(--bg);color:var(--ink)}
 .pw-eye:hover,.pw-eye:focus-visible{color:var(--ink);background:var(--line)}
 .pw-eye[aria-pressed=true]{color:var(--bronze)}
 input[data-pw]::-ms-reveal{display:none}
+/* Menu mobile : pictos et taille du texte groupés en bas, juste au-dessus du profil */
+@media (max-width:820px){
+  html.nav-open .rail .rail-picto{margin-top:auto;padding:12px 10px 4px}
+  html.nav-open .rail .rail-fs{margin:0 10px 4px}
+  html.nav-open .rail .me{margin-top:0}
+  html.nav-open .rail{gap:10px}
+}
