@@ -11,6 +11,7 @@ function page_dashboard(array $u): never {
         'gidNote' => q("SELECT body FROM space_notes WHERE space='gid'")->fetch() ?: null,
         'gidTasks' => q("SELECT title FROM tasks WHERE space='gid' AND done=0 ORDER BY created_at DESC LIMIT 5")->fetchAll(),
         'ops' => ag_ops(),
+        'digest' => json_decode((string)q("SELECT v FROM kv WHERE k='news_digest'")->fetchColumn(), true) ?: null,
         'stats' => [
             'syndic' => (int)q("SELECT COUNT(*) FROM buildings WHERE kind='syndic'")->fetchColumn(),
             'staff' => (int)q('SELECT COUNT(*) FROM staff')->fetchColumn(),

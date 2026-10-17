@@ -31,15 +31,18 @@
     <div class="ov-l">tâches partagées en cours · <?= (int)$stats['syndic'] ?> immeubles en syndic · <?= (int)$stats['staff'] ?> collaborateurs</div>
   </a>
 </div>
-<?php if ($o['upcoming']): ?>
-<section class="ov-lists">
-  <div class="sec-h"><h2>Prochaines AG</h2><?php if ($isDir): ?><a href="/planning-ag">Planning complet</a><?php endif; ?></div>
-  <ul class="ov-ag">
-    <?php foreach (array_slice($o['upcoming'], 0, 6) as $a): $ts = strtotime($a['ag_date']); ?>
-    <li><div class="cal <?= $ts <= strtotime('+7 days') ? 'soon' : '' ?>"><b><?= date('d', $ts) ?></b><span><?= e(MOIS[(int)date('n', $ts) - 1]) ?></span></div>
-      <div><?= $L('/immeubles/' . e($a['code']), '<span class="mono muted">' . e($a['code']) . '</span> ' . e($a['nom'] ?? '')) ?><div class="d"><?= e(trim(preg_replace('/^(M\.|Mme)\s*/u', '', (string)($a['gest'] ?? '')))) ?><?= !empty($a['ag_heure']) ? ' · ' . e($a['ag_heure']) : '' ?></div></div></li>
+<?php if ($o['upcoming']): $jrs = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.']; ?>
+<section class="ag-next">
+  <div class="sec-h"><h2>Prochaines AG</h2><span class="muted small"><?= count($o['upcoming']) ?> dans les 30 jours<?= $isDir ? ' · <a href="/planning-ag">Planning complet</a>' : '' ?></span></div>
+  <div class="agn-grid">
+    <?php foreach (array_slice($o['upcoming'], 0, 8) as $a): $ts = strtotime($a['ag_date']); $soon = $ts <= strtotime('+7 days'); $tag = $isDir ? 'a' : 'div'; ?>
+    <<?= $tag ?> class="agn<?= $soon ? ' soon' : '' ?>"<?= $isDir ? ' href="/immeubles/' . e($a['code']) . '"' : '' ?>>
+      <span class="agn-d"><small><?= e($jrs[(int)date('w', $ts)]) ?></small><b><?= date('d', $ts) ?></b><small><?= e(MOIS[(int)date('n', $ts) - 1]) ?></small></span>
+      <span class="agn-b"><b><?= e($a['nom'] ?? '') ?></b><small><span class="mono"><?= e($a['code']) ?></span><?= !empty($a['ag_heure']) ? ' · ' . e($a['ag_heure']) : '' ?></small><small><?= e(trim(preg_replace('/^(M\.|Mme)\s*/u', '', (string)($a['gest'] ?? '')))) ?></small><?php if (empty($a['convoc'])): ?><span class="chip warn">Convocation à envoyer</span><?php endif; ?></span>
+    </<?= $tag ?>>
     <?php endforeach; ?>
-  </ul>
+  </div>
+  <?php if (count($o['upcoming']) > 8): ?><p class="muted small"><?= count($o['upcoming']) - 8 ?> autre<?= count($o['upcoming']) - 8 > 1 ? 's' : '' ?> AG dans les 30 jours<?= $isDir ? ' · <a href="/planning-ag">voir le planning</a>' : '' ?>.</p><?php endif; ?>
 </section>
 <?php endif; ?>
 
@@ -74,9 +77,22 @@
   </section>
 
   <section class="col-5">
-    <div class="sec-h"><h2>Dernières actualités</h2><span class="muted small">Mise à jour chaque lundi à 9 h</span></div>
-    <?php if (!$news): ?>
-      <div class="empty"><strong>Actualités indisponibles.</strong>Les sources n'ont pas répondu. Nouvel essai automatique dans l'heure.</div>
+    <?php $dg = $digest && !empty($digest['items']) ? $digest : null; ?>
+    <div class="sec-h"><h2>Dernières actualités</h2><span class="muted small">Synthèse du lundi au vendredi à 8 h<?= $dg ? ' · ' . e(date_short(strtotime($dg['date']))) : '' ?></span></div>
+    <?php if ($dg): ?>
+    <div class="nd">
+      <?php foreach (array_slice($dg['items'], 0, 8) as $n): ?>
+      <article>
+        <span class="eyebrow"><?= e($n['source']) ?><?= $n['date'] ? ' · ' . e(date_short(strtotime($n['date']))) : '' ?></span>
+        <h3><?= e($n['title']) ?></h3>
+        <?php if ($n['summary']): ?><p><?= e($n['summary']) ?></p><?php endif; ?>
+        <?php if ($n['why']): ?><p class="nd-why"><strong>Pour GID :</strong> <?= e($n['why']) ?></p><?php endif; ?>
+        <a class="more" href="<?= e($n['url']) ?>" target="_blank" rel="noopener">Lire sur <?= e($n['source'] ?: 'le site') ?> →</a>
+      </article>
+      <?php endforeach; ?>
+    </div>
+    <?php elseif (!$news): ?>
+      <div class="empty"><strong>Actualités indisponibles.</strong>La synthèse arrive du lundi au vendredi à 8 h.</div>
     <?php else: ?>
     <div class="news one">
       <?php foreach (array_slice($news, 0, 8) as $n): ?>

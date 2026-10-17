@@ -8,7 +8,7 @@
 
 <div class="grid">
   <section class="col-12">
-    <div class="sec-h"><h2>Mails à traiter</h2><span class="muted small">Analyse automatique de votre boîte toutes les heures · cochez une fois traité</span></div>
+    <div class="sec-h"><h2>Mails à traiter</h2><?php $mAt = (int)q('SELECT MAX(created_at) FROM mail_items WHERE user_id=?', [(int)$u['id']])->fetchColumn(); ?><span class="muted small">Analyse de votre boîte toutes les heures, du lundi au vendredi de 8 h à 19 h<?= $mAt ? ' · dernière le ' . e(date('d/m à H:i', $mAt)) : '' ?> · cochez une fois traité</span></div>
     <?php if (!$mails): ?>
       <div class="empty"><strong>Rien à traiter.</strong>Les mails importants détectés dans votre boîte apparaîtront ici.</div>
     <?php else: ?>
