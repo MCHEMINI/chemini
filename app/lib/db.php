@@ -285,6 +285,12 @@ SQL);
     if ($v < 30) { // coordonnées professionnelles (ligne directe, raccourci) par adresse e-mail
         $pdo->exec('CREATE TABLE IF NOT EXISTS contacts(email TEXT PRIMARY KEY, phone TEXT, ext TEXT, updated_at INTEGER); PRAGMA user_version = 30;');
     }
+    if ($v < 31) { // un bandeau à période n'est jamais le bandeau par défaut : on rend ce rôle au dernier bandeau sans période
+        $pdo->exec("UPDATE banners SET is_default=0 WHERE start IS NOT NULL OR end IS NOT NULL");
+        if (!(int)$pdo->query('SELECT COUNT(*) FROM banners WHERE is_default=1')->fetchColumn())
+            $pdo->exec("UPDATE banners SET is_default=1 WHERE id=(SELECT id FROM banners WHERE start IS NULL AND end IS NULL ORDER BY created_at DESC LIMIT 1)");
+        $pdo->exec('PRAGMA user_version = 31;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

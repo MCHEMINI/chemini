@@ -668,26 +668,42 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
   document.querySelectorAll('[data-inv]').forEach(b => b.addEventListener('click', () => run('team/invite', { name: b.dataset.inv }, b)));
 })();
 
-/* Signatures : nouveau bandeau (image lue dans le navigateur) */
-(function(){ const f = document.getElementById('sgF'); if (!f) return; const inp = document.getElementById('sg-i'), pv = document.getElementById('sgPrev'); let data = '';
-  inp.addEventListener('change', () => { const file = inp.files[0]; if (!file) return; const r = new FileReader(); r.onload = () => { data = r.result; pv.hidden = false; pv.querySelector('img').src = data; }; r.readAsDataURL(file); });
-  f.addEventListener('submit', async e => { e.preventDefault(); const err = f.querySelector('.form-error'); err.hidden = true; const btn = f.querySelector('button');
-    const d = Object.fromEntries(new FormData(f).entries()); d.data = data; btn.disabled = true;
-    try { await api('sig/add', d); location.reload(); } catch (x) { btn.disabled = false; err.hidden = false; err.textContent = x.message; } });
+/* Signatures : ajouter un visuel (image lue dans le navigateur) ; défaut OU période */
+(function(){ const f = document.getElementById('sgF'); if (!f) return; const inp = document.getElementById('sg-i'), pv = document.getElementById('sgPrev'), d = document.getElementById('sg-d'), per = document.getElementById('sgPer'), s = document.getElementById('sg-s'), e = document.getElementById('sg-e'); let data = '';
+  const sync = () => { per.classList.toggle('off', d.checked); s.required = e.required = !d.checked; };
+  d.addEventListener('change', () => { if (d.checked) { s.value = e.value = ''; } sync(); });
+  [s, e].forEach(x => x.addEventListener('input', () => { if (x.value) { d.checked = false; sync(); } if (s.value && (!e.value || e.value < s.value)) e.min = s.value; }));
+  per.addEventListener('click', () => { if (d.checked) { d.checked = false; sync(); } });
+  sync();
+  inp.addEventListener('change', () => { const file = inp.files[0]; if (!file) return; const r = new FileReader(); r.onload = () => { data = r.result; pv.hidden = false; pv.src = data; f.querySelector('.sg-drop').classList.add('has'); }; r.readAsDataURL(file); });
+  f.addEventListener('submit', async ev => { ev.preventDefault(); const err = f.querySelector('.form-error'); err.hidden = true; const btn = f.querySelector('button.btn-primary');
+    const o = Object.fromEntries(new FormData(f).entries()); o.data = data; btn.disabled = true;
+    try { await api('sig/add', o); location.reload(); } catch (x) { btn.disabled = false; err.hidden = false; err.textContent = x.message; } });
 })();
 
 /* Signatures : prompt Gemini pour générer un bandeau */
-(function(){ const t = document.getElementById('sgTheme'), out = document.getElementById('sgPrompt'); if (!t || !out) return;
-  const build = () => { const m = t.value.trim() || 'GID, administrateur de biens à Paris';
-    out.value = `Crée une bannière horizontale de signature e-mail au format exact 1200 × 400 pixels (ratio 3:1), en haute définition, pour GID, administrateur de biens indépendant à Paris depuis plus de 50 ans (syndic de copropriété et gestion locative).
+(function(){ const t = document.getElementById('sgTheme'), sub = document.getElementById('sgSub'), out = document.getElementById('sgPrompt'); if (!t || !out) return;
+  const build = () => { const m = t.value.trim() || 'GID, administrateur de biens à Paris'; const s2 = (sub && sub.value.trim()) || '';
+    out.value = `Crée une bannière horizontale pour une signature e-mail.
 
-Message principal, écrit en français, en grandes lettres capitales blanches, police sans empattement grasse, parfaitement lisible : « ${m} ».
-Une courte ligne secondaire en orange en dessous si elle aide le message.
+FORMAT (impératif) : image paysage de exactement 1200 × 400 pixels, ratio 3:1, PNG, haute définition. Elle sera affichée en 600 × 200 pixels sous la signature : tout doit rester lisible à cette taille.
 
-Mise en page : texte sur les deux tiers gauche, sur un fond bleu nuit (#2B2A6B) ; à droite, une photo lumineuse d'un immeuble haussmannien parisien sous un ciel bleu, séparée par une bande diagonale orange (#F07D1A). Un fin filet orange en haut et en bas.
-Style sobre, haut de gamme et professionnel, cohérent avec un cabinet immobilier parisien. Marges d'au moins 40 pixels autour du texte.
+ENTREPRISE : GID, cabinet indépendant d'administration de biens à Paris (syndic de copropriété et gestion locative), plus de 60 ans d'expérience.
 
-Interdits : aucun logo inventé, aucune adresse, aucun numéro de téléphone, aucun autre texte que le message, pas de fautes d'orthographe, pas de filigrane.`; };
-  t.addEventListener('input', build); build();
+TEXTE (en français, sans aucune faute, seul texte de l'image) :
+– Titre en grandes capitales blanches, police sans empattement très grasse : « ${m} »${s2 ? `
+– Ligne secondaire en orange, plus petite : « ${s2} »` : ''}
+
+MISE EN PAGE :
+– Texte aligné à gauche sur les deux tiers gauche, fond bleu nuit uni (#2B2A6B).
+– Tiers droit : photo lumineuse d'une façade d'immeuble haussmannien parisien, ciel bleu, séparée du fond par une bande diagonale orange (#F07D1A).
+– Fin filet orange en haut et en bas.
+– Zone de sécurité : aucun texte à moins de 60 pixels des bords (l'image peut être légèrement recadrée).
+– Titre d'au moins 56 pixels de haut ; 2 lignes de texte au maximum en tout.
+
+STYLE : sobre, haut de gamme, professionnel, contraste fort, cohérent avec un cabinet immobilier parisien.
+
+INTERDITS : logo, adresse, numéro de téléphone, e-mail, site web, filigrane, texte inventé ou déformé, personnages.`; };
+  [t, sub].forEach(x => x && x.addEventListener('input', build)); build();
   document.getElementById('sgCopy').addEventListener('click', async e => { try { await navigator.clipboard.writeText(out.value); e.target.textContent = 'Copié ✓'; } catch (x) { out.select(); document.execCommand('copy'); e.target.textContent = 'Copié ✓'; } setTimeout(() => { e.target.textContent = 'Copier le prompt'; }, 2000); });
 })();

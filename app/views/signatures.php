@@ -1,83 +1,89 @@
-<?php $img = BASE_URL . '/signature/banniere'; $lnk = BASE_URL . '/signature/lien'; ?>
+<?php
+$img = BASE_URL . '/signature/banniere'; $lnk = BASE_URL . '/signature/lien';
+$def = null; foreach ($list as $b) if ($b['is_default']) { $def = $b; break; }
+$hits = json_decode((string)q("SELECT v FROM kv WHERE k='sig_hits'")->fetchColumn(), true) ?: [];
+$linked = !empty($hits['ext']) && $hits['ext'] > time() - 30 * 86400;
+$fd = fn(?string $d) => $d ? date('d/m/Y', strtotime($d)) : '…';
+// Ordre : en cours, programmés (par date), défaut, inactifs, terminés
+$rank = fn($b) => ['En cours d\'envoi' => 0, 'Programmé' => 1, 'Par défaut' => 2, 'Inactif' => 3, 'Terminé' => 4][sig_state($b)[0]] ?? 5;
+usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=> [$rank($b), $b['start'] ?? '', -$b['created_at']]);
+?>
 <header class="head">
   <div>
     <div class="eyebrow">Direction · e-mails</div>
     <h1>Signatures</h1>
-    <div class="date">Le bandeau en bas des signatures e-mail de toute l'équipe : programmez-en un nouveau, il part automatiquement aux dates choisies. Le reste de la signature ne change pas.</div>
+    <div class="date">Seul le visuel du bas des signatures change. Ajoutez un visuel avec sa période : il part automatiquement dans les mails de toute l'équipe aux dates choisies, puis le bandeau par défaut reprend.</div>
   </div>
 </header>
 
 <section class="sg-now">
-  <div class="sg-mail panel">
-    <div class="eyebrow">Signature envoyée aujourd'hui</div>
-    <div class="sg-sig">
-      <?php if ($tpl && !empty($tpl['html'])): ?><div class="sg-tpl"><?= $tpl['html'] ?></div>
-      <?php else: ?>
-      <p class="sg-fake"><b>Prénom Nom</b><br>Fonction · GID<br>2 place d'Estienne d'Orves, 75009 Paris · 01 42 66 20 88<br><span class="muted">(partie fixe de la signature Exclaimer, inchangée)</span></p>
-      <?php endif; ?>
-      <div class="sg-ban"><?php if ($cur): ?><a href="<?= e($cur['link'] ?: '#') ?>" target="_blank" rel="noopener"><img src="/signature/banniere?v=<?= (int)$cur['id'] ?>" alt="<?= e($cur['title']) ?>"></a><?php else: ?><div class="empty"><strong>Aucun bandeau.</strong>Ajoutez-en un ci-dessous.</div><?php endif; ?></div>
-    </div>
-    <?php if ($cur): ?><p class="muted small">« <?= e($cur['title']) ?> »<?= $cur['link'] ? ' · lien : ' . e($cur['link']) : '' ?><?= $cur['end'] ? ' · jusqu\'au ' . e(date('d/m/Y', strtotime($cur['end']))) : '' ?></p><?php endif; ?>
-  </div>
-  <div class="panel sg-int">
-    <h3>Mise à jour automatique avec Exclaimer</h3>
-    <p class="small">Dans Exclaimer, le bandeau de la signature pointe une fois pour toutes vers ces deux adresses. Ensuite, tout se règle ici : le bon bandeau s'affiche selon les dates, sans retoucher Exclaimer.</p>
-    <?php $hits = json_decode((string)q("SELECT v FROM kv WHERE k='sig_hits'")->fetchColumn(), true) ?: []; $linked = !empty($hits['ext']) && $hits['ext'] > time() - 30 * 86400; ?>
-    <p class="sg-link <?= $linked ? 'ok' : 'warn' ?>"><span class="chip <?= $linked ? 'ok' : 'warn' ?>"><?= $linked ? 'Relié' : 'Pas encore relié' ?></span>
-      <?= $linked ? 'Bandeau lu par Exclaimer ou une messagerie le ' . e(date('d/m/Y à H:i', (int)$hits['ext'])) . ' (' . (int)$hits['ext_n'] . ' lectures).' : 'Aucune lecture du bandeau par Exclaimer pour l\'instant : le réglage unique ci-dessous reste à faire dans Exclaimer (Source de l\'image › Lier à une image).' ?></p>
-    <label class="small muted">Image du bandeau</label><input class="input mono" readonly value="<?= e($img) ?>" onclick="this.select()">
-    <label class="small muted">Lien au clic</label><input class="input mono" readonly value="<?= e($lnk) ?>" onclick="this.select()">
+  <div class="panel sg-today">
+    <div class="sg-today-h"><div class="eyebrow">Envoyé aujourd'hui</div>
+      <span class="chip <?= $linked ? 'ok' : 'warn' ?>" title="<?= $linked ? 'Dernière lecture par Exclaimer ou une messagerie le ' . e(date('d/m/Y à H:i', (int)$hits['ext'])) : 'Exclaimer n\'a pas encore lu le bandeau' ?>"><?= $linked ? 'Exclaimer relié' : 'Exclaimer pas encore relié' ?></span></div>
+    <div class="sg-ban"><?php if ($cur): ?><img src="/signature/banniere?v=<?= (int)$cur['id'] ?>-<?= date('Ymd') ?>" alt="<?= e($cur['title']) ?>" width="600" height="200"><?php else: ?><div class="empty"><strong>Aucun bandeau.</strong>Ajoutez un premier visuel : il deviendra le bandeau par défaut.</div><?php endif; ?></div>
+    <?php if ($cur): ?><p class="small"><b><?= e($cur['title']) ?></b> · <?= $cur['is_default'] && !$cur['start'] ? 'bandeau par défaut' : 'jusqu\'au ' . e($fd($cur['end'])) . ($def && (int)$def['id'] !== (int)$cur['id'] ? ', puis retour à « ' . e($def['title']) . ' »' : '') ?></p><?php endif; ?>
+    <details class="sg-tech"><summary>Réglage Exclaimer (une seule fois)</summary>
+      <p class="small muted">Dans la signature Exclaimer, bandeau › Source de l'image › Lier à une image, puis Lien hypertexte :</p>
+      <input class="input mono" readonly value="<?= e($img) ?>" onclick="this.select()" aria-label="Adresse de l'image">
+      <input class="input mono" readonly value="<?= e($lnk) ?>" onclick="this.select()" aria-label="Adresse du lien">
+    </details>
   </div>
 </section>
 
-<section class="panel sg-make">
-  <div class="sg-mk-h"><h3>Créer le visuel</h3><span class="muted small">Format et prompt prêts pour Gemini</span></div>
-  <div class="sg-mk">
-    <div>
-      <ul class="sg-spec">
-        <li><b>600 × 200 px</b><span>taille affichée dans les mails (format 3:1)</span></li>
-        <li><b>1200 × 400 px</b><span>taille conseillée à générer et à importer ; Chemini envoie automatiquement à Exclaimer une version 600 × 200 recadrée au centre si le format diffère</span></li>
-        <li><b>PNG ou JPG</b><span>moins de 300 Ko conseillé (2 Mo au plus)</span></li>
-        <li><b>Marges</b><span>textes à 40 px des bords au moins ; pas de texte sous 24 px de haut</span></li>
-        <li><b>Charte</b><span>bleu nuit #2B2A6B, orange #F07D1A, blanc ; titres en capitales, police sans empattement grasse</span></li>
-      </ul>
-      <label class="small muted" for="sgTheme">Message du bandeau</label>
-      <input class="input" id="sgTheme" value="Meilleurs vœux 2027 — merci pour votre confiance" placeholder="Ex. Fermeture du cabinet du 24 au 26 décembre">
-    </div>
-    <div>
-      <label class="small muted" for="sgPrompt">Prompt à coller dans Gemini</label>
-      <textarea class="input bd-ta sg-prompt" id="sgPrompt" rows="11" readonly></textarea>
-      <div class="sg-mk-a"><button type="button" class="btn btn-primary" id="sgCopy">Copier le prompt</button><a class="btn btn-ghost" href="https://gemini.google.com/app" target="_blank" rel="noopener">Ouvrir Gemini</a></div>
-      <p class="muted small">Si l'image générée n'est pas exactement au format 3:1, demandez à Gemini « recadre en 1200 × 400 px sans couper le texte ».</p>
-    </div>
-  </div>
-</section>
-
-<details class="panel bd-new" id="sgForm"<?= $list ? '' : ' open' ?>>
-  <summary><span class="btn btn-primary">Nouveau bandeau</span><span class="muted small">Image de 1200 × 400 px (affichée en 600 × 200 px) · PNG, JPG ou GIF, 2 Mo au plus</span></summary>
-  <form class="pl-form" id="sgF">
-    <div class="field pl-wide"><label for="sg-t">Nom</label><input class="input" id="sg-t" name="title" maxlength="120" required placeholder="Ex. Vœux 2027"></div>
-    <div class="field pl-wide"><label for="sg-l">Lien au clic (facultatif)</label><input class="input" id="sg-l" name="link" maxlength="500" placeholder="https://www.gidsas.fr/…"></div>
-    <div class="field"><label for="sg-s">Diffusé à partir du</label><input class="input" id="sg-s" name="start" type="date"></div>
-    <div class="field"><label for="sg-e">Jusqu'au</label><input class="input" id="sg-e" name="end" type="date"></div>
-    <div class="field pl-wide"><label for="sg-i">Image</label><input class="input" id="sg-i" type="file" accept="image/png,image/jpeg,image/gif" required></div>
-    <label class="bd-pin"><input type="checkbox" name="is_default" value="1" checked> Bandeau par défaut (hors périodes programmées)</label>
-    <div class="sg-prev" id="sgPrev" hidden><img alt=""></div>
+<section class="sg-work">
+  <form class="panel sg-add" id="sgF">
+    <h2>Ajouter un visuel</h2>
+    <label class="sg-drop" for="sg-i">
+      <input id="sg-i" type="file" accept="image/png,image/jpeg,image/gif" required>
+      <span class="sg-drop-in"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/></svg><b>Choisir l'image générée</b><small>PNG ou JPG · 1200 × 400 px idéalement · 2 Mo au plus</small></span>
+      <img id="sgPrev" alt="" hidden>
+    </label>
+    <label class="bd-pin sg-defbox"><input type="checkbox" name="is_default" value="1" id="sg-d" checked> <span><b>Bandeau par défaut</b> (hors périodes programmées)</span></label>
+    <fieldset class="sg-period" id="sgPer">
+      <legend>Période de diffusion</legend>
+      <div class="sg-dates"><div class="field"><label for="sg-s">Du</label><input class="input" id="sg-s" name="start" type="date"></div>
+      <div class="field"><label for="sg-e">Au</label><input class="input" id="sg-e" name="end" type="date"></div></div>
+      <p class="muted small">Décochez « Bandeau par défaut » pour programmer une période. À la fin de la période, le bandeau par défaut<?= $def ? ' (« ' . e($def['title']) . ' »)' : '' ?> reprend automatiquement.</p>
+    </fieldset>
+    <details class="sg-opt"><summary>Nom et lien (facultatif)</summary>
+      <div class="field"><label for="sg-t">Nom</label><input class="input" id="sg-t" name="title" maxlength="120" placeholder="Rempli automatiquement si vide"></div>
+      <div class="field"><label for="sg-l">Lien au clic</label><input class="input" id="sg-l" name="link" maxlength="500" placeholder="https://www.gidsas.fr/"></div>
+    </details>
     <p class="form-error" hidden></p>
-    <div class="pl-act"><button class="btn btn-primary">Enregistrer</button></div>
+    <button class="btn btn-primary">Ajouter le visuel</button>
   </form>
-</details>
+
+  <section class="panel sg-make">
+    <h2>Générer le visuel avec Gemini</h2>
+    <ol class="sg-steps">
+      <li><b>Écrivez le message</b> du bandeau ci-dessous : le prompt se met à jour.</li>
+      <li><b>Copiez le prompt</b> et collez-le dans Gemini.</li>
+      <li><b>Téléchargez l'image</b> obtenue (format 3:1, 1200 × 400 px).</li>
+      <li><b>Ajoutez-la</b> dans « Ajouter un visuel » avec sa période.</li>
+    </ol>
+    <div class="field"><label for="sgTheme">Message du bandeau</label><input class="input" id="sgTheme" value="Meilleurs vœux 2027 — merci pour votre confiance"></div>
+    <div class="field"><label for="sgSub">Ligne secondaire (facultatif)</label><input class="input" id="sgSub" placeholder="Ex. Le cabinet sera fermé du 24 au 26 décembre"></div>
+    <textarea class="input bd-ta sg-prompt" id="sgPrompt" rows="12" readonly aria-label="Prompt pour Gemini"></textarea>
+    <div class="sg-mk-a"><button type="button" class="btn btn-primary" id="sgCopy">Copier le prompt</button><a class="btn btn-ghost" href="https://gemini.google.com/app" target="_blank" rel="noopener">Ouvrir Gemini</a></div>
+    <p class="muted small">Format envoyé dans les mails : 600 × 200 px. Si l'image n'est pas exactement en 3:1, Chemini la recadre au centre : gardez le texte loin des bords.</p>
+  </section>
+</section>
 
 <?php if ($list): ?>
-<div class="sg-grid">
-  <?php foreach ($list as $b): [$st, $c] = sig_state($b); ?>
-  <article class="panel sg-card">
-    <div class="sg-thumb"><img src="/signatures/image/<?= (int)$b['id'] ?>" alt="" loading="lazy"></div>
-    <div class="sg-meta"><b><?= e($b['title']) ?></b><span class="chip <?= $c ?>"><?= e($st) ?></span></div>
-    <p class="muted small"><?= $b['start'] || $b['end'] ? 'Du ' . ($b['start'] ? date('d/m/Y', strtotime($b['start'])) : '…') . ' au ' . ($b['end'] ? date('d/m/Y', strtotime($b['end'])) : '…') : 'Sans période' ?><?= $b['is_default'] ? ' · par défaut' : '' ?> · <?= (int)$b['w'] ?>×<?= (int)$b['h'] ?> px</p>
-    <?php if ($b['link']): ?><p class="small sg-l"><?= e($b['link']) ?></p><?php endif; ?>
-    <div class="sg-act"><?php if (!$b['is_default']): ?><button type="button" class="btn-link" data-api="sig/default" data-id="<?= (int)$b['id'] ?>">Définir par défaut</button><?php endif; ?> <button type="button" class="btn-link" data-api="sig/delete" data-id="<?= (int)$b['id'] ?>" data-confirm="Supprimer ?">Supprimer</button></div>
-  </article>
-  <?php endforeach; ?>
-</div>
+<section>
+  <div class="sec-h"><h2>Bandeaux</h2><span class="muted small">Statuts recalculés chaque jour selon les dates</span></div>
+  <div class="sg-grid">
+    <?php foreach ($list as $b): [$st, $c] = sig_state($b); $isPer = $b['start'] || $b['end']; ?>
+    <article class="panel sg-card<?= $c === 'ok' ? ' on' : '' ?>">
+      <div class="sg-thumb"><img src="/signatures/image/<?= (int)$b['id'] ?>" alt="" loading="lazy"></div>
+      <div class="sg-meta"><b><?= e($b['title']) ?></b><span class="chip <?= $c ?>"><?= e($st) ?></span></div>
+      <p class="muted small"><?= $isPer ? 'Du ' . $fd($b['start']) . ' au ' . $fd($b['end']) : ($b['is_default'] ? 'Bandeau par défaut, hors périodes' : 'Sans période') ?><?= $b['link'] ? ' · <span class="sg-l">' . e(preg_replace('#^https?://#', '', $b['link'])) . '</span>' : '' ?></p>
+      <div class="sg-act">
+        <?php if (!$b['is_default'] && !$isPer): ?><button type="button" class="btn-link" data-api="sig/default" data-id="<?= (int)$b['id'] ?>">Définir par défaut</button><?php endif; ?>
+        <?php if (!$b['is_default']): ?><button type="button" class="btn-link" data-api="sig/delete" data-id="<?= (int)$b['id'] ?>" data-confirm="Supprimer ?">Supprimer</button><?php else: ?><span class="muted small">Toujours un bandeau par défaut : définissez-en un autre pour supprimer celui-ci.</span><?php endif; ?>
+      </div>
+    </article>
+    <?php endforeach; ?>
+  </div>
+</section>
 <?php endif; ?>

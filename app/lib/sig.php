@@ -17,9 +17,11 @@ function sig_current(): ?array {
 function sig_state(array $b): array {
     $t = date('Y-m-d'); $cur = sig_current();
     if ($cur && (int)$cur['id'] === (int)$b['id']) return ['En cours d\'envoi', 'ok'];
+    if ($b['is_default']) return ['Par défaut', 'neutral'];
+    if ($b['end'] && $b['end'] < $t) return ['Terminé', 'muted'];
     if ($b['start'] && $b['start'] > $t) return ['Programmé', 'warn'];
-    if ($b['end'] && $b['end'] < $t) return ['Terminé', 'neutral'];
-    return [$b['is_default'] ? 'Par défaut' : 'En attente', 'neutral'];
+    if ($b['start'] || $b['end']) return ['Programmé', 'warn']; // période en cours masquée par une autre plus récente
+    return ['Inactif', 'muted'];
 }
 
 /** Image publique (adresse fixe pour Exclaimer). */
