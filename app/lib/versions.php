@@ -52,5 +52,7 @@ const VERSIONS = [
     ['2026-10-17 03:15', 'all', 'Informations générales, Organigramme et Accueil', 'Tableau d\'affichage de la société, qui travaille avec qui, page des nouveaux arrivants et présentation de GID.'],
     ['2026-10-17 03:15', 'all', 'Mes tâches reliées aux tâches d\'équipe', 'Les tâches perso apparaissent aussi dans Collaborateurs, visibles par vous seul.'],
     ['2026-10-17 03:15', 'direction', 'Top 20 des immeubles et classement complet', 'Page de tous les immeubles triable.'],
+    ['2026-10-17 03:30', 'direction', 'Pilotage du cabinet', 'Renouvellements de mandat chiffrés, prévision d\'encaissement, gestionnaires et charge, préparation des AG, agenda iPhone, travaux votés, sinistres, contrats, demandes, échéancier réglementaire, conformité, impayés.'],
+    ['2026-10-17 03:30', 'all', 'Application iPhone', 'Chemini s\'installe sur l\'écran d\'accueil, avec une pastille indiquant les tâches en cours.'],
     ['2026-10-17 02:45', 'all', 'Versioning', 'Historique de tout ce qui a été fait sur la plateforme ; Tâches IA limitées à 10 lignes par bloc.'],
 ];

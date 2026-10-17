@@ -1026,3 +1026,41 @@ a.og-p:hover b{color:var(--bronze)}
 .deck-hint{text-align:center;margin-top:10px}
 @media (max-width:720px){.deck-stage{aspect-ratio:auto;height:calc(100vh - 210px);max-height:none}.sl{justify-content:flex-start;padding:24px 20px}.sl-kpis,.sl-cols,.sl-cols.four,.sl-teams{grid-template-columns:1fr 1fr}.sl-flow{flex-direction:column}.sl-flow i{display:none}}
 .rk-bar{margin-bottom:16px}.rk-tbl .pos{color:var(--ok)}.rk-tbl .neg{color:var(--crit)}
+
+/* Pilotage */
+.pl-sec{margin-bottom:32px}
+.pl-btn{margin-top:12px}
+.pl-regs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.pl-reg{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);text-decoration:none}
+.pl-reg:hover{border-color:var(--bronze)}
+.pl-ic{display:grid;place-items:center;width:44px;height:44px;border-radius:10px;background:var(--bronze-soft);font-size:20px}
+.pl-rt{display:flex;flex-direction:column;min-width:0}.pl-rt b{font-size:15px}.pl-rt small{font-size:12.5px;color:var(--muted)}
+.pl-rn{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.pl-rn b{font:500 26px/1 var(--f-display)}
+.pl-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px 18px}
+.pl-form .pl-wide{grid-column:span 2}.pl-form .form-error,.pl-form .pl-act{grid-column:1/-1}
+@media (max-width:640px){.pl-form .pl-wide{grid-column:auto}}
+.pe-bar{width:120px;margin-bottom:4px}
+.pe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.pe-card{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);text-decoration:none}
+.pe-card:hover{border-color:var(--bronze)}
+.pe-h{display:flex;flex-direction:column}.pe-h b{font-size:14.5px}.pe-h small{font-size:12px;color:var(--muted)}
+.pe-l{height:6px;border-radius:3px;background:var(--line);overflow:hidden}.pe-l i{display:block;height:100%;background:var(--bronze)}
+.pe-n{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:12.5px;color:var(--muted)}.pe-n b{color:var(--ink);font-variant-numeric:tabular-nums}.pe-n .crit,.pe-n .crit b{color:var(--crit)}
+.cs-legend{display:flex;gap:18px;font-size:13px;color:var(--muted);margin-bottom:14px}.cs-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.cs-legend .h,.cs-bar .h{background:var(--bronze)}.cs-legend .a,.cs-bar .a{background:#C9A66B}
+.cs-chart{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;align-items:end;height:260px;margin-bottom:12px}
+.cs-col{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.cs-bar{display:flex;flex-direction:column-reverse;width:100%;max-width:44px;height:200px;justify-content:flex-start}
+.cs-bar i{display:block;width:100%}.cs-bar .a{border-radius:4px 4px 0 0}
+.cs-col.past{opacity:.5}
+.cs-v{font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}.cs-m{font-size:12px;color:var(--muted)}
+@media (max-width:640px){.cs-chart{gap:3px}.cs-v{font-size:9px}}
+.pa-checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.pa-checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start;font-size:14px}
+.pa-checks li span:last-child{display:flex;flex-direction:column}.pa-checks small{color:var(--muted);font-size:12.5px}
+.pa-b{width:20px;height:20px;border:1.5px solid var(--line);border-radius:5px;display:grid;place-items:center;font-size:13px;color:#fff}
+.pa-checks li.ok .pa-b{background:var(--ok);border-color:var(--ok)}
+@media print{.rail,.page-tools,.ia-fab,.head .btn,.burger{display:none!important}main{margin:0!important;padding:0!important}.panel{break-inside:avoid}}
+.cs-chart{grid-template-columns:repeat(12,minmax(0,1fr))}
+@media (max-width:640px){.cs-v{display:none}}
+.ag-tbl td.r.mono,.ag-tbl td.mono{white-space:nowrap}

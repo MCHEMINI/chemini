@@ -233,6 +233,15 @@ SQL);
         $ins->execute(['Tâches d\'équipe', "Dans Collaborateurs, chacun peut affecter une tâche à un collègue, avec ou sans échéance. La personne la coche une fois faite : la date de traitement est enregistrée.", 'outils', 0, $t + 2]);
         $pdo->exec('PRAGMA user_version = 23;');
     }
+    if ($v < 24) {
+        $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS reg_items (id INTEGER PRIMARY KEY, reg TEXT NOT NULL, code TEXT, data TEXT NOT NULL, ext_key TEXT,
+  created_by INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS reg_items_reg ON reg_items(reg, code);
+CREATE UNIQUE INDEX IF NOT EXISTS reg_items_ext ON reg_items(reg, ext_key);
+PRAGMA user_version = 24;
+SQL);
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

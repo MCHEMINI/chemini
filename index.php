@@ -27,7 +27,7 @@ header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-in
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 
 $route0 = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '', '/');
-if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news)$#', $route0, $m)) ingest_handle($m[1]);
+if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 
@@ -173,6 +173,15 @@ try {
                 $u = require_user();
                 if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès refusé', 'u' => $u]); }
                 render('hono_changes', ['title' => 'Modifications des honoraires', 'nav' => 'honoraires', 'u' => $u, 'changes' => hono_changes(0, 20000)]);
+            }
+            if (preg_match('#^pilotage(?:/([a-z]+))?(?:/(\d{5}))?$#', $route, $m)) {
+                $u = require_user();
+                require APP_DIR . '/pages/pilot.php';
+                page_pilot($u, $m[1] ?? '', $m[2] ?? '');
+            }
+            if (preg_match('#^calendrier/([a-f0-9]{32})\.ics$#', $route, $m)) {
+                require APP_DIR . '/pages/pilot.php';
+                ical_feed($m[1]);
             }
             if (preg_match('#^equipe/([a-z0-9-]{1,80})$#', $route, $m)) {
                 $u = require_user();

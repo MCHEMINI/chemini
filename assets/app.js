@@ -622,3 +622,16 @@ document.querySelectorAll('table[data-sortable]').forEach(t => {
       return ((!isNaN(nx) && !isNaN(ny)) ? nx - ny : x.localeCompare(y, 'fr', { numeric: true })) * d; }); rows.forEach(r => tb.appendChild(r)); }); });
 });
 (function(){ const q = document.getElementById('rkQ'); if (!q) return; q.addEventListener('input', () => { const v = q.value.trim().toLowerCase(); document.querySelectorAll('.rk-tbl tbody tr').forEach(tr => { tr.hidden = !!v && !tr.dataset.q.includes(v); }); }); })();
+
+/* Registres du pilotage : modifier une fiche dans le formulaire */
+(function(){ const box = document.getElementById('regForm'); if (!box) return; const f = box.querySelector('form'), t = document.getElementById('regFormT');
+  const reset = () => { f.reset(); f.id.value = '0'; t.textContent = 'Nouvelle fiche'; };
+  document.addEventListener('click', e => { const b = e.target.closest('[data-edit]'); if (!b) return; const d = JSON.parse(b.dataset.edit); reset();
+    Object.keys(d).forEach(k => { const el = f.elements[k]; if (el) el.value = d[k] ?? ''; }); t.textContent = 'Modifier la fiche'; box.open = true; box.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  document.getElementById('regReset').addEventListener('click', () => { reset(); box.open = false; });
+})();
+
+/* Application installable + pastille sur l'icône (tâches en cours) */
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+(function(){ const n = document.querySelector('.nav-ia .nav-n'), t = [...document.querySelectorAll('.rail nav a')].find(a => a.getAttribute('href') === '/mes-taches')?.querySelector('.nav-n');
+  const c = (parseInt(t?.textContent || '0', 10) || 0); if ('setAppBadge' in navigator) { try { c ? navigator.setAppBadge(c) : navigator.clearAppBadge(); } catch (e) {} } })();

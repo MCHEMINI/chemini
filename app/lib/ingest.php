@@ -114,6 +114,20 @@ function ingest_handle(string $kind): never {
         if (!annexes_store($d)) $send(['error' => 'cats / years manquants'], 400);
         $send(['ok' => true, 'years' => array_keys($d['years'])]);
     }
+    if ($kind === 'reg') { // fiches de registre (ex. impayés relevés dans ImmOpen) : {reg, items:[{ext_key, code, ...champs}]}
+        require_once APP_DIR . '/lib/pilot.php';
+        $reg = (string)($d['reg'] ?? ''); if (!isset(REGS[$reg])) $send(['error' => 'registre inconnu'], 400);
+        $n = 0;
+        foreach (array_slice((array)($d['items'] ?? []), 0, 2000) as $it) {
+            if (!is_array($it)) continue; $row = [];
+            foreach (REGS[$reg][3] as $k => $_) if (isset($it[$k])) $row[$k] = is_scalar($it[$k]) ? $it[$k] : '';
+            $key = mb_substr((string)($it['ext_key'] ?? ''), 0, 200) ?: null; $code = (string)($row['code'] ?? '');
+            if ($key && ($old = q('SELECT id, data FROM reg_items WHERE reg=? AND ext_key=?', [$reg, $key])->fetch())) q('UPDATE reg_items SET code=?, data=?, updated_at=? WHERE id=?', [$code, json_encode($row + (json_decode($old['data'], true) ?: []), JSON_UNESCAPED_UNICODE), time(), $old['id']]);
+            else q('INSERT INTO reg_items(reg,code,data,ext_key,created_at,updated_at) VALUES(?,?,?,?,?,?)', [$reg, $code, json_encode($row, JSON_UNESCAPED_UNICODE), $key, time(), time()]);
+            $n++;
+        }
+        $send(['ok' => true, 'n' => $n]);
+    }
     if ($kind === 'news') { // synthèse quotidienne des actualités : {date:"AAAA-MM-JJ", items:[{title, source, url, date, summary, why}]}
         $items = [];
         foreach (array_slice((array)($d['items'] ?? []), 0, 12) as $i) {

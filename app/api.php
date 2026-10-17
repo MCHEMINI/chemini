@@ -330,6 +330,39 @@ function api(string $r): never {
             if (!$allowed) json_out(['error' => 'Accès refusé.'], 403);
             q($r === 'tasks/toggle' ? 'UPDATE tasks SET done = 1 - done WHERE id=?' : 'DELETE FROM tasks WHERE id=?', [$task['id']]);
             json_out(['ok' => true]);
+        case 'reg/save':
+        case 'reg/delete':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            require_once APP_DIR . '/lib/pilot.php';
+            $id = in_int('id');
+            if ($r === 'reg/delete') { q('DELETE FROM reg_items WHERE id=?', [$id]); json_out(['ok' => true]); }
+            $reg = in_str('reg', 20); if (!isset(REGS[$reg])) json_out(['error' => 'Registre inconnu.'], 400);
+            $d = [];
+            foreach (REGS[$reg][3] as $k => [$label, $type]) {
+                $v = in_str($k, 1000);
+                if ($type === 'money') $v = $v === '' ? '' : (float)str_replace([' ', ','], ['', '.'], $v);
+                elseif ($type === 'int') $v = $v === '' ? '' : (int)$v;
+                elseif ($type === 'date' && $v !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $v)) $v = '';
+                elseif (is_array($type) && $v !== '' && !in_array($v, $type, true)) $v = '';
+                $d[$k] = $v;
+            }
+            $code = (string)($d['code'] ?? '');
+            if ($id) { $old = q('SELECT data FROM reg_items WHERE id=? AND reg=?', [$id, $reg])->fetchColumn(); if ($old === false) json_out(['error' => 'Fiche introuvable.'], 404);
+                q('UPDATE reg_items SET code=?, data=?, updated_at=? WHERE id=?', [$code, json_encode($d + (json_decode((string)$old, true) ?: []), JSON_UNESCAPED_UNICODE), time(), $id]); }
+            else q('INSERT INTO reg_items(reg,code,data,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?)', [$reg, $code, json_encode($d, JSON_UNESCAPED_UNICODE), $uid, time(), time()]);
+            json_out(['ok' => true]);
+        case 'pilot/pvtasks':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            require_once APP_DIR . '/pages/dashboard.php';
+            $n = 0; $people = team_people(); $B = q("SELECT code, gest FROM buildings WHERE kind='syndic'")->fetchAll(PDO::FETCH_KEY_PAIR);
+            foreach (ag_ops()['nopv'] as $b) {
+                $code = str_pad((string)$b['num'], 5, '0', STR_PAD_LEFT); $g = team_slug((string)($B[$code] ?? $B[(string)(int)$code] ?? ''));
+                if (!isset($people[$g])) continue;
+                $title = 'Diffuser le PV de l\'AG du ' . date('d/m/Y', strtotime((string)$b['dateAG'])) . ' · ' . $code . ' ' . trim((string)$b['imm']);
+                if (q('SELECT 1 FROM team_tasks WHERE person=? AND title=? AND done_at IS NULL', [$g, $title])->fetchColumn()) continue;
+                q('INSERT INTO team_tasks(person,title,due,created_by,by_dir,created_at,priv) VALUES(?,?,?,?,1,?,0)', [$g, $title, date('Y-m-d', strtotime('+3 days')), $uid, time()]); $n++;
+            }
+            json_out(['ok' => true, 'n' => $n]);
         case 'accueil/qcm':
             if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
             require_once APP_DIR . '/pages/onboard.php';
