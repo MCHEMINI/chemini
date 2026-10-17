@@ -841,3 +841,19 @@ TEXTE À ÉCRIRE SUR L'IMAGE (seul texte autorisé) :
 
 /* Remplace les anciens onclick en ligne (bloqués par la politique de sécurité du navigateur) */
 document.addEventListener('click', e => { if (e.target.closest('[data-print]')) window.print(); const s = e.target.closest('input[data-select]'); if (s) s.select(); });
+/* Mots de passe : œil pour afficher ou masquer la saisie (tous les champs du même formulaire basculent ensemble) */
+(function(){
+  const EYE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.5 4.5-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  const group = inp => { const f = inp.form || inp.closest('form, .field, div'); return f ? [...f.querySelectorAll('input[data-pw]')] : [inp]; };
+  const set = (inp, show) => group(inp).forEach(i => { i.type = show ? 'text' : 'password'; const b = i.parentNode.querySelector('.pw-eye'); if (b) { b.innerHTML = show ? EYE_OFF : EYE; b.setAttribute('aria-pressed', String(show)); b.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe'); b.title = b.getAttribute('aria-label'); } });
+  const add = inp => {
+    if (inp.dataset.pw) return; inp.dataset.pw = '1';
+    const w = document.createElement('span'); w.className = 'pw-wrap'; inp.parentNode.insertBefore(w, inp); w.appendChild(inp);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pw-eye'; w.appendChild(b);
+    b.addEventListener('mousedown', e => e.preventDefault()); // garde le curseur dans le champ
+    b.addEventListener('click', () => set(inp, inp.type === 'password'));
+    set(inp, false);
+  };
+  document.querySelectorAll('input[type=password]').forEach(add);
+})();
