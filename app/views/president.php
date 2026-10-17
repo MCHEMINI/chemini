@@ -10,6 +10,7 @@ $src = $w ? (json_decode((string)$w['sources'], true) ?: []) : [];
   </div>
 </header>
 
+<?php if ($ed): [$nc, $nt] = pw_next_note(); ?><p class="pw-rule pw-rule-<?= $nc ?>"><span aria-hidden="true">ⓘ</span> Si le mot du Président n'est pas validé avant le 1er du mois, il est publié automatiquement. <b><?= e($nt) ?></b></p><?php endif; ?>
 <?php if ($ed && ($al = pw_alert())): ?>
 <?php [$alT, $alD] = pw_alert_text($al); ?><div class="pw-alert"><b><?= e($alT) ?>.</b> <?= e($alD) ?></div>
 <?php endif; ?>

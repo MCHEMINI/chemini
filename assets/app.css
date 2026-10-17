@@ -1690,3 +1690,6 @@ img[data-zoom]{cursor:zoom-in}
 @media (max-width:640px){.rq-row{grid-template-columns:minmax(0,1fr)}}
 .rq-mine .rq-row{grid-template-columns:minmax(0,1fr)}
 .rq-mine .sec-h{flex-wrap:wrap;gap:4px 12px}
+.pw-rule{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;margin:0 0 14px;padding:10px 14px;border:1px solid var(--line);border-left:3px solid var(--bronze);border-radius:8px;background:var(--surface);font-size:14.5px;color:var(--muted)}
+.pw-rule b{color:var(--ink);font-weight:600}.pw-rule-warn{border-left-color:var(--warn)}.pw-rule-ok{border-left-color:var(--ok)}
+.hm-pw-rule{display:block;margin-top:6px;font-size:12.5px;line-height:1.4;color:var(--muted)}.hm-pw-warn{color:var(--warn)}.hm-pw-ok{color:var(--ok)}

@@ -96,7 +96,7 @@ $svg = fn($n) => '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" st
       <?php if (!empty($O['upcoming'])): ?><ul class="hm-ag"><?php foreach (array_slice($O['upcoming'], 0, 4) as $r): ?><li><b><?= e(date('d/m', strtotime($r['ag_date']))) ?></b><span><?= e(mb_strimwidth((string)($r['nom'] ?? $r['code']), 0, 38, '…')) ?></span><small><?= e(trim(preg_replace('/^(M\.|Mme)\s*/u', '', (string)($r['gest'] ?? '')))) ?></small></li><?php endforeach; ?></ul>
       <?php else: ?><span class="hm-s">Aucune AG dans les 30 prochains jours</span><?php endif; ?></a>
     <a class="hm-card hm-pw" href="/mot-du-president"><span class="hm-ic"><?= $svg('pen') ?></span><span class="hm-l">Mot du Président</span>
-      <?php if ($pw = $D['pw']): ?><b class="hm-t"><?= e($pw['title']) ?></b><span class="hm-s"><?= e(pw_month_label($pw['month'])) ?></span><?php else: ?><span class="hm-s">Premier mot le 1er novembre</span><?php endif; ?></a>
+      <?php if ($pw = $D['pw']): ?><b class="hm-t"><?= e($pw['title']) ?></b><span class="hm-s"><?= e(pw_month_label($pw['month'])) ?></span><?php else: ?><span class="hm-s">Premier mot le 1er novembre</span><?php endif; ?><?php if (pw_editor($u)): [$nc, $nt] = pw_next_note(); ?><span class="hm-pw-rule hm-pw-<?= $nc ?>"><?= e($nt) ?></span><?php endif; ?></a>
     <a class="hm-card" href="/gid"><span class="hm-ic"><?= $svg('news') ?></span><span class="hm-l">Informations</span>
       <?php if ($D['board']): ?><ul class="hm-mini"><?php foreach ($D['board'] as $b): ?><li><?= e(mb_strimwidth((string)$b['title'], 0, 60, '…')) ?></li><?php endforeach; ?></ul><?php else: ?><span class="hm-s">Aucune information</span><?php endif; ?></a>
     <?php $nb = news_blocks(); $nImp = array_sum(array_column($nb, 'imp')); ?>

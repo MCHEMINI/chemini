@@ -38,6 +38,14 @@ function pw_alert_text(array $al): array {
     return ["Le mot de $lab n'est pas validé", "Il sera publié automatiquement le 1er ($quand), même sans validation : relisez-le et cliquez sur « Valider la publication »."];
 }
 
+/** Rappel permanent pour le Président : état du prochain mot et règle de publication automatique. */
+function pw_next_note(): array {
+    $m = date('Y-m', strtotime(date('Y-m-01') . ' +1 month')); $w = pw_get($m); $lab = pw_month_label($m);
+    if ($w && $w['status'] === 'validated') return ['ok', "$lab validé : publication le 1er."];
+    if ($w) return ['warn', "$lab à valider avant le 1er : sans validation, il sera publié automatiquement le 1er."];
+    return ['todo', "Brouillon de $lab rédigé le 25 : s'il n'est pas validé avant le 1er, il sera publié automatiquement."];
+}
+
 function pw_month_label(string $m): string { return ucfirst(MOIS_LONG[(int)substr($m, 5, 2) - 1]) . ' ' . substr($m, 0, 4); }
 
 /** Mise en forme : « ## » intertitre, « - » liste, **gras**, paragraphes séparés par une ligne vide. */
