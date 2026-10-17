@@ -14,7 +14,7 @@ function page_tasks(array $u): never {
     require_once APP_DIR . '/pages/team.php';
     $me = team_me($u);
     $all = $me ? team_load($u, $me) : [];
-    $open = array_values(array_filter($all, fn($t) => !$t['done_at'])); $done = array_values(array_filter($all, fn($t) => $t['done_at']));
+    $open = array_values(array_filter($all, fn($t) => !$t['done_at'])); $done = array_values(array_filter($all, fn($t) => $t['done_at'] && $t['title'] !== SURVEY_TASK));
     usort($done, fn($a, $b) => $b['done_at'] <=> $a['done_at']);
     $spaces = array_values(array_filter(array_keys(SPACES), fn($s) => can_space($u, $s)));
     $shared = $spaces ? q('SELECT t.*, u.name AS by_name FROM tasks t LEFT JOIN users u ON u.id=t.user_id WHERE t.space IN (' . implode(',', array_fill(0, count($spaces), '?')) . ') ORDER BY t.done, t.created_at DESC LIMIT 200', $spaces)->fetchAll() : [];

@@ -454,6 +454,7 @@ function api(string $r): never {
         case 'team/delete':
             $task = q('SELECT * FROM team_tasks WHERE id=?', [in_int('id')])->fetch();
             if (!$task || !team_can_edit($u, $task)) json_out(['error' => 'Accès refusé.'], 403);
+            if ($task['title'] === SURVEY_TASK && $r === 'team/toggle') json_out(['error' => 'Cette tâche se termine automatiquement une fois le questionnaire rempli.'], 400);
             if ($r === 'team/delete') {
                 if ((int)$task['created_by'] !== $uid && ((int)$task['priv'] || !can_space($u, 'direction'))) json_out(['error' => 'Seule la personne qui a affecté la tâche peut la supprimer.'], 403);
                 q('DELETE FROM team_tasks WHERE id=?', [$task['id']]);

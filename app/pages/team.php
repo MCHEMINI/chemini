@@ -32,7 +32,7 @@ function page_team_person(array $u, string $key): never {
     $m0 = strtotime(date('Y-m-01'));
     $tasks = team_load($u, $key);
     $open = array_values(array_filter($tasks, fn($t) => !$t['done_at']));
-    $done = array_values(array_filter($tasks, fn($t) => $t['done_at']));
+    $done = array_values(array_filter($tasks, fn($t) => $t['done_at'] && $t['title'] !== SURVEY_TASK));
     usort($done, fn($a, $b) => $b['done_at'] <=> $a['done_at']);
     render('team_person', ['title' => $people[$key]['name'], 'nav' => 'team', 'u' => $u, 'p' => $people[$key], 'open' => $open, 'done' => $done,
         'me' => team_me($u), 'isDir' => can_space($u, 'direction')]);

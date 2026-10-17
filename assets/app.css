@@ -1104,3 +1104,6 @@ a.og-p:hover b{color:var(--bronze)}
 .sg-thumb{background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px;min-height:60px;display:grid;place-items:center}.sg-thumb img{max-width:100%;max-height:140px}
 .sg-meta{display:flex;justify-content:space-between;align-items:center;gap:8px}.sg-card p{margin:0}.sg-l{overflow-wrap:anywhere;color:var(--bronze)}
 @media (max-width:900px){.sg-now{grid-template-columns:1fr}}
+.tt-survey{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;align-items:start;margin:4px 0 8px;padding:16px;border:1px solid var(--bronze);border-radius:var(--r);background:var(--bronze-soft)}
+.tt-survey b{font-size:15px}.tt-survey p{margin:4px 0 10px;font-size:13.5px;line-height:1.5}
+.tt-survey small{display:block;margin-top:8px;font-size:12px;color:var(--muted)}
