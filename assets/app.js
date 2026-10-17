@@ -729,11 +729,32 @@ function fabBurst(el) { const r = el.getBoundingClientRect(), box = document.cre
     try { const r = await api('guides/save', o); location.href = r.go || '/guides'; } catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });
 })();
 
-/* Mot du Président : enregistrer le brouillon */
-(function(){ const f = document.getElementById('pwF'); if (!f) return;
-  f.addEventListener('submit', async e => { e.preventDefault(); const err = f.querySelector('.form-error'), b = f.querySelector('.btn-primary'); err.hidden = true; b.disabled = true;
-    const o = Object.fromEntries(new FormData(f).entries()); o.month = f.dataset.month;
-    try { await api('president/save', o); location.href = '/mot-du-president/' + f.dataset.month; } catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });
+/* Mot du Président : modification sur place, même mise en page (conversion HTML → texte balisé à l'enregistrement) */
+(function(){ const doc = document.getElementById('pwDoc'), ed = document.getElementById('pwEdit'); if (!doc || !ed) return;
+  const tools = document.getElementById('pwTools'), save = document.getElementById('pwSave'), cancel = document.getElementById('pwCancel'), err = document.getElementById('pwErr');
+  const fields = doc.querySelectorAll('[data-f]'); const orig = [...fields].map(f => f.innerHTML);
+  const on = v => { fields.forEach(f => f.contentEditable = v ? 'true' : 'false'); doc.classList.toggle('editing', v); tools.hidden = !v; save.hidden = cancel.hidden = !v; ed.hidden = v;
+    document.querySelectorAll('.pw-act [data-api]').forEach(b => b.hidden = v); if (v) doc.querySelector('[data-f=body]').focus(); };
+  ed.addEventListener('click', () => on(true));
+  cancel.addEventListener('click', () => { fields.forEach((f, i) => f.innerHTML = orig[i]); on(false); });
+  tools.addEventListener('mousedown', e => e.preventDefault());
+  tools.querySelectorAll('[data-fmt]').forEach(b => b.addEventListener('click', () => { const k = b.dataset.fmt;
+    if (k === 'bold') document.execCommand('bold'); else if (k === 'ul') document.execCommand('insertUnorderedList'); else document.execCommand('formatBlock', false, k); }));
+  doc.querySelectorAll('[data-f=title],[data-f=chapo]').forEach(f => f.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); }));
+  const inline = n => [...n.childNodes].map(c => c.nodeType === 3 ? c.textContent : (/^(B|STRONG)$/.test(c.tagName) ? '**' + inline(c).trim() + '**' : c.tagName === 'BR' ? '\n' : inline(c))).join('').replace(/ /g, ' ');
+  const toMd = root => { const out = [];
+    [...root.childNodes].forEach(n => { if (n.nodeType === 3) { const t = n.textContent.trim(); if (t) out.push(t); return; }
+      const tag = n.tagName; const txt = inline(n).trim();
+      if (tag === 'H2' || tag === 'H3') { if (txt) out.push('## ' + txt.replace(/\*\*/g, '')); }
+      else if (tag === 'UL' || tag === 'OL') { const li = [...n.querySelectorAll('li')].map(l => '- ' + inline(l).trim()).filter(x => x !== '- '); if (li.length) out.push(li.join('\n')); }
+      else if (txt) out.push(txt); });
+    return out.join('\n\n'); };
+  save.addEventListener('click', async () => { err.hidden = true; save.disabled = true;
+    const o = { month: doc.dataset.month, title: doc.querySelector('[data-f=title]').innerText.trim(), chapo: doc.querySelector('[data-f=chapo]').innerText.trim(), body: toMd(doc.querySelector('[data-f=body]')) };
+    try { await api('president/save', o); location.reload(); } catch (x) { save.disabled = false; err.hidden = false; err.textContent = x.message; } });
+  tools.querySelector('[data-act=save]').addEventListener('click', () => save.click());
+  tools.querySelector('[data-act=cancel]').addEventListener('click', () => cancel.click());
+  if ('edit' in doc.dataset) on(true);
 })();
 /* Tableau de bord Perso : compteurs mis à jour toutes les 2 minutes */
 (function(){ if (!document.querySelector('[data-live]')) return;

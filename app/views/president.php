@@ -18,25 +18,22 @@ $src = $w ? (json_decode((string)$w['sources'], true) ?: []) : [];
   <article class="pw-art panel">
     <?php if (!$w): ?>
       <div class="empty"><strong>Aucun mot publié pour l'instant.</strong>Le premier paraîtra le 1er du mois.</div>
-    <?php elseif ($edit): ?>
-      <form id="pwF" class="pw-form" data-month="<?= e($w['month']) ?>">
-        <div class="eyebrow">Modifier · <?= e(pw_month_label($w['month'])) ?></div>
-        <div class="field"><label for="pw-t">Titre</label><input class="input" id="pw-t" name="title" maxlength="200" value="<?= e($w['title']) ?>" required></div>
-        <div class="field"><label for="pw-c">Chapeau</label><textarea class="input" id="pw-c" name="chapo" rows="3" maxlength="800"><?= e((string)$w['chapo']) ?></textarea></div>
-        <div class="field"><label for="pw-b">Texte <span class="muted">(« ## » pour un intertitre, « - » pour une liste, **gras**)</span></label><textarea class="input pw-body" id="pw-b" name="body" rows="26" required><?= e($w['body']) ?></textarea></div>
-        <p class="form-error" hidden></p>
-        <div class="pw-act"><button class="btn btn-primary">Enregistrer le brouillon</button><a class="btn btn-ghost" href="/mot-du-president/<?= e($w['month']) ?>">Annuler</a></div>
-      </form>
     <?php else: [$sl, $sc] = $st($w); ?>
       <div class="pw-meta"><span class="eyebrow"><?= e(pw_month_label($w['month'])) ?></span><?php if ($ed): ?><span class="chip <?= $sc ?>"><?= e($sl) ?></span><?php endif; ?></div>
-      <h2 class="pw-title"><?= e($w['title']) ?></h2>
-      <?php if ($w['chapo']): ?><p class="pw-chapo"><?= e($w['chapo']) ?></p><?php endif; ?>
-      <div class="pw-body-r"><?= pw_render($w['body']) ?></div>
+      <?php if ($ed): ?><div class="pw-tools" id="pwTools" hidden role="toolbar" aria-label="Mise en forme">
+        <button type="button" data-fmt="h2" title="Intertitre">Intertitre</button><button type="button" data-fmt="p" title="Paragraphe">Paragraphe</button><button type="button" data-fmt="bold" title="Gras"><b>G</b></button><button type="button" data-fmt="ul" title="Liste à puces">• Liste</button>
+        <span class="pw-tools-h">Vous modifiez l'article tel qu'il sera publié</span><button type="button" data-act="cancel">Annuler</button><button type="button" data-act="save" class="pw-tsave">Enregistrer</button></div><?php endif; ?>
+      <div id="pwDoc" data-month="<?= e($w['month']) ?>"<?= $edit ? ' data-edit' : '' ?>>
+      <h2 class="pw-title" data-f="title"><?= e($w['title']) ?></h2>
+      <p class="pw-chapo" data-f="chapo"><?= e((string)$w['chapo']) ?></p>
+      <div class="pw-body-r" data-f="body"><?= pw_render($w['body']) ?></div>
+      </div>
       <div class="pw-sign"><span class="ag-av">MC</span><span><b>Mehdi Chemini</b><small>Président de GID</small></span></div>
       <?php if ($src): ?><details class="pw-src"><summary>Sources (<?= count($src) ?>)</summary><ul><?php foreach ($src as $s): ?><li><a href="<?= e($s['url'] ?? '#') ?>" target="_blank" rel="noopener"><?= e($s['title'] ?? $s['url'] ?? '') ?></a></li><?php endforeach; ?></ul></details><?php endif; ?>
       <?php if ($ed): ?>
       <div class="pw-act">
-        <a class="btn btn-ghost" href="/mot-du-president/<?= e($w['month']) ?>?modifier">Modifier</a>
+        <button type="button" class="btn btn-ghost" id="pwEdit">Modifier</button>
+        <button type="button" class="btn btn-primary" id="pwSave" hidden>Enregistrer</button><button type="button" class="btn btn-ghost" id="pwCancel" hidden>Annuler</button><span class="form-error" id="pwErr" hidden></span>
         <?php if ($w['status'] !== 'validated'): ?><button type="button" class="btn btn-primary" data-api="president/validate" data-k="<?= e($w['month']) ?>" data-confirm="Valider la publication ?">Valider la publication</button>
         <?php else: ?><button type="button" class="btn-link" data-api="president/unvalidate" data-k="<?= e($w['month']) ?>" data-confirm="Repasser en brouillon ?">Repasser en brouillon</button><?php endif; ?>
       </div>

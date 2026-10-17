@@ -1336,3 +1336,11 @@ em.crit,.hm-mini li.crit{color:var(--crit)}em.warn{color:var(--warn)}em.ok{color
 .gd-form{display:flex;flex-direction:column;gap:14px}.gd-fgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.gd-wide{grid-column:span 3}
 .gd-ta{font:14px/1.6 var(--f-mono, monospace);min-height:380px}.gd-help{margin:0}.gd-act{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.gd-del{margin-left:auto;color:var(--crit)}
 @media (max-width:900px){.gd-wrap{grid-template-columns:1fr}.gd-side{position:static}.gd-art{padding:20px 16px}.gd-fgrid{grid-template-columns:1fr 1fr}.gd-wide{grid-column:1/-1}}
+.pw-tools{position:sticky;top:10px;z-index:5;display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 16px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.pw-tools button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:7px;padding:5px 10px;font:600 13px var(--f-body);cursor:pointer}.pw-tools button:hover{border-color:var(--bronze)}
+.pw-tools-h{margin-left:auto;font-size:12px;color:var(--muted)}
+#pwDoc.editing [data-f]{outline:1px dashed var(--bronze);outline-offset:6px;border-radius:4px;cursor:text}
+#pwDoc.editing [data-f]:focus{outline:2px solid var(--bronze)}
+#pwDoc.editing [data-f=chapo]:empty::before{content:"Chapeau (deux phrases d'introduction)";color:var(--muted)}
+#pwDoc:not(.editing) [data-f=chapo]:empty{display:none}
+.pw-tools .pw-tsave{background:var(--ink);color:var(--bg);border-color:var(--ink)}
