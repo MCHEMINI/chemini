@@ -1,5 +1,5 @@
 <?php
-$st = fn($x) => pw_published($x) ? ['Publié', 'ok'] : ($x['status'] === 'validated' ? ['Validé · publication le 1er ' . MOIS_LONG[(int)substr($x['month'], 5) - 1], 'ok'] : ['Brouillon', 'warn']);
+$st = fn($x) => pw_published($x) ? ($x['status'] === 'validated' ? ['Publié', 'ok'] : ['Publié sans validation', 'warn']) : ($x['status'] === 'validated' ? ['Validé · publication le 1er ' . MOIS_LONG[(int)substr($x['month'], 5) - 1], 'ok'] : ['Brouillon · publié automatiquement le 1er ' . MOIS_LONG[(int)substr($x['month'], 5) - 1], 'warn']);
 $src = $w ? (json_decode((string)$w['sources'], true) ?: []) : [];
 ?>
 <header class="head">
@@ -11,7 +11,7 @@ $src = $w ? (json_decode((string)$w['sources'], true) ?: []) : [];
 </header>
 
 <?php if ($ed && ($al = pw_alert())): ?>
-<div class="pw-alert"><b><?= $al['word'] ? 'Le mot de ' . e(pw_month_label($al['month'])) . ' attend votre validation.' : 'Le mot de ' . e(pw_month_label($al['month'])) . ' n\'est pas encore rédigé.' ?></b> <?= $al['word'] ? 'Relisez-le, modifiez-le si besoin, puis cliquez sur « Valider la publication ». Sans validation, il reste en brouillon.' : 'Il sera préparé automatiquement à partir des actualités du mois.' ?></div>
+<?php [$alT, $alD] = pw_alert_text($al); ?><div class="pw-alert"><b><?= e($alT) ?>.</b> <?= e($alD) ?></div>
 <?php endif; ?>
 
 <div class="pw-wrap">
@@ -58,6 +58,6 @@ $src = $w ? (json_decode((string)$w['sources'], true) ?: []) : [];
       <div class="pw-share-off"<?= $tk ? ' hidden' : '' ?>><button type="button" class="btn btn-ghost" data-sh="on">Créer le lien</button></div>
       <span class="form-error" hidden></span>
     </div><?php endif; ?>
-    <?php if ($ed): ?><div class="panel pw-how"><h3>Fonctionnement</h3><ol><li>Le 25 de chaque mois, un brouillon est rédigé d'après les actualités du mois.</li><li>Vous le relisez et le modifiez si besoin.</li><li>« Valider la publication » : il paraît le 1er pour toute l'équipe.</li><li>Sans validation, il reste en brouillon et une alerte s'affiche sur votre tableau de bord.</li></ol></div><?php endif; ?>
+    <?php if ($ed): ?><div class="panel pw-how"><h3>Fonctionnement</h3><ol><li>Le 25 de chaque mois, un brouillon est rédigé d'après les actualités du mois et la saison (fêtes, rentrée, été, assemblées générales).</li><li>Vous le relisez et le modifiez si besoin, puis « Valider la publication ».</li><li>Il paraît le 1er pour toute l'équipe, validé ou non.</li><li>Sans validation, une alerte s'affiche sur votre tableau de bord les 5 jours qui précèdent et les 5 jours qui suivent la publication.</li></ol></div><?php endif; ?>
   </aside>
 </div>

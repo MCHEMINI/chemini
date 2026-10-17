@@ -29,7 +29,7 @@ $svg = fn($n) => '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" st
 </header>
 
 <?php if (!empty($D['pwAlert'])): $al = $D['pwAlert']; ?>
-<a class="hm-alert" href="/mot-du-president/<?= e($al['month']) ?>"><span class="hm-alert-i">!</span><span><b>Mot du Président de <?= e(pw_month_label($al['month'])) ?> <?= $al['word'] ? 'non validé' : 'pas encore rédigé' ?></b><small><?= $al['word'] ? 'Il reste en brouillon tant que vous ne l\'avez pas validé : relisez-le et cliquez sur « Valider la publication ».' : 'Le brouillon sera préparé automatiquement d\'après les actualités du mois.' ?></small></span><span class="hm-go">Ouvrir →</span></a>
+<?php [$alT, $alD] = pw_alert_text($al); ?><a class="hm-alert" href="/mot-du-president/<?= e($al['month']) ?>"><span class="hm-alert-i">!</span><span><b><?= e($alT) ?></b><small><?= e($alD) ?></small></span><span class="hm-go">Ouvrir →</span></a>
 <?php endif; ?>
 
 <section class="hm-kpis" aria-label="Mes priorités">

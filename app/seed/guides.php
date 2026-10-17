@@ -458,10 +458,11 @@ MD, 'direction'],
 MD, 'annonceurs'],
 ['chemini-mot-president', 'Dashboard · Président', '🖋️', 'Mot du Président : relire, publier, partager', 'Le cycle mensuel du Mot du Président, de la rédaction automatique au partage par lien.', '3 min', 'Débutant', <<<'MD'
 ## Chaque mois
-1. **Le 25, un brouillon est rédigé** d'après les actualités du mois ; une alerte apparaît sur votre tableau de bord. [[Ouvrir le Mot du Président|/mot-du-president]]
+1. **Le 25, un brouillon est rédigé** d'après les actualités du mois et la saison (fêtes, rentrée, congés d'été, assemblées générales). [[Ouvrir le Mot du Président|/mot-du-president]]
 2. **Relisez et modifiez** avec « Modifier » : l'article garde sa mise en page, la barre d'outils propose intertitre, paragraphe, gras et liste.
-3. **« Valider la publication »** : il paraît le 1er du mois pour toute l'équipe. Sans validation, il reste en brouillon.
-4. **« Repasser en brouillon »** annule la validation si besoin.
+3. **« Valider la publication »** : il paraît le 1er du mois pour toute l'équipe.
+4. **Sans validation, il paraît quand même le 1er** : une alerte s'affiche sur votre tableau de bord les 5 derniers jours du mois, puis du 1er au 5 pour vous inviter à le relire.
+5. **« Repasser en brouillon »** annule la validation si besoin (avant le 1er).
 
 ## Partager par lien
 1. **Encadré « Partager par lien »** sur la page du mot : « Créer le lien » le copie aussitôt.

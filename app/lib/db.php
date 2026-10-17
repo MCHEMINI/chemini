@@ -428,6 +428,11 @@ SQL);
         $pdo->exec("CREATE TABLE IF NOT EXISTS staff_requests(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, cat TEXT NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'new', ai_analysis TEXT, ai_accept TEXT, ai_refuse TEXT, consigne_id INTEGER, decision TEXT, answer TEXT, answered_by INTEGER, answered_at INTEGER, seen_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
                     CREATE INDEX IF NOT EXISTS staff_requests_user ON staff_requests(user_id, status); PRAGMA user_version = 54;");
     }
+    if ($v < 55) { // Guide Mot du Président : publication automatique le 1er, même sans validation
+        $seed = is_file(APP_DIR . '/seed/guides.php') ? require APP_DIR . '/seed/guides.php' : [];
+        foreach ($seed as $g) if ($g[0] === 'chemini-mot-president') $pdo->prepare('UPDATE guides SET body=?, updated_at=? WHERE slug=? AND updated_by IS NULL')->execute([$g[7], time(), $g[0]]);
+        $pdo->exec('PRAGMA user_version = 55;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

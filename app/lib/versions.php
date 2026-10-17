@@ -97,4 +97,5 @@ const VERSIONS = [
     ['2026-10-17 23:55', 'direction', 'Signatures : bandeaux en grand', 'Un clic sur une vignette affiche le bandeau en grand ; les vignettes se mettent à jour dès qu\'un visuel est remplacé.'],
     ['2026-10-17 23:58', 'direction', 'Questions de l\'IA et maquettes à valider', 'Sur le tableau de bord Direction : l\'IA pose ses questions en quiz, chaque réponse crée la Tâche IA de correction ; les maquettes se valident, se refusent ou se renvoient avec un commentaire.'],
     ['2026-10-18 00:20', 'all', 'Demandes à la Direction', 'Depuis Mails à traiter, chaque collaborateur adresse une demande à la Direction (congés, horaires, formation…), visible de lui seul et de la Direction ; la réponse arrive au même endroit.'],
+    ['2026-10-18 00:30', 'direction', 'Mot du Président publié automatiquement', 'Préparé le 25, il paraît le 1er du mois même sans validation ; le Président est alerté sur son tableau de bord 5 jours avant et 5 jours après.'],
 ];
