@@ -96,6 +96,8 @@ function ingest_handle(string $kind): never {
                ON CONFLICT(code,ag_date) DO UPDATE SET msg_id=excluded.msg_id, gc_ht=excluded.gc_ht, gc_ttc=excluded.gc_ttc, travaux_ttc=excluded.travaux_ttc, detail=excluded.detail, link=excluded.link, pv_date=COALESCE(excluded.pv_date, pv_votes.pv_date)',
               [$str($it['msg_id'] ?? '', 300), $code, $date, $s . '-' . ($s + 1), isset($it['gc_ht']) ? (float)$it['gc_ht'] : null, isset($it['gc_ttc']) ? (float)$it['gc_ttc'] : null, round($sum, 2), json_encode($tr, JSON_UNESCAPED_UNICODE), $str($it['link'] ?? '', 2000), time(), $pvd]);
             $n++;
+            q('INSERT INTO hono_changes(at,user_id,source,tab,ref,field,old,new) VALUES(?,?,?,?,?,?,?,?)', [time(), null, 'auto', 'Immeubles', $code, 'PV d’AG relevé', '',
+              'AG du ' . hono_v($date) . ' · HTV ' . number_format($sum, 2, ',', ' ') . ' €' . (isset($it['gc_ttc']) ? ' · gestion votée ' . number_format((float)$it['gc_ttc'], 2, ',', ' ') . ' €' : '')]);
         }
         $send(['ok' => true, 'saved' => $n]);
     }

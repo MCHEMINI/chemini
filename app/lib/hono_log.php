@@ -62,7 +62,8 @@ function hono_log_diff(array $old, array $new, ?int $uid, string $source): int {
 
 /** Modifications récentes groupées pour l'affichage : [{at, user, source, tab, ref, field, old, new}] */
 function hono_changes(int $since = 0, int $limit = 3000): array {
-    return array_map(fn($r) => ['at' => (int)$r['at'], 'user' => $r['name'] ?: ($r['source'] === 'auto' ? 'Mise à jour automatique' : '—'), 'source' => $r['source'], 'tab' => $r['tab'],
+    hono_backfill();
+    return array_map(fn($r) => ['at' => (int)$r['at'], 'user' => $r['name'] ?: ($r['source'] === 'auto' ? 'Mise à jour automatique' : ($r['source'] === 'evolution' ? 'Évolution' : '—')), 'source' => $r['source'], 'tab' => $r['tab'],
         'ref' => (string)$r['ref'], 'field' => (string)$r['field'], 'old' => (string)$r['old'], 'new' => (string)$r['new']],
         q('SELECT c.*, u.name FROM hono_changes c LEFT JOIN users u ON u.id=c.user_id WHERE c.at>=? ORDER BY c.at DESC, c.id DESC LIMIT ' . (int)$limit, [$since])->fetchAll());
 }
@@ -96,4 +97,49 @@ function hono_autofill(?array $extra = null): array {
         hono_log_diff($old, $st, null, 'auto');
     }
     return ['ok' => true, 'filled' => $n, 'cells' => $filled, 'window' => [$from, $to]];
+}
+
+/** Évolutions de l'outil Honoraires (affichées dans le journal, onglet « Évolution de l'outil »). */
+const HONO_EVOLUTIONS = [
+    ['2026-10-16 01:09', 'Section Honoraires partagée avec l’équipe (lecture seule sauf Mehdi Chemini)'],
+    ['2026-10-16 02:17', 'Honoraires aux couleurs du site, onglet « Optimisation & stratégie »'],
+    ['2026-10-16 02:41', 'Audit mensuel affiché en tête d’« Optimisation & stratégie », alerte sur le tableau de bord'],
+    ['2026-10-16 15:31', 'Bloc « Honoraires annexes » (exercice 1er avril–31 mars) et choix des colonnes mémorisé'],
+    ['2026-10-16 15:43', 'Exercices du 1er avril au 31 mars, ordre des colonnes réglable'],
+    ['2026-10-16 16:02', 'Honoraires annexes en pleine page avec retour'],
+    ['2026-10-16 16:32', 'Contrôle croisé avec ImmOpen, suppression avec confirmation et archivage, honoraires travaux votés d’après les PV'],
+    ['2026-10-16 18:05', 'Colonnes HTV avec bouton i (détail des votes en AG)'],
+    ['2026-10-16 18:15', 'HTV : honoraires travaux votés en AG uniquement, exercice des AG du 1er juillet au 30 juin'],
+    ['2026-10-16 19:23', '« AG tenue le » et « Remise PV » complétés d’après les PV d’AG'],
+    ['2026-10-17 00:07', 'Version mobile : onglets regroupés dans un menu déroulant'],
+    ['2026-10-17 02:02', 'Fenêtres de détail à la charte du site'],
+    ['2026-10-17 02:06', 'Dates en champ texte JJ/MM/AAAA, complétées aussi d’après le planning ImmOpen'],
+    ['2026-10-17 02:17', 'Onglet « Modifications », tableau de décision dans « Optimisation & stratégie », mise à jour automatique des cellules vides'],
+];
+
+/** Reprise unique de l'historique antérieur au journal : PV relevés, archives, saisies depuis le fichier d'origine, évolutions de l'outil. */
+function hono_backfill(): void {
+    if (q("SELECT 1 FROM kv WHERE k='hono_backfill_v1'")->fetchColumn()) return;
+    q("INSERT INTO kv(k,v,updated_at) VALUES('hono_backfill_v1','1',?) ON CONFLICT(k) DO UPDATE SET v='1'", [time()]);
+    $ins = fn($at, $uid, $src, $tab, $ref, $field, $old, $new) => q('INSERT INTO hono_changes(at,user_id,source,tab,ref,field,old,new) VALUES(?,?,?,?,?,?,?,?)', [$at, $uid, $src, $tab, mb_substr((string)$ref, 0, 200), $field, mb_substr((string)$old, 0, 300), mb_substr((string)$new, 0, 300)]);
+    $st = hono_state(); $names = [];
+    foreach ((array)($st['bld'] ?? []) as $b) $names[str_pad(preg_replace('/\D/', '', (string)($b['num'] ?? '')), 5, '0', STR_PAD_LEFT)] = ($b['num'] ?? '') . ' · ' . ($b['imm'] ?? '');
+    foreach (q('SELECT * FROM pv_votes ORDER BY created_at')->fetchAll() as $r) {
+        $det = json_decode((string)$r['detail'], true) ?: [];
+        $ins((int)$r['created_at'], null, 'auto', 'Immeubles', $names[$r['code']] ?? $r['code'], 'PV d’AG relevé', '',
+            'AG du ' . hono_v($r['ag_date']) . ($r['pv_date'] ? ', PV remis le ' . hono_v($r['pv_date']) : '') . ' · HTV ' . number_format((float)$r['travaux_ttc'], 2, ',', ' ') . ' €' . ($r['gc_ttc'] !== null ? ' · gestion votée ' . number_format((float)$r['gc_ttc'], 2, ',', ' ') . ' €' : '') . (count($det) ? ' (' . count($det) . ' résolution' . (count($det) > 1 ? 's' : '') . ')' : ''));
+    }
+    foreach (q('SELECT * FROM hono_archive')->fetchAll() as $a) {
+        $ins((int)$a['created_at'], (int)$a['created_by'] ?: null, 'manuel', 'Immeubles', trim(($a['num'] ? $a['num'] . ' · ' : '') . $a['imm']), 'Ligne archivée', '', 'archives');
+        if ($a['restored_at']) $ins((int)$a['restored_at'], null, 'manuel', 'Immeubles', trim(($a['num'] ? $a['num'] . ' · ' : '') . $a['imm']), 'Ligne restaurée', 'archives', 'tableau');
+    }
+    // saisies faites depuis le fichier d'origine
+    $html = (string)q('SELECT html FROM docs WHERE slug=?', ['honoraires'])->fetchColumn();
+    $sv = q('SELECT updated_at, updated_by FROM doc_state WHERE slug=?', ['honoraires'])->fetch();
+    if ($sv && preg_match('#<script id="seed" type="application/json">(.*?)</script>#s', $html, $m) && ($seed = json_decode($m[1], true))) {
+        $before = (int)q('SELECT COUNT(*) FROM hono_changes')->fetchColumn();
+        $cur = $st; hono_log_diff($seed, $cur, $sv['updated_by'] ? (int)$sv['updated_by'] : null, 'manuel');
+        q("UPDATE hono_changes SET at=? WHERE id > (SELECT COALESCE(MAX(id),0) FROM hono_changes) - ? AND at>=?", [(int)$sv['updated_at'], (int)q('SELECT COUNT(*) FROM hono_changes')->fetchColumn() - $before, time() - 5]);
+    }
+    foreach (HONO_EVOLUTIONS as $e) $ins(strtotime($e[0]), null, 'evolution', 'Évolution de l’outil', '', $e[1], '', '');
 }
