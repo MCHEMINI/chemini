@@ -678,6 +678,14 @@ function fabBurst(el) { const r = el.getBoundingClientRect(), box = document.cre
   tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.fabTab)));
   try { const k = localStorage.getItem('fabTab'); if (k === 'team') show('team'); } catch (e) {}
   const f = document.getElementById('fabTeam'); if (!f) return;
+  /* Pour quand ? : « Autre date… » ouvre le calendrier */
+  const od = f.querySelector('.fab-date'), ol = f.querySelector('[data-due-other]'), orad = f.querySelector('.fab-due-other input');
+  if (od && orad) {
+    const pick = () => { try { od.showPicker(); } catch (e) { od.focus(); od.click(); } };
+    orad.addEventListener('click', pick);
+    od.addEventListener('change', () => { if (od.value) { const [y, m, d] = od.value.split('-'); ol.textContent = new Date(+y, m - 1, +d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }); orad.checked = true; } });
+    f.addEventListener('change', e => { if (e.target.name === 'due' && e.target !== orad) { od.value = ''; ol.textContent = 'Autre date…'; } });
+  }
   /* Pour qui ? : bouton + liste en popup avec recherche */
   const wb = document.getElementById('fabWho'), pl = document.getElementById('fabPList');
   if (wb && pl) {
@@ -694,6 +702,7 @@ function fabBurst(el) { const r = el.getBoundingClientRect(), box = document.cre
   }
   f.addEventListener('submit', async e => { e.preventDefault(); const err = f.querySelector('.form-error'), b = f.querySelector('.btn-primary'); err.hidden = true; b.disabled = true;
     const o = Object.fromEntries(new FormData(f).entries());
+    if (o.due === 'autre') { if (!o.due_other) { b.disabled = false; err.hidden = false; err.textContent = 'Choisissez la date.'; return; } o.due = o.due_other; } delete o.due_other;
     try { await api('team/add', o); fabBurst(b); const who = f.querySelector('[name=person]:checked'); const nm = who ? who.closest('.fab-p').dataset.first : '';
       f.querySelector('#fabT').value = ''; b.disabled = false; toast(nm === 'Moi' ? '✅ Tâche ajoutée à votre liste' : '🚀 Tâche affectée à ' + nm); }
     catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });

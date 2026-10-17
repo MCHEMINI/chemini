@@ -1471,3 +1471,6 @@ input[data-pw]::-ms-reveal{display:none}
   html.nav-open .rail .me{margin-top:0}
   html.nav-open .rail{gap:10px}
 }
+
+.fab-due{position:relative}
+.fab-date{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}

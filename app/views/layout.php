@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=67">
+<link rel="stylesheet" href="/assets/app.css?v=68">
 </head>
 <body>
 <div id="app">
@@ -132,6 +132,7 @@
       <div class="fab-lbl">Pour quand ?</div>
       <div class="fab-due" role="radiogroup" aria-label="Échéance">
         <?php foreach (['' => 'Sans date', date('Y-m-d') => 'Aujourd\'hui', date('Y-m-d', strtotime('+1 day')) => 'Demain', date('Y-m-d', strtotime('friday this week')) => 'Vendredi', date('Y-m-d', strtotime('+7 days')) => 'Dans 7 jours'] as $dv => $dl): ?><label><input type="radio" name="due" value="<?= e($dv) ?>"<?= $dv === '' ? ' checked' : '' ?>><span><?= e($dl) ?></span></label><?php endforeach; ?>
+        <label class="fab-due-other"><input type="radio" name="due" value="autre"><span data-due-other>Autre date…</span></label><input type="date" class="fab-date" name="due_other" min="<?= date('Y-m-d') ?>" aria-label="Choisir une date" tabindex="-1">
       </div>
       <p class="form-error" hidden></p>
       <div class="fab-foot"><a href="/organigramme" class="small">Voir les collaborateurs</a><button class="btn btn-primary">Affecter 🚀</button></div>
@@ -140,6 +141,6 @@
   <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Créer une tâche IA ou une tâche d'équipe"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=45"></script>
+<script src="/assets/app.js?v=46"></script>
 </body>
 </html>
