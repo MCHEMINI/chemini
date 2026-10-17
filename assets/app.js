@@ -86,6 +86,12 @@
     mqTabs.addEventListener('change', close);
   });
 
+  /* ---------- Stratégies : leviers « À lancer » ---------- */
+  $$('[data-strat]').forEach(cb => cb.addEventListener('change', async () => {
+    cb.closest('.st-card')?.classList.toggle('on', cb.checked);
+    try { await api('strat/set', { k: cb.dataset.strat, on: cb.checked }); } catch (e) { cb.checked = !cb.checked; }
+  }));
+
   /* ---------- base64url <-> ArrayBuffer ---------- */
   const b64uToBuf = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0)).buffer;
   const bufToB64u = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');

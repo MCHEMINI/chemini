@@ -9,12 +9,39 @@
   </div>
 </header>
 
-<div class="summary">
-  <div><div class="n"><?= (int)$stats['syndic'] ?></div><div class="l"><?php if ($isDir): ?><a href="/immeubles">Immeubles en syndic</a><?php else: ?>Immeubles en syndic<?php endif; ?></div></div>
-  <div><div class="n"><?= (int)$stats['staff'] ?></div><div class="l">Collaborateurs</div></div>
-  <div><div class="n <?= $stats['veilleImp'] ? 'crit' : '' ?>"><?= (int)$stats['veilleImp'] ?></div><div class="l">Points de veille importants cette semaine</div></div>
-  <div><div class="n"><?= (int)$stats['tasks'] ?></div><div class="l"><a href="/gid">Tâches de l'équipe en cours</a></div></div>
+<?php $o = $ops; $L = fn($href, $txt) => $isDir ? '<a href="' . $href . '">' . $txt . '</a>' : $txt; ?>
+<div class="ov-grid">
+  <div class="ov-card">
+    <div class="ov-h"><span class="ov-eye">Assemblées générales</span><?php if ($isDir): ?><a class="ov-go" href="/planning-ag">Planning →</a><?php endif; ?></div>
+    <div class="ov-n"><?= count($o['upcoming']) ?></div>
+    <div class="ov-l">AG dans les 30 prochains jours · <?= (int)$o['week'] ?> sous 14 jours</div>
+    <ul class="ov-rows">
+      <li class="<?= count($o['convoc']) ? 'crit' : 'ok' ?>"><span>Convocations en retard</span><b><?= count($o['convoc']) ?></b></li>
+      <li class="<?= count($o['nopv']) ? 'crit' : 'ok' ?>"><span>PV à diffuser (+21 jours)</span><b><?= count($o['nopv']) ?></b></li>
+    </ul>
+  </div>
+  <div class="ov-card">
+    <div class="ov-h"><span class="ov-eye">Veille juridique</span><span class="ov-go">lundi 9 h</span></div>
+    <div class="ov-n <?= $stats['veilleImp'] ? 'crit' : '' ?>"><?= (int)$stats['veilleImp'] ?></div>
+    <div class="ov-l">point<?= $stats['veilleImp'] > 1 ? 's' : '' ?> important<?= $stats['veilleImp'] > 1 ? 's' : '' ?> cette semaine<?= $veille ? ' · ' . count($veille) . ' informations' : '' ?></div>
+  </div>
+  <a class="ov-card" href="/gid">
+    <div class="ov-h"><span class="ov-eye">Équipe</span><span class="ov-go">Espace équipe →</span></div>
+    <div class="ov-n"><?= (int)$stats['tasks'] ?></div>
+    <div class="ov-l">tâches partagées en cours · <?= (int)$stats['syndic'] ?> immeubles en syndic · <?= (int)$stats['staff'] ?> collaborateurs</div>
+  </a>
 </div>
+<?php if ($o['upcoming']): ?>
+<section class="ov-lists">
+  <div class="sec-h"><h2>Prochaines AG</h2><?php if ($isDir): ?><a href="/planning-ag">Planning complet</a><?php endif; ?></div>
+  <ul class="ov-ag">
+    <?php foreach (array_slice($o['upcoming'], 0, 6) as $a): $ts = strtotime($a['ag_date']); ?>
+    <li><div class="cal <?= $ts <= strtotime('+7 days') ? 'soon' : '' ?>"><b><?= date('d', $ts) ?></b><span><?= e(MOIS[(int)date('n', $ts) - 1]) ?></span></div>
+      <div><?= $L('/immeubles/' . e($a['code']), '<span class="mono muted">' . e($a['code']) . '</span> ' . e($a['nom'] ?? '')) ?><div class="d"><?= e(trim(preg_replace('/^(M\.|Mme)\s*/u', '', (string)($a['gest'] ?? '')))) ?><?= !empty($a['ag_heure']) ? ' · ' . e($a['ag_heure']) : '' ?></div></div></li>
+    <?php endforeach; ?>
+  </ul>
+</section>
+<?php endif; ?>
 
 <div class="grid">
   <section class="col-7">

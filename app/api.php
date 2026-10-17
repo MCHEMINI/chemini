@@ -350,6 +350,13 @@ function api(string $r): never {
             if (q('SELECT 1 FROM compta_done WHERE k=?', [$k])->fetchColumn()) q('DELETE FROM compta_done WHERE k=?', [$k]);
             else q('INSERT INTO compta_done(k,user_id,done_at) VALUES(?,?,?)', [$k, $uid, time()]);
             json_out(['ok' => true]);
+        case 'strat/set': // choix « À lancer » de la page Stratégies (partagés par la Direction)
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            $k = preg_replace('/[^a-z]/', '', in_str('k', 20)); if ($k === '') json_out(['error' => 'Levier inconnu'], 400);
+            $c = json_decode((string)q("SELECT v FROM kv WHERE k='strat_choices'")->fetchColumn(), true) ?: [];
+            if (body()['on'] ?? false) $c[$k] = ['by' => $u['name'], 'at' => time()]; else unset($c[$k]);
+            q("INSERT INTO kv(k,v,updated_at) VALUES('strat_choices',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode($c, JSON_UNESCAPED_UNICODE), time()]);
+            json_out(['ok' => true]);
         case 'audit/read':
             q('INSERT OR IGNORE INTO audit_reads(user_id,audit_id,read_at) VALUES(?,?,?)', [$uid, in_int('id'), time()]);
             json_out(['ok' => true]);

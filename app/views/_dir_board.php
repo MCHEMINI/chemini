@@ -14,15 +14,11 @@
 <?php endif; ?>
 
 
-<div class="summary">
-  <div><div class="n"><?= e($kpi['ttc']) ?></div><div class="l">Honoraires 2026-2027 proposés</div></div>
-  <div><div class="n"><?= e($kpi['ag']) ?></div><div class="l">AG tenues · <?= e($kpi['agVote']) ?></div></div>
-  <div><div class="n <?= $kpi['red'] ? 'crit' : '' ?>"><?= (int)$kpi['red'] ?></div><div class="l"><a href="/immeubles">Immeubles non rentables</a> · <?= (int)$kpi['orange'] ?> fragiles</div></div>
-  <div><div class="n <?= $compta && $compta['anom'] ? 'crit' : '' ?>"><?= $compta ? (int)$compta['anom'] : '—' ?></div><div class="l"><a href="/comptabilite">Incohérences comptables</a> · <?= $compta ? (int)$compta['fact'] . ' factures manquantes' : 'contrôle vendredi 19 h' ?></div></div>
-</div>
+<?php require __DIR__ . '/_overview.php'; ?>
 
 <div class="dir-actions"><button class="btn btn-ghost" type="button" data-open="dlgDeadline">Nouvelle échéance</button><button class="btn btn-primary" type="button" data-open="dlgItem">Nouveau point</button></div>
 
+<?php if ($items || $deadlines || $overdue): ?>
 <div class="grid">
   <section class="col-7">
     <div class="sec-h"><h2>Points importants à traiter</h2></div>
@@ -75,6 +71,8 @@
   </section>
 
 </div>
+<?php endif; ?>
+
 <dialog id="dlgItem" class="dlg">
   <form data-api="items/create" class="stack">
     <div class="eyebrow">Direction</div>

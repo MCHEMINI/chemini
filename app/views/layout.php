@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=30">
+<link rel="stylesheet" href="/assets/app.css?v=31">
 </head>
 <body>
 <div id="app">
@@ -41,6 +41,7 @@
       <a class="<?= $cls('ag') ?>" href="/planning-ag"><i class="dot"></i>Planning des AG</a>
       <a class="<?= $cls('honoraires') ?>" href="/honoraires"><i class="dot"></i>Honoraires</a>
       <a class="<?= $cls('compta') ?>" href="/comptabilite"><i class="dot"></i>Comptabilité</a>
+      <a class="<?= $cls('strategies') ?>" href="/strategies"><i class="dot"></i>Stratégies</a>
       <?php endif; ?>
       <?php if (in_array('famille', $sp, true)): ?>
       <?= $grp('Famille', 'famille', space_members('famille')) ?>

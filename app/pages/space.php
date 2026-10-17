@@ -7,7 +7,7 @@ function page_space(array $u, string $space): never {
         render('notfound', ['title' => 'Accès réservé', 'message' => 'Vous ne faites pas partie de cet espace.'], false);
     }
     $extra = [];
-    if ($space === 'direction') { require_once APP_DIR . '/pages/dashboard.php'; $extra = direction_board($u); }
+    if ($space === 'direction') { require_once APP_DIR . '/pages/dashboard.php'; $extra = direction_board($u) + ['ov' => dir_overview($u)]; }
     if ($space === 'famille') {
         $trips = q("SELECT * FROM trips WHERE space='famille' ORDER BY updated_at DESC LIMIT 4")->fetchAll();
         foreach ($trips as &$t) $t['d'] = json_decode($t['data'], true) ?: [];

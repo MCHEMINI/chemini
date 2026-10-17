@@ -62,6 +62,10 @@ try {
             require APP_DIR . '/pages/assistant.php';
             if ($route === 'assistant/historique') page_assistant_history($u);
             page_assistant($u);
+        case 'strategies':
+            $u = require_user();
+            require APP_DIR . '/pages/strategies.php';
+            page_strategies($u);
         case 'immeubles':
             $u = require_user();
             require APP_DIR . '/pages/immeubles.php';
