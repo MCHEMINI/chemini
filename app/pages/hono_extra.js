@@ -26,6 +26,15 @@
   var css = h('style');
   css.textContent = [
     '.ha-card{grid-column:1/-1;cursor:pointer;transition:border-color .15s}',
+    ':root{--ha-ann:#C9A66B}',
+    '.ha-pl{display:grid;gap:8px;margin-top:12px}',
+    '.ha-pr{display:grid;grid-template-columns:34px minmax(0,1fr) 92px 56px 70px;gap:10px;align-items:center;font-size:13px}',
+    '.ha-pr .p{font-weight:700}.ha-pr .t{display:flex;height:14px;border-radius:3px;background:var(--surface-2);overflow:hidden}.ha-pr .t i{display:block;height:100%}.ha-pr .t .h{background:var(--accent)}.ha-pr .t .a{background:var(--ha-ann)}',
+    '.ha-pr .v{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}.ha-pr .s{text-align:right;color:var(--text-2);font-size:12px;font-variant-numeric:tabular-nums}.ha-pr .l{text-align:right;color:var(--text-2);font-size:12px;font-variant-numeric:tabular-nums}',
+    '.ha-pf{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}',
+    '.ha-pf div{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--text-2)}.ha-pf b{font-size:15px;color:var(--text);font-variant-numeric:tabular-nums}.ha-pf .strong b{color:var(--accent)}',
+    '.ha-pn{margin:10px 0 0;font-size:12px;color:var(--text-2)}',
+    '@media (max-width:640px){.ha-pr{grid-template-columns:30px minmax(0,1fr) 84px 50px}.ha-pr .l{display:none}.ha-pf{grid-template-columns:1fr 1fr}}',
     '.ha-card:hover{border-color:var(--accent)}',
     '.ha-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}',
     '.ha-years{display:flex;gap:6px;flex-wrap:wrap}',
@@ -109,6 +118,7 @@
     '.hd-empty{color:var(--text-2);margin:0}.hd-foot{font-size:12.5px;color:var(--text-2);margin:12px 0 0}',
     '.hd-more{margin-top:26px;border-top:1px solid var(--border);padding-top:14px}.hd-more>summary{cursor:pointer;font-weight:600;color:var(--accent);padding:6px 0;margin-bottom:12px}',
     '.hm-h{margin-bottom:18px}.hm-s{margin:8px 0 0;color:var(--text-2)}',
+    'main.wrap{padding-top:28px;padding-bottom:64px}',
     '.hm-day{border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:14px;overflow:hidden}',
     '.hm-date{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;background:var(--surface-2,transparent);border-bottom:1px solid var(--border)}.hm-date strong::first-letter{text-transform:uppercase}.hm-date span{font-size:12.5px;color:var(--text-2)}',
     '.hm-list{list-style:none;margin:0;padding:0}.hm-list li{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:10px 16px;border-top:1px solid var(--grid,var(--border));font-size:14px}.hm-list li:first-child{border-top:0}',
@@ -154,6 +164,8 @@
     /* Menus déroulants (Colonnes, Archives) */
     '.ha-pop{position:absolute;z-index:50;top:calc(100% + 8px);right:0;width:340px;max-height:70vh;overflow:auto;background:var(--bg,var(--surface));border:1px solid var(--border);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.2);padding:6px 14px 12px;text-align:left}',
     '.ha-pop .r{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding:10px 0;margin-bottom:6px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2)}',
+    '.ha-pop{width:360px}.ha-pop .r>span{white-space:nowrap}',
+    '@media (max-width:640px){.ha-pop{position:fixed;left:12px;right:12px;top:auto;bottom:12px;width:auto;max-height:72vh;box-shadow:0 -10px 60px rgba(0,0,0,.3)}}',
     '.ha-pop .r button{font:inherit;font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;border:0;background:none;color:var(--accent);cursor:pointer;padding:0}',
     '.ha-arch{width:400px}.ha-arow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}.ha-arow:last-child{border-bottom:0}.ha-arow strong{font-size:14px}',
     '.ha-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2100;background:var(--text);color:var(--bg,#fff);padding:11px 18px;border-radius:10px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.2)}'
@@ -232,6 +244,48 @@
     card.appendChild(bars);
     var f = h('div', 'ha-foot'); f.appendChild(h('span', null, 'Source : ImmOpen, balance fournisseurs (crédits par immeuble) · relevé du ' + fdate(A.at)));
     f.appendChild(h('span', 'ha-link', 'Voir le détail par immeuble →')); card.appendChild(f);
+    portCard();
+  }
+
+  /* ---------- Honoraires TTC + annexes par portefeuille (à droite du bloc par portefeuille) ---------- */
+  var pcard;
+  function portCard() {
+    var grid = document.querySelector('#tab-dash .grid.two'); if (!grid || !A || !YEARS.length) return;
+    var ref = [].filter.call(grid.children, function (c) { var t = c.querySelector('h2'); return t && /^Honoraires TTC par portefeuille$/.test(t.textContent.trim()); })[0];
+    if (!ref) return;
+    if (!pcard) pcard = h('div', 'card ha-pcard');
+    if (ref.nextSibling !== pcard) grid.insertBefore(pcard, ref.nextSibling);
+    pcard.textContent = '';
+    var y = curYear(), Y = A.years[y] || {}, B = Y.b || {}, part = !!Y.partial, k = part ? 12 / monthsElapsed(y) : 1;
+    var st = getState(), P = {}, byCode = {};
+    st.bld.forEach(function (b) {
+      if (num(b.perdus) > 0 && num(b.h2627v) === 0) return;
+      var port = String(b.port || '').trim().toUpperCase() || '—', c = code5(b.num);
+      P[port] = P[port] || { port: port, hon: 0, ann: 0, lots: 0 };
+      P[port].hon += num(b.h2627v); P[port].lots += num(b.lots); if (c) byCode[c] = port;
+    });
+    var orphan = 0;
+    Object.keys(B).forEach(function (c) { var t = CATS.reduce(function (a, x, i) { return a + num(B[c][i]); }, 0) * k; var port = byCode[c]; if (port) P[port].ann += t; else orphan += t; });
+    var L = Object.keys(P).map(function (p) { var o = P[p]; o.tot = o.hon + o.ann; return o; }).sort(function (a, b) { return b.tot - a.tot; });
+    var tH = sum(L.map(function (o) { return o.hon; })), tA = sum(L.map(function (o) { return o.ann; })) + orphan, mx = Math.max.apply(null, L.map(function (o) { return o.tot; }).concat([1]));
+    pcard.appendChild(h('h2', null, 'Honoraires TTC + annexes par portefeuille'));
+    pcard.appendChild(h('p', 'desc', 'Honoraires 2026-2027 à voter + honoraires annexes ' + y + (part ? ' projetés sur 12 mois (facturé au ' + fdate(Y.end) + ')' : ' facturés')));
+    var lg = h('div', 'legend'); [['var(--accent)', 'Honoraires à voter'], ['var(--ha-ann)', 'Honoraires annexes']].forEach(function (x) { var s2 = h('span'), i = h('i'); i.style.background = x[0]; s2.appendChild(i); s2.appendChild(document.createTextNode(x[1])); lg.appendChild(s2); }); pcard.appendChild(lg);
+    var list = h('div', 'ha-pl');
+    L.forEach(function (o) {
+      var r = h('div', 'ha-pr'); r.title = (GN[o.port] || o.port) + ' · honoraires ' + EUR.format(o.hon) + ' + annexes ' + EUR.format(o.ann);
+      r.appendChild(h('span', 'p', o.port));
+      var t = h('span', 't'), a = h('i', 'h'), b2 = h('i', 'a'); a.style.width = (o.hon / mx * 100).toFixed(2) + '%'; b2.style.width = (o.ann / mx * 100).toFixed(2) + '%'; t.appendChild(a); t.appendChild(b2); r.appendChild(t);
+      r.appendChild(h('span', 'v', EUR.format(o.tot)));
+      r.appendChild(h('span', 's', '+' + PCT.format(o.hon ? o.ann / o.hon * 100 : 0) + ' %'));
+      r.appendChild(h('span', 'l', o.lots ? EUR.format(o.tot / o.lots) + '/lot' : ''));
+      list.appendChild(r);
+    });
+    pcard.appendChild(list);
+    var ft = h('div', 'ha-pf');
+    [['Honoraires à voter', EUR.format(tH)], ['Annexes' + (part ? ' (projection)' : ''), EUR.format(tA)], ['Total cabinet', EUR.format(tH + tA)], ['Part des annexes', PCT.format((tH + tA) ? tA / (tH + tA) * 100 : 0) + ' %']].forEach(function (x, i) { var d = h('div', i === 2 ? 'strong' : null); d.appendChild(h('span', null, x[0])); d.appendChild(h('b', null, x[1])); ft.appendChild(d); });
+    pcard.appendChild(ft);
+    if (orphan) pcard.appendChild(h('p', 'ha-pn', EUR.format(orphan) + ' d’annexes sur des immeubles absents du tableau (sortis ou non rattachés) : comptés dans le total, hors portefeuille.'));
   }
   function yearButtons() {
     var w = h('div', 'ha-years'); w.setAttribute('role', 'group'); w.setAttribute('aria-label', 'Exercice');
@@ -870,7 +924,7 @@
     var ccT = null;
     if (t) new MutationObserver(function () { if (!busy) { decorate(); clearTimeout(ccT); ccT = setTimeout(crossCheck, 400); } }).observe(t, { childList: true, subtree: true });
     var g = document.querySelector('#tab-dash .grid.two');
-    if (g) new MutationObserver(function () { if (card && !g.contains(card)) { card = null; renderCard(); } }).observe(g, { childList: true });
+    if (g) new MutationObserver(function () { if (card && !g.contains(card)) { card = null; renderCard(); } else if (pcard && !g.contains(pcard)) portCard(); }).observe(g, { childList: true });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

@@ -87,6 +87,7 @@ function logout(): void {
 function require_user(): array {
     $u = current_user();
     if (!$u) { redirect('/connexion'); }
+    if (function_exists('sec_audit_maybe')) sec_audit_maybe();
     return $u;
 }
 

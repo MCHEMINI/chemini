@@ -42,5 +42,10 @@ const VERSIONS = [
     ['2026-10-17 02:17', 'direction', 'Journal des modifications des honoraires', 'Onglet Modifications et historique par mois ; tableau de décision dans Optimisation & stratégie.'],
     ['2026-10-17 02:28', 'all', 'Tableaux de bord : vue d\'ensemble des sections', ''],
     ['2026-10-17 02:28', 'direction', 'Direction › Stratégies', 'Leviers de rentabilité par immeuble et pour l\'ensemble du portefeuille.'],
+    ['2026-10-17 02:40', 'direction', 'Planning des AG et Comptabilité remis en page', 'Filtres rapides, recherche, une fiche par gestionnaire ; une fiche par comptable avec son détail.'],
+    ['2026-10-17 02:40', 'direction', 'Honoraires TTC + annexes par portefeuille', 'Nouveau bloc du tableau de bord des honoraires.'],
+    ['2026-10-17 02:40', 'direction', 'Stratégies mises à jour le 1er de chaque mois', 'Évolution par rapport au mois précédent.'],
+    ['2026-10-17 02:50', 'all', 'Page Sécurité réorganisée', 'Méthodes de connexion regroupées, appareils et messagerie à côté.'],
+    ['2026-10-17 02:50', 'direction', 'Audit hebdomadaire de la plateforme', 'Fonctionnement et sécurité chaque samedi à 12 h, sauvegarde de la base, nettoyage des accès expirés.'],
     ['2026-10-17 02:45', 'all', 'Versioning', 'Historique de tout ce qui a été fait sur la plateforme ; Tâches IA limitées à 10 lignes par bloc.'],
 ];

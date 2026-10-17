@@ -14,6 +14,7 @@ require APP_DIR . '/lib/mail.php';
 require APP_DIR . '/lib/ingest.php';
 require APP_DIR . '/lib/building.php';
 require APP_DIR . '/lib/hono_log.php';
+require APP_DIR . '/lib/sec_audit.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');

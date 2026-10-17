@@ -209,6 +209,10 @@ function api(string $r): never {
             audit($uid, 'device_revoked');
             json_out(['ok' => true]);
 
+        case 'sec/run':
+            if ($u['role'] !== 'admin') json_out(['error' => 'Réservé à l\'administrateur.'], 403);
+            $r = sec_audit_run(date('Y-m-d'));
+            json_out(['ok' => true, 'reload' => true, 'score' => $r['score']]);
         case 'invite':
             if ($u['role'] !== 'admin') json_out(['error' => 'Réservé à l\'administrateur.'], 403);
             $email = strtolower(in_str('email', 190));
