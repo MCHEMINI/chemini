@@ -85,6 +85,10 @@ function books_api(string $r, array $u): never {
             rename($part, book_path($b));
             clearstatcache();
             q('UPDATE books SET size=?, updated_at=? WHERE id=?', [filesize(book_path($b)), time(), $b['id']]);
+            try { // texte pour la recherche : EPUB lu directement, PDF mis en file pour l'OCR
+                $txt = $b['kind'] === 'epub' ? epub_text(book_path($b)) : '';
+                doc_text_save('book', (string)$b['id'], $b['title'], $txt, $uid, null, '/mes-livres/' . (int)$b['id'], $b['kind'] === 'pdf');
+            } catch (Throwable $e) {}
             json_out(['ok' => true, 'id' => (int)$b['id']]);
         case 'books/meta': // titre, auteur, couverture (image data: JPEG/PNG réduite côté navigateur)
             $b = book_get($u, in_int('id'));
@@ -98,6 +102,7 @@ function books_api(string $r, array $u): never {
                 $cover = ($c !== '' && strlen($c) < 400000 && preg_match('#^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$#', $c)) ? $c : null;
             }
             q('UPDATE books SET title=?, author=?, cover=?, updated_at=? WHERE id=?', [$title, $author, $cover, time(), $b['id']]);
+            q("UPDATE doc_texts SET title=? WHERE kind='book' AND ref=?", [$title, (string)$b['id']]);
             json_out(['ok' => true]);
         case 'books/state': // position de lecture, signets, surlignements et notes (seuls les champs envoyés sont modifiés)
             $b = book_get($u, in_int('id'));
@@ -116,7 +121,7 @@ function books_api(string $r, array $u): never {
         case 'books/delete':
             $b = book_get($u, in_int('id'));
             if (!$b) json_out(['error' => 'Livre introuvable.'], 404);
-            @unlink(book_path($b)); @unlink(book_dir($uid) . '/' . (int)$b['id'] . '.part');
+            @unlink(book_path($b)); @unlink(book_dir($uid) . '/' . (int)$b['id'] . '.part'); doc_text_delete('book', (string)$b['id']);
             q('DELETE FROM book_state WHERE book_id=?', [$b['id']]);
             q('DELETE FROM books WHERE id=?', [$b['id']]);
             audit($uid, 'book_delete:' . (int)$b['id']);

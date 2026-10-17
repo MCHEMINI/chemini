@@ -938,3 +938,25 @@ document.addEventListener('click', e => { if (e.target.closest('[data-print]')) 
 /* Boutons « Copier » génériques (data-copy) */
 document.addEventListener('click', async e => { const b = e.target.closest('[data-copy]'); if (!b) return; e.preventDefault(); const t = document.getElementById('toast');
   try { await navigator.clipboard.writeText(b.dataset.copy); if (t) { t.textContent = '📋 Copié'; t.hidden = false; setTimeout(() => (t.hidden = true), 2000); } } catch (_) { const i = b.parentElement.querySelector('input'); if (i) i.select(); } });
+/* Recherche globale : résultats instantanés sous la barre (selon les droits), Entrée = page complète */
+(function(){ const f = document.querySelector('form.gs'); if (!f) return; const i = f.querySelector('input'), d = document.getElementById('gsDrop'); let t = 0, seq = 0, sel = -1;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const close = () => { d.hidden = true; i.setAttribute('aria-expanded', 'false'); sel = -1; };
+  const links = () => [...d.querySelectorAll('a')];
+  async function run(){ const q = i.value.trim(); if (q.length < 2) return close(); const my = ++seq;
+    try { const r = await window.api('search', { q }); if (my !== seq) return;
+      const g = r.groups || [];
+      d.innerHTML = g.length ? g.map(x => '<div class="gs-g"><div class="gs-gh">' + x.icon + ' ' + esc(x.label) + '</div>' + x.items.map(it => '<a href="' + esc(it.url) + '"><b>' + esc(it.title) + '</b>' + (it.meta ? '<small>' + esc(it.meta) + '</small>' : '') + (it.snip ? '<span class="gs-snip">' + it.snip + '</span>' : '') + '</a>').join('') + '</div>').join('')
+        + '<a class="gs-all" href="/recherche?q=' + encodeURIComponent(q) + '">Tous les résultats pour « ' + esc(q) + ' » ›</a>'
+        : '<p class="gs-none">Aucun résultat pour « ' + esc(q) + ' ».</p>';
+      d.hidden = false; i.setAttribute('aria-expanded', 'true'); sel = -1;
+    } catch (e) { if (my === seq) { d.innerHTML = '<p class="gs-none">' + esc(e.message) + '</p>'; d.hidden = false; } } }
+  i.addEventListener('input', () => { clearTimeout(t); t = setTimeout(run, 220); });
+  i.addEventListener('focus', () => { if (d.innerHTML && i.value.trim().length >= 2) { d.hidden = false; i.setAttribute('aria-expanded', 'true'); } });
+  i.addEventListener('keydown', e => { const L = links(); if (d.hidden || !L.length) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); sel = (sel + (e.key === 'ArrowDown' ? 1 : -1) + L.length) % L.length; L.forEach((a, k) => a.classList.toggle('on', k === sel)); L[sel].scrollIntoView({ block: 'nearest' }); }
+    else if (e.key === 'Enter' && sel >= 0) { e.preventDefault(); location.href = L[sel].href; }
+    else if (e.key === 'Escape') close(); });
+  document.addEventListener('click', e => { if (!f.contains(e.target)) close(); });
+  document.addEventListener('keydown', e => { if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '') && !document.activeElement?.isContentEditable) { e.preventDefault(); i.focus(); } });
+})();

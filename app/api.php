@@ -160,6 +160,12 @@ function api(string $r): never {
 
     if (preg_match('#^(items|deadlines|building)/#', $r) && !can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
     if (str_starts_with($r, 'books/')) { require APP_DIR . '/pages/books.php'; books_api($r, $u); }
+    if ($r === 'search') { // recherche instantanée (barre des tableaux de bord)
+        if (rate_limited('search:' . $uid, 240, 300)) json_out(['error' => 'Trop de recherches, patientez un instant.'], 429);
+        rate_hit('search:' . $uid);
+        $g = search_all($u, in_str('q', 80), 4);
+        json_out(['ok' => true, 'groups' => array_map(fn($x) => ['label' => $x['label'], 'icon' => $x['icon'], 'more' => $x['more'], 'items' => $x['items']], $g)]);
+    }
     switch ($r) {
         case 'trust':
             if (body()['trust'] ?? false) { trust_this_device($uid); audit($uid, 'device_trusted'); }

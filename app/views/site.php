@@ -19,6 +19,36 @@ $last = $A ? max(array_column($A, 'modified')) : null;
 $bar = function (array $rows, string $cls = '') { $max = max($rows ?: [1]) ?: 1; $o = '<div class="ws-bars ' . $cls . '">';
     foreach ($rows as $k => $v) $o .= '<div class="ws-bar"><span>' . e((string)$k) . '</span><i><b style="width:' . round($v / $max * 100) . '%"></b></i><em>' . $v . '</em></div>'; return $o . '</div>'; };
 ?>
+<div class="ws-freq">
+  <section class="panel ws-visits" id="frequentation">
+    <?php $pd = in_array((int)($_GET['p'] ?? 30), [7, 30, 90], true) ? (int)($_GET['p'] ?? 30) : 30; $R = stats_report($pd); $snip = '<script defer src="' . BASE_URL . '/t.js"></script>'; ?>
+    <div class="sec-h"><h2>Fréquentation</h2><span class="ws-per"><?php foreach ([7 => '7 jours', 30 => '30 jours', 90 => '90 jours'] as $k => $l): ?><a href="?p=<?= $k ?>#frequentation" class="<?= $pd === $k ? 'on' : '' ?>"><?= $l ?></a><?php endforeach; ?></span></div>
+    <?php if (!$R['total']): ?>
+      <p class="muted">La mesure d'audience de Chemini n'est pas encore installée sur le site. Elle fonctionne <b>sans cookie ni service extérieur</b> (aucun bandeau de consentement supplémentaire) : visiteurs, pages et annonces vues, provenance, appareils, appels, e-mails et formulaires envoyés.</p>
+      <ol class="ws-how-l">
+        <li>Dans WordPress : <b>Elementor › Code personnalisé › Ajouter</b>, emplacement « &lt;head&gt; », puis collez cette ligne et publiez :</li>
+      </ol>
+      <div class="ws-snip"><input class="input mono" readonly value="<?= e($snip) ?>" data-select aria-label="Code de mesure à coller"><button type="button" class="btn btn-ghost" data-copy="<?= e($snip) ?>">Copier</button></div>
+      <p class="muted small">Les visites des personnes connectées à WordPress ne sont pas comptées. Les premiers chiffres apparaissent ici dès la première visite.</p>
+    <?php else: $evo = $R['prev_visitors'] ? round(($R['visitors'] / $R['prev_visitors'] - 1) * 100) : null; $ev = $R['events']; ?>
+      <div class="ws-kpis">
+        <div><b><?= number_format($R['visitors'], 0, ',', ' ') ?></b><span>Visiteurs</span><?php if ($evo !== null): ?><small class="<?= $evo >= 0 ? 'up' : 'dn' ?>"><?= $evo >= 0 ? '+' : '' ?><?= $evo ?> % vs période précédente</small><?php endif; ?></div>
+        <div><b><?= number_format($R['views'], 0, ',', ' ') ?></b><span>Pages vues</span><small><?= $R['visitors'] ? number_format($R['views'] / $R['visitors'], 1, ',', '') : '0' ?> par visite</small></div>
+        <div><b><?= $R['contacts'] ?></b><span>Contacts</span><small><?= (int)($ev['tel'] ?? 0) ?> appel<?= ($ev['tel'] ?? 0) > 1 ? 's' : '' ?> · <?= (int)($ev['mail'] ?? 0) ?> e-mail<?= ($ev['mail'] ?? 0) > 1 ? 's' : '' ?> · <?= (int)($ev['form'] ?? 0) ?> formulaire<?= ($ev['form'] ?? 0) > 1 ? 's' : '' ?></small></div>
+        <div><b><?= $R['bounce'] ?> %</b><span>Visites d'une seule page</span><small>taux de rebond</small></div>
+      </div>
+      <div class="ws-cols ws-daily" style="grid-template-columns:repeat(<?= count($R['daily']) ?>,minmax(0,1fr))"><?php $mx = max(array_column($R['daily'], 'v') ?: [1]) ?: 1; foreach ($R['daily'] as $dday => $x): ?><div class="ws-col" title="<?= e(date('d/m', strtotime($dday))) ?> : <?= $x['v'] ?> visiteur<?= $x['v'] > 1 ? 's' : '' ?>, <?= $x['p'] ?> pages vues"><i style="height:<?= max(2, round($x['v'] / $mx * 100)) ?>%"></i><?php if ($pd <= 30 && ((int)date('N', strtotime($dday)) === 1 || $pd === 7)): ?><span><?= e(date('d/m', strtotime($dday))) ?></span><?php endif; ?></div><?php endforeach; ?></div>
+      <div class="ws-grid ws-sub">
+        <div><h3>Pages les plus vues</h3><?= $bar(array_combine(array_map(fn($x) => ($x['title'] ? preg_replace('/\s[–|-]\s.*$/u', '', $x['title']) : $x['path']) . ' ', $R['pages']) ?: [], array_map('intval', array_column($R['pages'], 'n')) ?: [])) ?></div>
+        <div><h3>Annonces les plus vues</h3><?= $R['annonces'] ? $bar(array_combine(array_map(fn($x) => ($x['title'] ? preg_replace('/\s[–|-]\s(GID|Gid).*$/u', '', $x['title']) : basename($x['path'])) . ' ', $R['annonces']), array_map('intval', array_column($R['annonces'], 'n')))) : '<p class="muted small">Aucune annonce vue sur la période.</p>' ?></div>
+        <div><h3>Provenance des visiteurs</h3><?= $bar($R['channels']) ?><?php if ($R['sources']): ?><p class="muted small">Principaux sites : <?= e(implode(', ', array_map(fn($k, $v) => $k . ' (' . $v . ')', array_keys($R['sources']), $R['sources']))) ?></p><?php endif; ?></div>
+        <div><h3>Appareils</h3><?= $bar($R['devices']) ?>
+          <?php if ($R['last']): ?><h3>Derniers contacts</h3><ul class="ws-last"><?php foreach ($R['last'] as $l): ?><li><span class="chip neutral"><?= e(STATS_KINDS[$l['kind']] ?? $l['kind']) ?></span> <?= e(date('d/m H:i', (int)$l['ts'])) ?> · <?= e($l['path']) ?></li><?php endforeach; ?></ul><?php endif; ?></div>
+      </div>
+      <p class="muted small">Mesure Chemini, sans cookie · dernière visite enregistrée le <?= e(date('d/m/Y à H:i', $R['last_hit'])) ?> · <a href="#" data-copy="<?= e($snip) ?>">copier le code de mesure</a></p>
+    <?php endif; ?>
+  </section>
+</div>
 <div class="st-tiles ws-tiles">
   <div class="m"><b><?= count($online) ?></b><span>Annonces en ligne</span><small><?= count($A) - count($online) ?> en brouillon ou privées</small></div>
   <div class="g"><b><?= $active ?></b><span>À vendre ou à louer</span><small>biens disponibles</small></div>
@@ -55,33 +85,6 @@ $bar = function (array $rows, string $cls = '') { $max = max($rows ?: [1]) ?: 1;
       <li class="ok"><b><?= (int)$snap['media'] ?></b> médias · <b><?= count($pubP) ?></b> pages publiées · <b><?= (int)$snap['users'] ?></b> compte<?= (int)$snap['users'] > 1 ? 's' : '' ?> WordPress<?= !empty($snap['forms']) ? ' · formulaires : ' . e(implode(', ', $snap['forms'])) : '' ?></li>
     </ul>
   </section>
-  <section class="panel ws-wide ws-visits" id="frequentation">
-    <?php $pd = in_array((int)($_GET['p'] ?? 30), [7, 30, 90], true) ? (int)($_GET['p'] ?? 30) : 30; $R = stats_report($pd); $snip = '<script defer src="' . BASE_URL . '/t.js"></script>'; ?>
-    <div class="sec-h"><h2>Fréquentation</h2><span class="ws-per"><?php foreach ([7 => '7 jours', 30 => '30 jours', 90 => '90 jours'] as $k => $l): ?><a href="?p=<?= $k ?>#frequentation" class="<?= $pd === $k ? 'on' : '' ?>"><?= $l ?></a><?php endforeach; ?></span></div>
-    <?php if (!$R['total']): ?>
-      <p class="muted">La mesure d'audience de Chemini n'est pas encore installée sur le site. Elle fonctionne <b>sans cookie ni service extérieur</b> (aucun bandeau de consentement supplémentaire) : visiteurs, pages et annonces vues, provenance, appareils, appels, e-mails et formulaires envoyés.</p>
-      <ol class="ws-how-l">
-        <li>Dans WordPress : <b>Elementor › Code personnalisé › Ajouter</b>, emplacement « &lt;head&gt; », puis collez cette ligne et publiez :</li>
-      </ol>
-      <div class="ws-snip"><input class="input mono" readonly value="<?= e($snip) ?>" data-select aria-label="Code de mesure à coller"><button type="button" class="btn btn-ghost" data-copy="<?= e($snip) ?>">Copier</button></div>
-      <p class="muted small">Les visites des personnes connectées à WordPress ne sont pas comptées. Les premiers chiffres apparaissent ici dès la première visite.</p>
-    <?php else: $evo = $R['prev_visitors'] ? round(($R['visitors'] / $R['prev_visitors'] - 1) * 100) : null; $ev = $R['events']; ?>
-      <div class="ws-kpis">
-        <div><b><?= number_format($R['visitors'], 0, ',', ' ') ?></b><span>Visiteurs</span><?php if ($evo !== null): ?><small class="<?= $evo >= 0 ? 'up' : 'dn' ?>"><?= $evo >= 0 ? '+' : '' ?><?= $evo ?> % vs période précédente</small><?php endif; ?></div>
-        <div><b><?= number_format($R['views'], 0, ',', ' ') ?></b><span>Pages vues</span><small><?= $R['visitors'] ? number_format($R['views'] / $R['visitors'], 1, ',', '') : '0' ?> par visite</small></div>
-        <div><b><?= $R['contacts'] ?></b><span>Contacts</span><small><?= (int)($ev['tel'] ?? 0) ?> appel<?= ($ev['tel'] ?? 0) > 1 ? 's' : '' ?> · <?= (int)($ev['mail'] ?? 0) ?> e-mail<?= ($ev['mail'] ?? 0) > 1 ? 's' : '' ?> · <?= (int)($ev['form'] ?? 0) ?> formulaire<?= ($ev['form'] ?? 0) > 1 ? 's' : '' ?></small></div>
-        <div><b><?= $R['bounce'] ?> %</b><span>Visites d'une seule page</span><small>taux de rebond</small></div>
-      </div>
-      <div class="ws-cols ws-daily" style="grid-template-columns:repeat(<?= count($R['daily']) ?>,minmax(0,1fr))"><?php $mx = max(array_column($R['daily'], 'v') ?: [1]) ?: 1; foreach ($R['daily'] as $dday => $x): ?><div class="ws-col" title="<?= e(date('d/m', strtotime($dday))) ?> : <?= $x['v'] ?> visiteur<?= $x['v'] > 1 ? 's' : '' ?>, <?= $x['p'] ?> pages vues"><i style="height:<?= max(2, round($x['v'] / $mx * 100)) ?>%"></i><?php if ($pd <= 30 && ((int)date('N', strtotime($dday)) === 1 || $pd === 7)): ?><span><?= e(date('d/m', strtotime($dday))) ?></span><?php endif; ?></div><?php endforeach; ?></div>
-      <div class="ws-grid ws-sub">
-        <div><h3>Pages les plus vues</h3><?= $bar(array_combine(array_map(fn($x) => ($x['title'] ? preg_replace('/\s[–|-]\s.*$/u', '', $x['title']) : $x['path']) . ' ', $R['pages']) ?: [], array_map('intval', array_column($R['pages'], 'n')) ?: [])) ?></div>
-        <div><h3>Annonces les plus vues</h3><?= $R['annonces'] ? $bar(array_combine(array_map(fn($x) => ($x['title'] ? preg_replace('/\s[–|-]\s(GID|Gid).*$/u', '', $x['title']) : basename($x['path'])) . ' ', $R['annonces']), array_map('intval', array_column($R['annonces'], 'n')))) : '<p class="muted small">Aucune annonce vue sur la période.</p>' ?></div>
-        <div><h3>Provenance des visiteurs</h3><?= $bar($R['channels']) ?><?php if ($R['sources']): ?><p class="muted small">Principaux sites : <?= e(implode(', ', array_map(fn($k, $v) => $k . ' (' . $v . ')', array_keys($R['sources']), $R['sources']))) ?></p><?php endif; ?></div>
-        <div><h3>Appareils</h3><?= $bar($R['devices']) ?>
-          <?php if ($R['last']): ?><h3>Derniers contacts</h3><ul class="ws-last"><?php foreach ($R['last'] as $l): ?><li><span class="chip neutral"><?= e(STATS_KINDS[$l['kind']] ?? $l['kind']) ?></span> <?= e(date('d/m H:i', (int)$l['ts'])) ?> · <?= e($l['path']) ?></li><?php endforeach; ?></ul><?php endif; ?></div>
-      </div>
-      <p class="muted small">Mesure Chemini, sans cookie · dernière visite enregistrée le <?= e(date('d/m/Y à H:i', $R['last_hit'])) ?> · <a href="#" data-copy="<?= e($snip) ?>">copier le code de mesure</a></p>
-    <?php endif; ?>
-  </section>
+
 </div>
 <?php endif; ?>

@@ -400,6 +400,17 @@ SQL);
         foreach ((array)($dg['items'] ?? []) as $i) if (!empty($i['url']) && !empty($i['title'])) $ins->execute([$i['url'], $i['title'], $i['source'] ?? '', preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($i['date'] ?? '')) ? $i['date'] : date('Y-m-d'), $i['summary'] ?? '', $i['why'] ?? '', news_guess_cat($i['title'] . ' ' . ($i['summary'] ?? '')), 'digest', time()]);
         $pdo->exec('PRAGMA user_version = 50;');
     }
+    if ($v < 51) { // Recherche globale : texte des documents importés (extraction directe, ou OCR pour les PDF numérisés)
+        $pdo->exec("CREATE TABLE IF NOT EXISTS doc_texts(id INTEGER PRIMARY KEY, kind TEXT NOT NULL, ref TEXT NOT NULL, title TEXT NOT NULL, text TEXT NOT NULL DEFAULT '', owner_id INTEGER, space TEXT, url TEXT NOT NULL, needs_ocr INTEGER NOT NULL DEFAULT 0, ocr INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL, UNIQUE(kind, ref));
+                    CREATE INDEX IF NOT EXISTS doc_texts_ocr ON doc_texts(needs_ocr)");
+        $ins = $pdo->prepare('INSERT OR IGNORE INTO doc_texts(kind,ref,title,text,owner_id,url,needs_ocr,updated_at) VALUES(?,?,?,?,?,?,?,?)');
+        foreach ($pdo->query('SELECT id, user_id, title, kind FROM books WHERE size>0')->fetchAll() as $b) { // livres déjà importés
+            $f = DATA_DIR . '/books/' . (int)$b['user_id'] . '/' . (int)$b['id'] . '.' . $b['kind'];
+            $t = ''; try { if ($b['kind'] === 'epub' && is_file($f) && function_exists('epub_text')) $t = mb_substr(trim(preg_replace('/\s+/u', ' ', epub_text($f))), 0, 400000); } catch (Throwable $e) {}
+            $ins->execute(['book', (string)$b['id'], $b['title'], $t, (int)$b['user_id'], '/mes-livres/' . (int)$b['id'], $b['kind'] === 'pdf' ? 1 : 0, time()]);
+        }
+        $pdo->exec('PRAGMA user_version = 51;');
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */

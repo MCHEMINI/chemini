@@ -11,7 +11,7 @@ function ingest_key(): string { return hash_hmac('sha256', 'chemini-ingest-v1', 
 function ingest_handle(string $kind): never {
     $send = function (array $d, int $c = 200): never { http_response_code($c); header('Content-Type: application/json'); header('Cache-Control: no-store'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; };
     $method = $_SERVER['REQUEST_METHOD'] ?? '';
-    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes', 'pv', 'mails'], true))) $send(['error' => 'POST attendu'], 405);
+    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes', 'pv', 'mails', 'ocr', 'banners'], true))) $send(['error' => 'POST attendu'], 405);
     if (ip_blocked()) $send(['error' => 'IP bloquée'], 429);
     if (!hash_equals(ingest_key(), (string)($_SERVER['HTTP_X_INGEST_KEY'] ?? ''))) { ip_fail(null, 'ingest'); $send(['error' => 'clé invalide'], 403); }
     if ($kind === 'pv' && $method === 'GET') { // PV déjà traités (identifiants de message) pour ne pas les relire
@@ -22,6 +22,21 @@ function ingest_handle(string $kind): never {
                    FROM consignes c JOIN users u ON u.id = c.user_id WHERE c.status IN ('todo','doing')
                    ORDER BY CASE c.priority WHEN 'haute' THEN 0 WHEN 'normale' THEN 1 ELSE 2 END, c.created_at ASC LIMIT 100")->fetchAll();
         $send(['ok' => true, 'items' => $rows]);
+    }
+    if ($kind === 'banners' && $method === 'GET') { // bandeaux de signature, avec l'image (pour les retoucher)
+        $out = [];
+        foreach (sig_all() as $b) { $f = sig_dir() . '/' . basename($b['file']); $out[] = ['id' => (int)$b['id'], 'title' => $b['title'], 'mode' => sig_mode($b), 'start' => $b['start'], 'end' => $b['end'], 'w' => (int)$b['w'], 'h' => (int)$b['h'],
+            'data' => isset($_GET['img']) && is_file($f) ? 'data:' . $b['mime'] . ';base64,' . base64_encode((string)file_get_contents($f)) : null]; }
+        $send(['ok' => true, 'items' => $out]);
+    }
+    if ($kind === 'ocr' && $method === 'GET') { // documents importés en attente d'OCR : liste, ou fichier (?id=)
+        $id = (int)($_GET['id'] ?? 0);
+        if (!$id) $send(['ok' => true, 'items' => q('SELECT id, kind, title, updated_at FROM doc_texts WHERE needs_ocr=1 ORDER BY updated_at LIMIT 20')->fetchAll(), 'pending' => (int)q('SELECT COUNT(*) FROM doc_texts WHERE needs_ocr=1')->fetchColumn()]);
+        $d = q('SELECT * FROM doc_texts WHERE id=? AND needs_ocr=1', [$id])->fetch();
+        $path = '';
+        if ($d && $d['kind'] === 'book') { require_once APP_DIR . '/pages/books.php'; $b = q('SELECT * FROM books WHERE id=?', [(int)$d['ref']])->fetch(); $path = $b ? book_path($b) : ''; }
+        if (!$path || !is_file($path)) $send(['error' => 'introuvable'], 404);
+        header('Content-Type: application/pdf'); header('Cache-Control: no-store'); header('Content-Length: ' . filesize($path)); readfile($path); exit;
     }
     if ($kind === 'honoraires') { // lecture des données actuelles du tableau des honoraires (pour l'audit mensuel)
         $st = q('SELECT json, updated_at FROM doc_state WHERE slug=?', ['honoraires'])->fetch();
@@ -36,6 +51,13 @@ function ingest_handle(string $kind): never {
     $d = json_decode($raw, true);
     if (!is_array($d)) $send(['error' => 'JSON invalide'], 400);
     $str = fn($v, int $max) => mb_substr(trim((string)($v ?? '')), 0, $max);
+    if ($kind === 'ocr') { // texte reconnu d'un document (OCR) : {id, text}
+        $id = (int)($d['id'] ?? 0);
+        if (!q('SELECT 1 FROM doc_texts WHERE id=?', [$id])->fetchColumn()) $send(['error' => 'introuvable'], 404);
+        $t = mb_substr(trim(preg_replace('/\s+/u', ' ', (string)($d['text'] ?? ''))), 0, 400000);
+        q('UPDATE doc_texts SET text=?, ocr=1, needs_ocr=0, updated_at=? WHERE id=?', [$t, time(), $id]);
+        $send(['ok' => true, 'chars' => mb_strlen($t)]);
+    }
 
     if ($kind === 'mails' && $method === 'GET') { // mails encore à traiter (pour repérer ceux auxquels une réponse a été envoyée)
         $u = q('SELECT id FROM users WHERE email=?', [strtolower((string)($_GET['user_email'] ?? ''))])->fetchColumn();
@@ -156,6 +178,11 @@ function ingest_handle(string $kind): never {
         $out = [];
         foreach (array_slice((array)($d['items'] ?? []), 0, 20) as $it) {
             if (!is_array($it)) continue; $t = mb_substr(trim((string)($it['title'] ?? '')), 0, 120);
+            if (!empty($it['replace'])) { // nouvelle image pour un bandeau existant (mode, dates et titre conservés)
+                $o = q('SELECT * FROM banners WHERE id=?', [(int)$it['replace']])->fetch();
+                $r = $o ? sig_save($o, (string)($it['data'] ?? ''), sig_mode($o), (string)$o['start'], (string)$o['end'], $o['title'], null) : ['error' => 'introuvable'];
+                $out[] = [$o['title'] ?? (int)$it['replace'], $r['error'] ?? 'remplacé']; continue;
+            }
             if ($t !== '' && q('SELECT 1 FROM banners WHERE title=?', [$t])->fetchColumn()) { $out[] = [$t, 'déjà présent']; continue; }
             $r = sig_save(null, (string)($it['data'] ?? ''), (string)($it['mode'] ?? 'draft'), (string)($it['start'] ?? ''), (string)($it['end'] ?? ''), $t, null);
             $out[] = [$t, $r['error'] ?? 'ajouté'];
