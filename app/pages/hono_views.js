@@ -255,6 +255,11 @@
       '.hv-c2{display:flex;align-items:baseline;gap:8px}.hv-c2 strong{font-size:1.45em;font-weight:600;font-variant-numeric:tabular-nums}.hv-c2 small{color:var(--muted);font-size:12px}',
       '.hv-drawer{width:100%;border-left:0;transform:translateY(100%)}.hv-dh{flex-direction:column;gap:6px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px}.hv-x{font-size:15px;font-weight:700;color:var(--accent);padding:0}',
       '.hv-db{padding:14px 16px calc(30px + env(safe-area-inset-bottom,0px))}.hv-fields{grid-template-columns:1fr 1fr}.hv-f input{font-size:16px}',
+      'body.hv-m:not(.hv-head-open) header.top{display:none}body.hv-m main.wrap{padding-top:4px}',
+      'body.hv-m:not(.hv-filt-open) #tab-imm .toolbar>:not(#immSearch):not(.count),body.hv-m:not(.hv-filt-open) .hv-chips,body.hv-m:not(.hv-filt-open) #haCheck{display:none!important}',
+      'body.hv-m #tab-imm .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}',
+      'body.hv-m #immSearch{flex:1 1 100%;width:100%;min-width:0;font-size:16px;padding:12px 14px 12px 40px;border-radius:12px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2718%27 height=%2718%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23888%27 stroke-width=%272.2%27 stroke-linecap=%27round%27%3E%3Ccircle cx=%2711%27 cy=%2711%27 r=%277%27/%3E%3Cpath d=%27m20 20-3.5-3.5%27/%3E%3C/svg%3E") no-repeat 13px center}',
+      'body.hv-m #tab-imm .toolbar .count{flex-basis:100%;font-size:12px;margin:-2px 0 0 4px}body.hv-m.hv-filt-open #tab-imm .toolbar select{flex:1 1 45%;min-width:0}',
       '}'
     ].join('\n');
     document.head.appendChild(s);
@@ -275,7 +280,37 @@
     MOBILE.addEventListener ? MOBILE.addEventListener('change', function () { decorateRows(); applyView(); }) : 0;
     window.addEventListener('resize', function () { requestAnimationFrame(stick); });
     var navB = document.querySelector('nav.tabs [data-tab="imm"]'); if (navB) navB.addEventListener('click', function () { setTimeout(function () { applyView(); stick(); }, 30); });
-    groupHeads(); applyView(); decorateRows();
+    groupHeads(); applyView(); decorateRows(); mobileTools();
+  }
+
+  /* Mobile : en-tête du document et filtres repliés derrière deux pictos placés à gauche de la taille du texte (page parente) */
+  function mobileTools() {
+    var pd; try { pd = window.parent !== window && window.parent.document; } catch (e) { pd = null; }
+    var tools = pd && pd.querySelector('.page-tools'); if (!tools || pd.getElementById('hvTools')) return;
+    var st = pd.createElement('style'); st.textContent = '#hvTools{display:none;gap:6px;margin-right:auto}@media (max-width:760px){#hvTools{display:inline-flex}}#hvTools button{position:relative;display:grid;place-items:center;width:36px;height:32px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink);cursor:pointer;padding:0}#hvTools button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}#hvTools button[hidden]{display:none}#hvTools i{position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;border-radius:99px;background:#c0392b;color:#fff;font:700 10px/15px system-ui;font-style:normal}#hvTools i:empty{display:none}.page-tools:has(#hvTools){gap:8px;align-items:center}';
+    pd.head.appendChild(st);
+    var box = pd.createElement('div'); box.id = 'hvTools'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', 'Affichage du tableau');
+    function mk(svg, label) { var b = pd.createElement('button'); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label); b.setAttribute('aria-pressed', 'false'); b.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + svg + '</svg><i></i>'; box.appendChild(b); return b; }
+    var bHead = mk('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 13h6"/>', 'Titre, menu Fichier et onglets');
+    var bFilt = mk('<path d="M4 6h16M7 12h10M10 18h4"/>', 'Filtres et boutons');
+    tools.insertBefore(box, tools.firstChild);
+    var B = document.body; B.classList.add('hv-m');
+    function onImm() { var t = document.getElementById('tab-imm'); return !!(t && t.classList.contains('active')); }
+    function badge() {
+      var n = 0, p = document.getElementById('immPort'), s = document.getElementById('immStatus');
+      if (p && p.value) n++; if (s && s.value !== 'actifs') n++; if (only) n++;
+      bFilt.querySelector('i').textContent = n ? n : '';
+    }
+    function sync() {
+      bFilt.hidden = !onImm(); if (!onImm()) B.classList.remove('hv-filt-open');
+      bHead.setAttribute('aria-pressed', String(B.classList.contains('hv-head-open')));
+      bFilt.setAttribute('aria-pressed', String(B.classList.contains('hv-filt-open'))); badge();
+    }
+    bHead.addEventListener('click', function () { B.classList.toggle('hv-head-open'); sync(); if (B.classList.contains('hv-head-open')) window.scrollTo(0, 0); });
+    bFilt.addEventListener('click', function () { B.classList.toggle('hv-filt-open'); sync(); });
+    document.addEventListener('click', function (e) { if (e.target.closest('nav.tabs [data-tab]')) setTimeout(function () { B.classList.remove('hv-head-open'); sync(); }, 30); else if (e.target.closest('.hv-chip')) setTimeout(badge, 30); });
+    document.addEventListener('change', function (e) { if (e.target.id === 'immPort' || e.target.id === 'immStatus') badge(); });
+    sync();
   }
   function groupHeads() { document.querySelectorAll('#immTbl thead th[data-col]').forEach(function (th) { var g = GROUP[th.dataset.col]; if (g) th.classList.add('hv-' + g); }); }
   function start() { setTimeout(setup, 120); }
