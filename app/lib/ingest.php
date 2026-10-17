@@ -79,6 +79,7 @@ function ingest_handle(string $kind): never {
     if ($kind === 'mails') {
         $u = q('SELECT id FROM users WHERE email=?', [strtolower($str($d['user_email'] ?? '', 190))])->fetchColumn();
         if (!$u) $send(['error' => 'utilisateur inconnu'], 404);
+        q("INSERT INTO kv(k,v,updated_at) VALUES(?,?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", ['mails_run:' . $u, (string)time(), time()]); // dernière relève
         $added = 0; $closed = 0;
         foreach ((array)($d['done'] ?? []) as $mid) { // réponse envoyée : le mail sort de la liste « à traiter »
             $closed += q('UPDATE mail_items SET done=1, done_at=? WHERE user_id=? AND msg_id=? AND done=0', [time(), $u, $str((string)$mid, 400)])->rowCount();
