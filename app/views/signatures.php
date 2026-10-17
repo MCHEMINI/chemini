@@ -56,15 +56,13 @@ usort($list, fn($a, $b) => [$rank($a), $a['start'] ?? '', -$a['created_at']] <=>
   <section class="panel sg-make">
     <h2>Générer le visuel avec Gemini</h2>
     <ol class="sg-steps">
-      <li><b>Écrivez le message</b> du bandeau ci-dessous : le prompt se met à jour.</li>
-      <li><b>Copiez le prompt</b> et collez-le dans Gemini.</li>
+      <li><b>Copiez les consignes techniques</b> ci-dessous.</li>
+      <li><b>Dans Gemini</b>, décrivez le visuel souhaité (thème, message, ambiance) puis collez les consignes à la suite.</li>
       <li><b>Téléchargez l'image</b> obtenue (format 3:1, 1200 × 400 px).</li>
       <li><b>Ajoutez-la</b> dans « Ajouter un visuel » avec sa période.</li>
     </ol>
-    <div class="field"><label for="sgTheme">Message du bandeau</label><input class="input" id="sgTheme" value="Meilleurs vœux 2027 — merci pour votre confiance"></div>
-    <div class="field"><label for="sgSub">Ligne secondaire (facultatif)</label><input class="input" id="sgSub" placeholder="Ex. Le cabinet sera fermé du 24 au 26 décembre"></div>
-    <textarea class="input bd-ta sg-prompt" id="sgPrompt" rows="12" readonly aria-label="Prompt pour Gemini"></textarea>
-    <div class="sg-mk-a"><button type="button" class="btn btn-primary" id="sgCopy">Copier le prompt</button><a class="btn btn-ghost" href="https://gemini.google.com/app" target="_blank" rel="noopener">Ouvrir Gemini</a></div>
+    <textarea class="input bd-ta sg-prompt" id="sgPrompt" rows="12" readonly aria-label="Consignes techniques pour Gemini"></textarea>
+    <div class="sg-mk-a"><button type="button" class="btn btn-primary" id="sgCopy">Copier les consignes</button><a class="btn btn-ghost" href="https://gemini.google.com/app" target="_blank" rel="noopener">Ouvrir Gemini</a></div>
     <p class="muted small">Format envoyé dans les mails : 600 × 200 px. Si l'image n'est pas exactement en 3:1, Chemini la recadre au centre : gardez le texte loin des bords.</p>
   </section>
 </section>

@@ -695,29 +695,15 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
     try { await api('sig/edit', o); location.reload(); } catch (x) { b.disabled = false; err.hidden = false; err.textContent = x.message; } });
 }); })();
 
-/* Signatures : prompt Gemini pour générer un bandeau */
-(function(){ const t = document.getElementById('sgTheme'), sub = document.getElementById('sgSub'), out = document.getElementById('sgPrompt'); if (!t || !out) return;
-  const build = () => { const m = t.value.trim() || 'GID, administrateur de biens à Paris'; const s2 = (sub && sub.value.trim()) || '';
-    out.value = `Crée une bannière horizontale pour une signature e-mail.
+/* Signatures : consignes techniques à coller dans Gemini (le thème est décrit par l'utilisateur) */
+(function(){ const out = document.getElementById('sgPrompt'); if (!out) return;
+  out.value = `CONSIGNES TECHNIQUES — bannière de signature e-mail
 
-FORMAT (impératif) : image paysage de exactement 1200 × 400 pixels, ratio 3:1, PNG, haute définition. Elle sera affichée en 600 × 200 pixels sous la signature : tout doit rester lisible à cette taille.
-
-ENTREPRISE : GID, cabinet indépendant d'administration de biens à Paris (syndic de copropriété et gestion locative), plus de 60 ans d'expérience.
-
-TEXTE (en français, sans aucune faute, seul texte de l'image) :
-– Titre en grandes capitales blanches, police sans empattement très grasse : « ${m} »${s2 ? `
-– Ligne secondaire en orange, plus petite : « ${s2} »` : ''}
-
-MISE EN PAGE :
-– Texte aligné à gauche sur les deux tiers gauche, fond bleu nuit uni (#2B2A6B).
-– Tiers droit : photo lumineuse d'une façade d'immeuble haussmannien parisien, ciel bleu, séparée du fond par une bande diagonale orange (#F07D1A).
-– Fin filet orange en haut et en bas.
-– Zone de sécurité : aucun texte à moins de 60 pixels des bords (l'image peut être légèrement recadrée).
-– Titre d'au moins 56 pixels de haut ; 2 lignes de texte au maximum en tout.
-
-STYLE : sobre, haut de gamme, professionnel, contraste fort, cohérent avec un cabinet immobilier parisien.
-
-INTERDITS : logo, adresse, numéro de téléphone, e-mail, site web, filigrane, texte inventé ou déformé, personnages.`; };
-  [t, sub].forEach(x => x && x.addEventListener('input', build)); build();
-  document.getElementById('sgCopy').addEventListener('click', async e => { try { await navigator.clipboard.writeText(out.value); e.target.textContent = 'Copié ✓'; } catch (x) { out.select(); document.execCommand('copy'); e.target.textContent = 'Copié ✓'; } setTimeout(() => { e.target.textContent = 'Copier le prompt'; }, 2000); });
+– Format : paysage, exactement 1200 × 400 pixels (ratio 3:1), PNG ou JPG, haute définition, moins de 2 Mo.
+– Affichage final : réduit à 600 × 200 pixels sous la signature ; tout doit rester lisible à cette taille.
+– Zone de sécurité : aucun texte ni élément important à moins de 60 pixels des bords (l'image peut être légèrement recadrée au centre).
+– Texte : 2 lignes au maximum, titre d'au moins 56 pixels de haut, police sans empattement grasse, fort contraste avec le fond, orthographe française parfaite.
+– Couleurs de la charte : bleu nuit #2B2A6B, orange #F07D1A, blanc.
+– Interdits : logo, adresse, numéro de téléphone, e-mail, site web, filigrane, texte déformé ou inventé, bordure blanche autour de l'image.`;
+  document.getElementById('sgCopy').addEventListener('click', async e => { try { await navigator.clipboard.writeText(out.value); e.target.textContent = 'Copié ✓'; } catch (x) { out.select(); document.execCommand('copy'); e.target.textContent = 'Copié ✓'; } setTimeout(() => { e.target.textContent = 'Copier les consignes'; }, 2000); });
 })();

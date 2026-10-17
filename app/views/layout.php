@@ -91,6 +91,6 @@
   <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Tâches IA : donner une consigne"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=32"></script>
+<script src="/assets/app.js?v=33"></script>
 </body>
 </html>
