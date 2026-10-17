@@ -85,6 +85,7 @@
     '.tabpop{display:contents}.tabpop-btn{display:none}',
     '@media (max-width:820px){.tabpop{display:block;position:relative;margin:6px 0 10px}.tabpop-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 14px;border:1px solid var(--line,#ddd);border-radius:10px;background:var(--surface,#fff);color:var(--text,#111);font:inherit;font-weight:600;cursor:pointer}.tabpop-btn svg{width:18px!important;height:18px!important;flex:none}.tabpop.open .tabpop-btn svg{transform:rotate(180deg)}.tabpop>nav.tabs{display:none!important}.tabpop.open>nav.tabs{display:flex!important;flex-direction:column;position:absolute;z-index:50;top:calc(100% + 6px);left:0;right:0;padding:6px;border:1px solid var(--line,#ddd);border-radius:12px;background:var(--surface,#fff);box-shadow:0 14px 40px rgba(0,0,0,.18)}.tabpop.open>nav.tabs button{text-align:left;padding:12px;border:0;border-radius:8px;font-size:15px}.tabpop.open>nav.tabs button[aria-selected=true]{background:var(--line,#eee)}}',
     /* Fenêtres : même charte que les dialogues du site (sur-titre, titre Lora, boutons sobres) */
+    '.ha-dtx{min-width:96px}.ha-dtx.ha-bad{outline:2px solid #c0392b;outline-offset:-2px}',
     '.ha-dlg-bd{position:fixed;inset:0;z-index:2000;background:rgba(10,13,18,.55);backdrop-filter:blur(2px);display:grid;place-items:center;padding:16px;animation:haIn .15s ease-out}',
     '@keyframes haIn{from{opacity:0}to{opacity:1}}',
     '.ha-dlg{position:relative;display:flex;flex-direction:column;background:var(--bg,var(--surface));color:var(--text);border:1px solid var(--border);border-radius:12px;width:min(500px,100%);max-height:88vh;box-shadow:0 24px 70px rgba(0,0,0,.28);overflow:hidden}',
@@ -426,16 +427,45 @@
   /* « AG tenue le » et « Remise PV » : complétés d'après le PV de l'AG annuelle (celle qui vote le contrat) de l'exercice HTV en cours,
      uniquement si la cellule est vide et si l'utilisateur peut modifier le tableau (la saisie passe par le tableau lui-même). */
   var filled = {};
+  var IOX = {}; (Array.isArray(C.immopen) ? C.immopen : []).forEach(function (r) { IOX[r.code] = r; });
+  var EX0_START = EX0.slice(0, 4) + '-07-01';
+  function setCell(tr, k, v) {
+    var inp = tr.querySelector('input[data-k="' + k + '"]'); if (!inp || v == null || v === '' || String(inp.value).trim() !== '') return;
+    inp.value = v; inp.dispatchEvent(new Event('input', { bubbles: true })); syncTextDate(inp);
+  }
   function fillAgDates(t) {
     if (C.ro) return;
     [].forEach.call(t.querySelectorAll('tbody tr'), function (tr) {
-      var code = rowCode(tr), r = code && PV[code] && PV[code][EX0]; if (!r || filled[code]) return;
-      var ag = (r.ags || []).filter(function (a) { return a.gc != null; }).pop(); if (!ag) return;
-      filled[code] = 1;
-      [['dateAG', ag.date], ['datePV', ag.pv]].forEach(function (p) {
-        var inp = tr.querySelector('input[data-k="' + p[0] + '"]'); if (!inp || !p[1] || inp.value) return;
-        inp.value = p[1]; inp.dispatchEvent(new Event('input', { bubbles: true }));
-      });
+      var code = rowCode(tr); if (!code || filled[code]) return; filled[code] = 1;
+      var r = PV[code] && PV[code][EX0], ag = r ? (r.ags || []).filter(function (a) { return a.gc != null; }).pop() : null;
+      var io = IOX[code], last = io && io.last && io.last >= EX0_START ? io.last : null;
+      setCell(tr, 'dateAG', ag ? ag.date : last);                    // AG annuelle : PV reçu, sinon dernière AG ImmOpen
+      if (ag) { setCell(tr, 'datePV', ag.pv); if (ag.gc) setCell(tr, 'h2627e', String(ag.gc)); } // remise du PV et honoraires votés d'après le PV
+    });
+  }
+  /* Dates en champ texte JJ/MM/AAAA (le champ calendrier d'origine reste caché et porte la valeur enregistrée) */
+  function isoToFr(v) { var m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
+  function frToIso(v) {
+    v = String(v || '').trim(); if (!v) return '';
+    var m = v.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/); if (m) { var y = m[3].length === 2 ? '20' + m[3] : m[3]; return y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
+    m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? v : null;
+  }
+  function syncTextDate(inp) { var tx = inp._tx; if (tx && document.activeElement !== tx) tx.value = isoToFr(inp.value); }
+  function textDates(tr) {
+    [].forEach.call(tr.querySelectorAll('input[type="date"]'), function (inp) {
+      if (inp._tx) return;
+      var tx = document.createElement('input'); tx.type = 'text'; tx.className = inp.className + ' ha-dtx'; tx.inputMode = 'numeric'; tx.maxLength = 10; tx.title = 'Date au format JJ/MM/AAAA';
+      tx.value = isoToFr(inp.value); tx.readOnly = !!C.ro || inp.readOnly || inp.disabled; tx.style.cssText = inp.getAttribute('style') || '';
+      inp._tx = tx; inp.style.display = 'none'; inp.parentNode.insertBefore(tx, inp.nextSibling);
+      function commit() {
+        var iso = frToIso(tx.value);
+        if (iso === null) { tx.classList.add('ha-bad'); tx.title = 'Date attendue au format JJ/MM/AAAA'; return; }
+        tx.classList.remove('ha-bad'); tx.title = '';
+        if (iso !== inp.value) { inp.value = iso; inp.dispatchEvent(new Event('input', { bubbles: true })); }
+        tx.value = isoToFr(iso);
+      }
+      tx.addEventListener('input', function (e) { e.stopPropagation(); }); // le tableau ne doit voir que le champ d'origine
+      tx.addEventListener('change', function (e) { e.stopPropagation(); commit(); }); tx.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); commit(); tx.blur(); } });
     });
   }
   function hidden() { return Array.isArray(P.hono_cols) ? P.hono_cols : []; }
@@ -457,6 +487,7 @@
         EXTRA.forEach(function (x, i) { tot[i] += x.val(code); });
         if (tr.querySelector('[data-col]')) continue;
         for (var j = 0; j < n && j < tr.children.length; j++) tr.children[j].dataset.col = KEYS[j];
+        textDates(tr);
         var ref2 = tr.children[n] || null;
         EXTRA.forEach(function (x) { var v = x.val(code), td = h('td', 'ro r', v || (x.ex && hasHtv(code, x.ex)) ? EUR.format(v) : '–'); td.dataset.col = x.k; var tp = x.tip(code); if (tp) td.title = tp;
           if (x.ex && hasHtv(code, x.ex)) { var ib = h('button', 'ha-i', 'i'); ib.type = 'button'; ib.dataset.code = code; ib.dataset.ex = x.ex; ib.setAttribute('aria-label', 'Détail des honoraires travaux votés'); td.appendChild(ib); }
