@@ -905,3 +905,7 @@ a.agn:hover{border-color:var(--bronze)}
 .nd p{margin:0;font-size:14px;line-height:1.55;color:var(--ink)}
 .nd .nd-why{font-size:13px;color:var(--muted)}
 .nd .more{font-size:13px;font-weight:600;color:var(--bronze)}
+.tm-card{min-width:0}
+@media (max-width:640px){.tm-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.tm-n{flex-wrap:wrap;gap:2px 6px}}
+.agn-d{gap:3px}.agn-d b,.agn-d small{line-height:1}
+.sa-ring{gap:4px}.sa-ring b,.sa-ring small{line-height:1}
