@@ -55,16 +55,69 @@ function wp_req(string $method, string $path, array $query = [], ?array $body = 
             'error' => $res === false ? ($err ?: 'Site injoignable') : ($code >= 400 ? (string)($json['message'] ?? ('Erreur ' . $code)) : null)];
 }
 
-/* Cache des lectures (le tableau de bord ne sollicite le site qu'une fois toutes les 10 minutes) */
+/** Plusieurs lectures en parallèle : [clé => [chemin, query]] → [clé => réponse wp_req]. Le site répond en ~1 s par appel : en parallèle, tout arrive en 1 à 2 s. */
+function wp_req_multi(array $reqs): array {
+    $c = wp_conn(); $out = [];
+    if (!$c || empty($c['user']) || empty($c['pass'])) { foreach ($reqs as $k => $_) $out[$k] = ['code' => -1, 'json' => null, 'total' => null, 'error' => 'Site non connecté']; return $out; }
+    $mh = curl_multi_init(); $hs = []; $hdr = [];
+    foreach ($reqs as $k => [$path, $query]) {
+        $hdr[$k] = [];
+        $ch = curl_init(rtrim($c['url'], '/') . '/wp-json/' . ltrim($path, '/') . ($query ? '?' . http_build_query($query) : ''));
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => false, CURLOPT_TIMEOUT => 20, CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_USERPWD => $c['user'] . ':' . str_replace(' ', '', $c['pass']), CURLOPT_HTTPHEADER => ['Accept: application/json'], CURLOPT_ENCODING => '',
+            CURLOPT_USERAGENT => 'GID-Dashboard/1.0 (+' . BASE_URL . ')',
+            CURLOPT_HEADERFUNCTION => function ($ch, $h) use (&$hdr, $k) { $p = explode(':', $h, 2); if (count($p) === 2) $hdr[$k][strtolower(trim($p[0]))] = trim($p[1]); return strlen($h); }]);
+        curl_multi_add_handle($mh, $ch); $hs[$k] = $ch;
+    }
+    do { $st = curl_multi_exec($mh, $run); if ($run) curl_multi_select($mh, 1.0); } while ($run && $st === CURLM_OK);
+    foreach ($hs as $k => $ch) {
+        $res = curl_multi_getcontent($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); $err = curl_error($ch);
+        $json = is_string($res) && $res !== '' ? json_decode($res, true) : null;
+        $out[$k] = ['code' => ($res === null || $res === '' && $code === 0) ? 0 : $code, 'json' => $json, 'total' => isset($hdr[$k]['x-wp-total']) ? (int)$hdr[$k]['x-wp-total'] : null, 'pages' => isset($hdr[$k]['x-wp-totalpages']) ? (int)$hdr[$k]['x-wp-totalpages'] : 1,
+            'error' => $code === 0 ? ($err ?: 'Site injoignable') : ($code >= 400 ? (string)($json['message'] ?? ('Erreur ' . $code)) : null)];
+        curl_multi_remove_handle($mh, $ch); curl_close($ch);
+    }
+    curl_multi_close($mh);
+    return $out;
+}
+/** Collection complète : 1re page déjà lue, pages suivantes en parallèle. */
+function wp_rest_pages(array $first, string $path, array $query): array {
+    if ($first['code'] !== 200 || !is_array($first['json'])) return ['_error' => $first['error'] ?? ('Erreur ' . $first['code'])];
+    $out = $first['json']; $n = min(10, (int)($first['pages'] ?? 1));
+    if ($n > 1) { $more = []; for ($p = 2; $p <= $n; $p++) $more[$p] = [$path, $query + ['per_page' => 100, 'page' => $p]];
+        foreach (wp_req_multi($more) as $r) if ($r['code'] === 200 && is_array($r['json'])) $out = array_merge($out, $r['json']); }
+    return $out;
+}
+
+/* Cache des lectures. Le site WordPress répond lentement (~1 s par appel) : le tableau de bord affiche toujours la dernière
+   version connue, immédiatement, et l'actualise en arrière-plan quand elle a plus de 10 minutes (requête lancée par la page). */
 function wp_cache_clear(): void { q("DELETE FROM kv WHERE k LIKE 'wpc:%'"); }
-function wp_cached(string $key, callable $fn, int $ttl = WP_CACHE_TTL, bool $fresh = false): array {
+/** Marque l'instantané comme périmé sans l'effacer (affiché tel quel, actualisé en arrière-plan). */
+function wp_cache_stale(): void { q("UPDATE kv SET updated_at=0 WHERE k='wpc:snapshot'"); }
+/** Modifie l'instantané en place (ex. statut d'une annonce changé depuis le tableau de bord). */
+function wp_snap_patch(callable $fn): void {
+    $raw = q("SELECT v FROM kv WHERE k='wpc:snapshot'")->fetchColumn(); if (!$raw) return;
+    $s = json_decode((string)$raw, true); if (!is_array($s)) return;
+    $s = $fn($s); q("UPDATE kv SET v=?, updated_at=0 WHERE k='wpc:snapshot'", [json_encode($s, JSON_UNESCAPED_UNICODE)]);
+}
+function wp_cache_age(string $key = 'snapshot'): ?int { $t = q('SELECT updated_at FROM kv WHERE k=?', ['wpc:' . $key])->fetchColumn(); return $t === false ? null : time() - (int)$t; }
+function wp_cached(string $key, callable $fn, int $ttl = WP_CACHE_TTL, bool $fresh = false, bool $swr = true): array {
     $row = q('SELECT v, updated_at FROM kv WHERE k=?', ['wpc:' . $key])->fetch();
-    if (!$fresh && $row && time() - (int)$row['updated_at'] < $ttl) return json_decode($row['v'], true) ?: [];
-    $v = $fn();
+    if (!$fresh && $row && ($swr || time() - (int)$row['updated_at'] < $ttl)) { // version connue : affichée tout de suite
+        $v = json_decode($row['v'], true) ?: [];
+        if (time() - (int)$row['updated_at'] >= $ttl) $GLOBALS['wp_stale'][$key] = true;
+        return $v;
+    }
+    $lock = 'wpc-lock:' . $key; $lk = q('SELECT updated_at FROM kv WHERE k=?', [$lock])->fetchColumn();
+    if ($row && $lk !== false && time() - (int)$lk < 90) return json_decode($row['v'], true) ?: []; // déjà en cours d'actualisation
+    q("INSERT INTO kv(k,v,updated_at) VALUES(?,'1',?) ON CONFLICT(k) DO UPDATE SET updated_at=excluded.updated_at", [$lock, time()]);
+    @set_time_limit(120);
+    try { $v = $fn(); } finally { q('DELETE FROM kv WHERE k=?', [$lock]); }
     if (empty($v['_error'])) q("INSERT INTO kv(k,v,updated_at) VALUES(?,?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", ['wpc:' . $key, json_encode($v, JSON_UNESCAPED_UNICODE), time()]);
     elseif ($row) { $old = json_decode($row['v'], true) ?: []; $old['_stale'] = $v['_error']; return $old; }
     return $v;
 }
+function wp_is_stale(): bool { return !empty($GLOBALS['wp_stale']); }
 
 /** Récupère toutes les pages d'une collection (100 par appel, 10 appels au plus). */
 function wp_all(string $path, array $query = []): array {
@@ -77,54 +130,77 @@ function wp_all(string $path, array $query = []): array {
     return $out;
 }
 
-/** Instantané du site : annonces, taxonomies, pages, médias, extensions, formulaires, santé. */
+/** Instantané du site : annonces, taxonomies, pages, médias, extensions, formulaires, santé (lectures en parallèle). */
 function wp_snapshot(bool $fresh = false): array {
-    return wp_cached('snapshot', function () {
+    $snap = wp_cached('snapshot', function () {
         $s = ['at' => time(), 'url' => wp_url()];
-        $ann = wp_all('wp/v2/annonces', ['status' => 'any', 'context' => 'edit', '_fields' => 'id,status,title,date,modified,link,statuts,types,emplacement,featured_media']);
+        $Q = ['ann' => ['wp/v2/annonces', ['status' => 'any', 'context' => 'edit', 'per_page' => 100, '_fields' => 'id,status,title,date,modified,link,statuts,types,emplacement,featured_media']],
+              'statuts' => ['wp/v2/statuts', ['hide_empty' => 'false', 'per_page' => 100, '_fields' => 'id,name,count']],
+              'types' => ['wp/v2/types', ['hide_empty' => 'false', 'per_page' => 100, '_fields' => 'id,name,count']],
+              'emplacement' => ['wp/v2/emplacement', ['hide_empty' => 'false', 'per_page' => 100, '_fields' => 'id,name,count']],
+              'pages' => ['wp/v2/pages', ['status' => 'any', 'context' => 'edit', 'per_page' => 100, '_fields' => 'id,status,title,modified,link,yoast_head_json']],
+              'media' => ['wp/v2/media', ['per_page' => 1, '_fields' => 'id']],
+              'plugins' => ['wp/v2/plugins', ['context' => 'edit', '_fields' => 'plugin,name,status,version']],
+              'users' => ['wp/v2/users', ['per_page' => 1, 'context' => 'edit', '_fields' => 'id']],
+              'forms' => ['contact-form-7/v1/contact-forms', []],
+              'settings' => ['wp/v2/settings', ['_fields' => 'title,description,url,timezone,blog_public']],
+              // « types » est masqué par la route WordPress des types de contenus : termes lus via les annonces, dans le même lot
+              'emb' => ['wp/v2/annonces', ['status' => 'any', 'context' => 'edit', 'per_page' => 100, '_embed' => 'wp:term', '_fields' => 'id,_links,_embedded']]];
+        $R = wp_req_multi($Q);
+        $ann = wp_rest_pages($R['ann'], $Q['ann'][0], array_diff_key($Q['ann'][1], ['per_page' => 1]));
         if (isset($ann['_error'])) return ['_error' => $ann['_error']];
         $s['annonces'] = array_map(fn($a) => ['id' => (int)$a['id'], 'status' => $a['status'], 'title' => html_entity_decode((string)($a['title']['raw'] ?? $a['title']['rendered'] ?? ''), ENT_QUOTES),
             'date' => substr((string)$a['date'], 0, 10), 'modified' => substr((string)$a['modified'], 0, 10), 'link' => (string)$a['link'],
             'statuts' => $a['statuts'] ?? [], 'types' => $a['types'] ?? [], 'emplacement' => $a['emplacement'] ?? [], 'photo' => (int)($a['featured_media'] ?? 0)], $ann);
-        // Visuels : adresse de la photo principale de chaque annonce (taille moyenne)
-        $mids = array_values(array_filter(array_unique(array_column($s['annonces'], 'photo'))));
-        $urls = [];
-        foreach (array_chunk($mids, 100) as $ch) {
-            $m = wp_req('GET', 'wp/v2/media', ['include' => implode(',', $ch), 'per_page' => 100, '_fields' => 'id,source_url,media_details']);
-            if ($m['code'] === 200 && is_array($m['json'])) foreach ($m['json'] as $x) { $sz = $x['media_details']['sizes'] ?? []; $urls[(int)$x['id']] = (string)($sz['medium_large']['source_url'] ?? $sz['medium']['source_url'] ?? $x['source_url'] ?? ''); }
-        }
+        // Visuels : adresse de la photo principale de chaque annonce (taille moyenne), lots de 100 en parallèle
+        $mids = array_values(array_filter(array_unique(array_column($s['annonces'], 'photo')))); $urls = []; $MQ = [];
+        foreach (array_chunk($mids, 100) as $n => $ch) $MQ[$n] = ['wp/v2/media', ['include' => implode(',', $ch), 'per_page' => 100, '_fields' => 'id,source_url,media_details']];
+        foreach ($MQ ? wp_req_multi($MQ) : [] as $m) if ($m['code'] === 200 && is_array($m['json'])) foreach ($m['json'] as $x) { $sz = $x['media_details']['sizes'] ?? []; $urls[(int)$x['id']] = (string)($sz['medium_large']['source_url'] ?? $sz['medium']['source_url'] ?? $x['source_url'] ?? ''); }
         foreach ($s['annonces'] as &$a) $a['photo_url'] = $urls[$a['photo']] ?? ''; unset($a);
         $missing = [];
         foreach (['statuts', 'types', 'emplacement'] as $tx) {
-            $t = wp_all('wp/v2/' . $tx, ['hide_empty' => 'false', '_fields' => 'id,name,count']);
+            $t = $R[$tx]; $t = ($t['code'] === 200 && is_array($t['json'])) ? $t['json'] : ['_error' => 1];
             // « types » est masqué par la route WordPress /wp/v2/types (types de contenus) : on vérifie qu'il s'agit bien de termes
             $ok = !isset($t['_error']) && array_is_list($t) && (!$t || (isset($t[0]['id'], $t[0]['name']) && is_int($t[0]['id'])));
             $s['tax'][$tx] = $ok ? array_column(array_map(fn($x) => ['id' => (int)$x['id'], 'name' => html_entity_decode((string)$x['name'], ENT_QUOTES)], $t), 'name', 'id') : [];
             if (!$ok) $missing[] = $tx;
         }
         if ($missing) { // repli : termes utilisés par les annonces existantes
-            $emb = wp_all('wp/v2/annonces', ['status' => 'any', 'context' => 'edit', '_embed' => 'wp:term', '_fields' => 'id,_links,_embedded']);
+            $emb = wp_rest_pages($R['emb'], $Q['emb'][0], array_diff_key($Q['emb'][1], ['per_page' => 1]));
             if (!isset($emb['_error'])) foreach ($emb as $a) foreach ((array)($a['_embedded']['wp:term'] ?? []) as $grp) foreach ((array)$grp as $term)
                 if (in_array($term['taxonomy'] ?? '', $missing, true)) $s['tax'][$term['taxonomy']][(int)$term['id']] = html_entity_decode((string)$term['name'], ENT_QUOTES);
         }
-        $pages = wp_all('wp/v2/pages', ['status' => 'any', 'context' => 'edit', '_fields' => 'id,status,title,modified,link,yoast_head_json']);
+        $pages = wp_rest_pages($R['pages'], $Q['pages'][0], array_diff_key($Q['pages'][1], ['per_page' => 1]));
         $s['pages'] = isset($pages['_error']) ? [] : array_map(fn($p) => ['id' => (int)$p['id'], 'status' => $p['status'], 'title' => html_entity_decode((string)($p['title']['raw'] ?? ''), ENT_QUOTES),
             'modified' => substr((string)$p['modified'], 0, 10), 'link' => (string)$p['link'],
             'seo_title' => (string)($p['yoast_head_json']['title'] ?? ''), 'seo_desc' => (string)($p['yoast_head_json']['description'] ?? $p['yoast_head_json']['og_description'] ?? ''),
             'noindex' => str_contains((string)($p['yoast_head_json']['robots']['index'] ?? ''), 'noindex')], $pages);
-        $m = wp_req('GET', 'wp/v2/media', ['per_page' => 1, '_fields' => 'id']); $s['media'] = $m['total'];
-        $pl = wp_req('GET', 'wp/v2/plugins', ['context' => 'edit', '_fields' => 'plugin,name,status,version']);
-        $s['plugins'] = is_array($pl['json']) && $pl['code'] === 200 ? array_map(fn($p) => ['name' => html_entity_decode(strip_tags((string)$p['name']), ENT_QUOTES), 'status' => $p['status'], 'version' => $p['version']], $pl['json']) : [];
-        $us = wp_req('GET', 'wp/v2/users', ['per_page' => 1, 'context' => 'edit', '_fields' => 'id']); $s['users'] = $us['total'];
-        $cf = wp_req('GET', 'contact-form-7/v1/contact-forms'); $s['forms'] = is_array($cf['json']) && $cf['code'] === 200 ? array_map(fn($f) => (string)($f['title'] ?? ''), $cf['json']) : [];
-        $st = wp_req('GET', 'wp/v2/settings', ['_fields' => 'title,description,url,timezone,blog_public']); $s['settings'] = $st['code'] === 200 ? $st['json'] : [];
-        $s['health'] = [];
-        foreach (['https-status' => 'HTTPS', 'background-updates' => 'Mises à jour automatiques', 'loopback-requests' => 'Requêtes internes', 'dotorg-communication' => 'Liaison WordPress.org', 'page-cache' => 'Cache des pages'] as $t => $lab) {
-            $h = wp_req('GET', 'wp-site-health/v1/tests/' . $t);
-            if ($h['code'] === 200 && is_array($h['json'])) $s['health'][] = ['label' => $lab, 'status' => (string)($h['json']['status'] ?? ''), 'text' => html_entity_decode(strip_tags((string)($h['json']['label'] ?? '')), ENT_QUOTES)];
-        }
+        $s['media'] = $R['media']['total'];
+        $pl = $R['plugins']; $s['plugins'] = is_array($pl['json']) && $pl['code'] === 200 ? array_map(fn($p) => ['name' => html_entity_decode(strip_tags((string)$p['name']), ENT_QUOTES), 'status' => $p['status'], 'version' => $p['version']], $pl['json']) : [];
+        $s['users'] = $R['users']['total'];
+        $cf = $R['forms']; $s['forms'] = is_array($cf['json']) && $cf['code'] === 200 ? array_map(fn($f) => (string)($f['title'] ?? ''), $cf['json']) : [];
+        $s['settings'] = $R['settings']['code'] === 200 ? $R['settings']['json'] : [];
         return $s;
     }, WP_CACHE_TTL, $fresh);
+    if (empty($snap['_error'])) $snap['health'] = wp_health(false, false); // jamais bloquant : actualisée en arrière-plan
+    return $snap;
+}
+
+/** Santé du site (tests WordPress lents, dont les requêtes internes) : actualisée toutes les 6 heures, en arrière-plan.
+    $fetch=false : lecture du cache seulement (affichage) ; une version absente ou ancienne déclenche l'actualisation par la page. */
+function wp_health(bool $fresh = false, bool $fetch = true): array {
+    if (!$fetch) {
+        $row = q("SELECT v, updated_at FROM kv WHERE k='wpc:health'")->fetch();
+        if (!$row || time() - (int)$row['updated_at'] >= 6 * 3600) $GLOBALS['wp_stale']['health'] = true;
+        return $row ? array_values(json_decode($row['v'], true) ?: []) : [];
+    }
+    return array_values(wp_cached('health', function () {
+        $T = ['https-status' => 'HTTPS', 'background-updates' => 'Mises à jour automatiques', 'loopback-requests' => 'Requêtes internes', 'dotorg-communication' => 'Liaison WordPress.org', 'page-cache' => 'Cache des pages'];
+        $Q = []; foreach ($T as $t => $_) $Q[$t] = ['wp-site-health/v1/tests/' . $t, []];
+        $out = [];
+        foreach (wp_req_multi($Q) as $t => $h) if ($h['code'] === 200 && is_array($h['json'])) $out[] = ['label' => $T[$t], 'status' => (string)($h['json']['status'] ?? ''), 'text' => html_entity_decode(strip_tags((string)($h['json']['label'] ?? '')), ENT_QUOTES)];
+        return $out ?: ['_error' => 'santé indisponible'];
+    }, 6 * 3600, $fresh, false));
 }
 
 /** Statut commercial d'une annonce (premier terme « statuts »). */
@@ -265,6 +341,6 @@ function wp_ann_save(array $d, int $uid): array {
     elseif (!empty($d['statut'])) $post['statuts'] = [(int)$d['statut']];
     $res = wp_req('POST', 'wp/v2/annonces' . ($id ? '/' . $id : ''), ['context' => 'edit', '_fields' => 'id,status,link,meta'], $post);
     if (!in_array($res['code'], [200, 201], true)) return ['error' => 'WordPress : ' . ($res['error'] ?? 'erreur ' . $res['code']), 'code' => 502];
-    $nid = (int)$res['json']['id']; $d['media'] = $ids; wp_ann_src_save($nid, $d, $uid); wp_cache_clear();
+    $nid = (int)$res['json']['id']; $d['media'] = $ids; wp_ann_src_save($nid, $d, $uid); wp_cache_stale();
     return ['ok' => true, 'id' => $nid, 'status' => $res['json']['status'], 'link' => $res['json']['link'], 'edit' => wp_edit_link($nid), 'meta_ok' => !empty($res['json']['meta']['price'] ?? null), 'photos' => count($ids)];
 }

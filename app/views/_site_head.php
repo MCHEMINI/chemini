@@ -8,8 +8,10 @@ $err = $snap['_error'] ?? ($snap['_stale'] ?? null);
     <h1><?= e($h1) ?></h1>
     <div class="date"><?= e($lead) ?><?php if (!empty($snap['at'])): ?> · données du <?= e(date('d/m/Y à H:i', (int)$snap['at'])) ?><?php endif; ?></div>
   </div>
-  <?php if ($conn): ?><div class="head-actions"><?php if ($snap !== null): ?><a class="btn btn-ghost" href="?actualiser" title="Relire les données du site maintenant">Actualiser</a><?php endif; ?><a class="btn btn-ghost" href="<?= e(rtrim($conn['url'], '/')) ?>/wp-admin/" target="_blank" rel="noopener">Ouvrir WordPress ↗</a></div><?php endif; ?>
+  <?php if ($conn): ?><div class="head-actions"><?php if ($snap !== null): ?><button type="button" class="btn btn-ghost" data-ws-refresh-now title="Relire les données du site maintenant">Actualiser</button><?php endif; ?><a class="btn btn-ghost" href="<?= e(rtrim($conn['url'], '/')) ?>/wp-admin/" target="_blank" rel="noopener">Ouvrir WordPress ↗</a></div><?php endif; ?>
 </header>
+<?php if ($conn && $snap !== null && wp_is_stale()): ?><span data-ws-stale hidden></span><?php endif; ?>
+<div class="ws-upd" id="wsUpd" hidden><span>Les données du site viennent d'être mises à jour.</span><button type="button" class="btn-link" onclick="location.reload()">Afficher</button></div>
 <?php if (!$conn): ?>
 <div class="panel ws-empty">
   <h2>Le site n'est pas encore relié à Dashboard</h2>

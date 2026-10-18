@@ -99,4 +99,5 @@ const VERSIONS = [
     ['2026-10-18 00:20', 'all', 'Demandes à la Direction', 'Depuis Mails à traiter, chaque collaborateur adresse une demande à la Direction (congés, horaires, formation…), visible de lui seul et de la Direction ; la réponse arrive au même endroit.'],
     ['2026-10-18 00:30', 'direction', 'Mot du Président publié automatiquement', 'Préparé le 25, il paraît le 1er du mois même sans validation ; le Président est alerté sur son tableau de bord 5 jours avant et 5 jours après.'],
     ['2026-10-18 02:30', 'all', 'Tâches IA : validation et nouvelle présentation', 'Les consignes de l\'équipe sont validées ou refusées par la Direction avant d\'être traitées ; la page Tâches IA devient une liste compacte filtrable, chaque consigne s\'ouvre pour voir le détail et le résultat.'],
+    ['2026-10-18 06:30', 'direction', 'Site Web instantané', 'Les pages Site Web s\'affichent aussitôt avec les dernières données connues, puis se mettent à jour en arrière-plan ; les lectures du site WordPress sont faites en parallèle.'],
 ];

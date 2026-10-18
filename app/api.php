@@ -415,7 +415,8 @@ function api(string $r): never {
             if (!$id || !$b) json_out(['error' => 'Rien à modifier.'], 400);
             $res = wp_req('POST', 'wp/v2/annonces/' . $id, ['_fields' => 'id,status,statuts'], $b);
             if ($res['code'] !== 200) json_out(['error' => 'WordPress : ' . ($res['error'] ?? 'erreur ' . $res['code'])], 502);
-            audit($uid, 'wp_annonce:' . $id . ':' . json_encode($b)); wp_cache_clear();
+            audit($uid, 'wp_annonce:' . $id . ':' . json_encode($b));
+            $nb = $res['json'] ?? []; wp_snap_patch(function ($s) use ($id, $nb) { foreach ($s['annonces'] ?? [] as $k => $a) if ($a['id'] === $id) { if (isset($nb['status'])) $s['annonces'][$k]['status'] = $nb['status']; if (isset($nb['statuts'])) $s['annonces'][$k]['statuts'] = $nb['statuts']; } return $s; });
             json_out(['ok' => true, 'status' => $res['json']['status'] ?? null, 'statuts' => $res['json']['statuts'] ?? []]);
         case 'site/annonce-create': // ancien nom
         case 'site/annonce-save': // création ou modification d'une annonce (formulaire mobile ou appli hors ligne)
@@ -438,7 +439,17 @@ function api(string $r): never {
             $id = in_int('id'); if (!$id) json_out(['error' => 'Annonce inconnue.'], 400);
             $res = wp_req('DELETE', 'wp/v2/annonces/' . $id, ['_fields' => 'id,status']);
             if ($res['code'] !== 200) json_out(['error' => 'WordPress : ' . ($res['error'] ?? 'erreur ' . $res['code'])], 502);
-            q('DELETE FROM wp_annonces WHERE wp_id=?', [$id]); audit($uid, 'wp_annonce_trash:' . $id); wp_cache_clear(); json_out(['ok' => true]);
+            q('DELETE FROM wp_annonces WHERE wp_id=?', [$id]); audit($uid, 'wp_annonce_trash:' . $id);
+            wp_snap_patch(function ($s) use ($id) { $s['annonces'] = array_values(array_filter($s['annonces'] ?? [], fn($a) => $a['id'] !== $id)); return $s; }); json_out(['ok' => true]);
+        case 'site/refresh': // actualisation en arrière-plan de l'instantané du site (lancée par la page quand il a plus de 10 minutes)
+            if (!wp_poster($u)) json_out(['error' => 'Réservé aux annonceurs.'], 403);
+            if (!wp_conn()) json_out(['ok' => true, 'changed' => false]);
+            $before = (string)q("SELECT v FROM kv WHERE k='wpc:snapshot'")->fetchColumn();
+            session_write_close(); // ne bloque pas les autres pages pendant l'actualisation
+            $age = wp_cache_age();
+            if ($age === null || $age >= WP_CACHE_TTL || !empty(body()['force'])) wp_snapshot(true);
+            wp_health(false, true); $after = (string)q("SELECT v FROM kv WHERE k='wpc:snapshot'")->fetchColumn();
+            json_out(['ok' => true, 'changed' => md5(preg_replace('/"at":\d+/', '', $before)) !== md5(preg_replace('/"at":\d+/', '', $after))]);
         case 'site/posters': // annonceurs (administrateur)
             if (!wp_admin($u)) json_out(['error' => 'Réservé à l\'administrateur.'], 403);
             $ids = array_values(array_filter(array_map('intval', (array)(body()['ids'] ?? []))));

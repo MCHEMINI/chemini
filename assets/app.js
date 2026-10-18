@@ -1037,3 +1037,10 @@ document.addEventListener('click', async e => { const b = e.target.closest('[dat
   document.querySelectorAll('[data-iaf]').forEach(b => b.addEventListener('click', () => { f = b.dataset.iaf; document.querySelectorAll('[data-iaf]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); apply(); }));
   if (more) more.addEventListener('click', () => { open = true; apply(); });
   apply(); })();
+/* Site Web : la page s'affiche aussitôt avec les dernières données connues, puis les actualise en arrière-plan */
+(function(){ const upd = document.getElementById('wsUpd'); if (!upd) return;
+  const run = async force => { try { const r = await window.api('site/refresh', force ? { force: 1 } : {}); return r; } catch (_) { return null; } };
+  if (document.querySelector('[data-ws-stale]')) run(false).then(r => { if (r && r.changed) upd.hidden = false; });
+  const b = document.querySelector('[data-ws-refresh-now]');
+  if (b) b.addEventListener('click', async () => { b.disabled = true; const t = b.textContent; b.textContent = 'Actualisation…'; const r = await run(true); if (r) location.reload(); else { b.disabled = false; b.textContent = t; } });
+})();
