@@ -609,7 +609,17 @@ function api(string $r): never {
             if (!isset(CONSIGNE_PRIO[$p])) $p = 'normale';
             $sp = in_str('space', 20);
             if (!isset(consigne_spaces($u)[$sp])) $sp = 'perso';
-            q('INSERT INTO consignes(user_id,body,priority,status,space,created_at,updated_at) VALUES(?,?,?,?,?,?,?)', [$uid, $b, $p, 'todo', $sp, time(), time()]);
+            $needs = !can_space($u, 'direction'); // les consignes de l'équipe passent par la validation de la Direction
+            q('INSERT INTO consignes(user_id,body,priority,status,space,created_at,updated_at) VALUES(?,?,?,?,?,?,?)', [$uid, $b, $p, $needs ? 'pending' : 'todo', $sp, time(), time()]);
+            json_out(['ok' => true] + ($needs ? ['message' => '✨ Consigne envoyée : elle sera traitée dès que la Direction l\'aura validée.'] : []));
+        case 'consignes/approve':
+        case 'consignes/reject':
+            if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
+            $c = q("SELECT * FROM consignes WHERE id=? AND status='pending'", [in_int('id')])->fetch();
+            if (!$c) json_out(['error' => 'Consigne introuvable ou déjà traitée.'], 404);
+            if ($r === 'consignes/approve') q("UPDATE consignes SET status='todo', updated_at=? WHERE id=?", [time(), $c['id']]);
+            else q('DELETE FROM consignes WHERE id=?', [$c['id']]);
+            audit($uid, ($r === 'consignes/approve' ? 'consigne_approved:' : 'consigne_rejected:') . $c['id']);
             json_out(['ok' => true]);
         case 'consignes/delete':
             q('DELETE FROM consignes WHERE id=? AND user_id=?', [in_int('id'), $uid]);

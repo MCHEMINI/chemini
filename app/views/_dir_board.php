@@ -14,6 +14,7 @@
 <?php endif; ?>
 
 
+<?php $iaP = (int)q("SELECT COUNT(*) FROM consignes WHERE status='pending'")->fetchColumn(); if ($iaP): ?><a class="dir-iapend" href="/assistant"><span class="aiq-n"><?= $iaP ?></span><span><b><?= $iaP ?> consigne<?= $iaP > 1 ? 's' : '' ?> de l'équipe à valider</b> pour les Tâches IA</span><span class="hm-go" style="margin-left:auto">Ouvrir →</span></a><?php endif; ?>
 <?php require __DIR__ . '/_aiq.php'; ?>
 <?php require __DIR__ . '/_mq.php'; ?>
 <?php require __DIR__ . '/_rq_dir.php'; ?>

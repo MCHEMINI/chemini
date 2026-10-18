@@ -395,7 +395,7 @@
       if (f.dataset.toast && location.pathname !== '/assistant') {
         f.reset(); if (btn) btn.disabled = false;
         const pop = f.closest('[role=dialog]'); if (pop) { pop.hidden = true; $('#iaFab')?.setAttribute('aria-expanded', 'false'); }
-        toast(f.dataset.toast); return;
+        toast(r.message || f.dataset.toast); return;
       }
       location.reload();
     } catch (err) {
@@ -1023,3 +1023,17 @@ document.addEventListener('click', async e => {
       catch (x) { err.textContent = x.message; err.hidden = false; b.disabled = false; } });
   });
 })();
+/* Tâches IA de l'équipe : validation ou refus par la Direction */
+document.addEventListener('click', async e => { const b = e.target.closest('[data-ia-dec]'); if (!b) return; const li = b.closest('[data-cid]');
+  if (b.dataset.iaDec === 'reject' && !b.dataset.armed) { b.dataset.armed = 1; b.textContent = 'Confirmer le refus'; return; }
+  li.querySelectorAll('button').forEach(x => x.disabled = true);
+  try { await window.api('consignes/' + b.dataset.iaDec, { id: Number(li.dataset.cid) }); const t = document.getElementById('toast'); if (t) { t.textContent = b.dataset.iaDec === 'approve' ? '✓ Consigne validée : traitée au prochain passage' : 'Consigne refusée et supprimée'; t.hidden = false; }
+    setTimeout(() => location.reload(), 800); }
+  catch (x) { li.querySelectorAll('button').forEach(y => y.disabled = false); b.textContent = x.message; } });
+/* Tâches IA : liste compacte, filtre par statut et « Voir plus » */
+(function(){ const L = document.getElementById('iaRows'); if (!L) return; const more = document.getElementById('iaMore'); let f = '', open = false;
+  const apply = () => { let n = 0, hid = 0; L.querySelectorAll('.ia-row').forEach(r => { const ok = !f || r.dataset.st === f; const show = ok && (open || f || n < 15); r.hidden = !show; if (ok) { n++; if (!show) hid++; } });
+    if (more) { more.hidden = !hid; more.textContent = 'Voir plus (' + hid + ') ↓'; } };
+  document.querySelectorAll('[data-iaf]').forEach(b => b.addEventListener('click', () => { f = b.dataset.iaf; document.querySelectorAll('[data-iaf]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); apply(); }));
+  if (more) more.addEventListener('click', () => { open = true; apply(); });
+  apply(); })();

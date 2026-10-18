@@ -10,7 +10,8 @@ function page_assistant(array $u): never {
     $uid = (int)$u['id']; $m0 = strtotime(date('Y-m-01 00:00:00'));
     render('assistant_board', [
         'title' => 'Tâches IA', 'nav' => 'ia', 'u' => $u,
-        'ia_todo' => q("SELECT * FROM consignes WHERE user_id=? AND status='todo' ORDER BY CASE priority WHEN 'haute' THEN 0 WHEN 'normale' THEN 1 ELSE 2 END, created_at", [$uid])->fetchAll(),
+        'ia_pending' => can_space($u, 'direction') ? q("SELECT c.*, us.name AS asker FROM consignes c JOIN users us ON us.id=c.user_id WHERE c.status='pending' ORDER BY c.created_at")->fetchAll() : [],
+        'ia_todo' => q("SELECT * FROM consignes WHERE user_id=? AND status IN ('pending','todo') ORDER BY status='pending', CASE priority WHEN 'haute' THEN 0 WHEN 'normale' THEN 1 ELSE 2 END, created_at", [$uid])->fetchAll(),
         'ia_doing' => q("SELECT * FROM consignes WHERE user_id=? AND status='doing' ORDER BY updated_at DESC", [$uid])->fetchAll(),
         'ia_done' => q("SELECT * FROM consignes WHERE user_id=? AND status='done' AND COALESCE(done_at, updated_at)>=CAST(? AS INTEGER) ORDER BY COALESCE(done_at, updated_at) DESC", [$uid, $m0])->fetchAll(),
         'ia_done_all' => (int)q("SELECT COUNT(*) FROM consignes WHERE user_id=? AND status='done'", [$uid])->fetchColumn(),
