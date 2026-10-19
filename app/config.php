@@ -20,7 +20,7 @@ $set('APP_NAME', 'GID Dashboard');
 $set('BASE_URL', getenv('CHEMINI_BASE_URL') ?: 'https://chemini.gidsas.fr');
 // Adresses publiques de la plateforme : dashboard.gidsas.fr (communiquée aux équipes) et chemini.gidsas.fr pointent au même endroit
 $set('APP_HOSTS', ['dashboard.gidsas.fr', 'chemini.gidsas.fr']);
-$set('ASSET_CSS_V', 87); // à garder égal au ?v= de app.css dans les vues
+$set('ASSET_CSS_V', 88); // à garder égal au ?v= de app.css dans les vues
 $set('ASSET_ANN_V', 2);
 $set('DATA_DIR', dirname(__DIR__) . '/data');
 $set('APP_KEY', getenv('CHEMINI_APP_KEY') ?: '');

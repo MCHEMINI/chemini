@@ -390,6 +390,10 @@
     } catch (err) { toast(err.message); }
     b.disabled = false;
   }));
+  $$('[data-cand-note-open]').forEach(b => b.addEventListener('click', () => {
+    const f = document.getElementById(b.getAttribute('aria-controls')); if (!f) return;
+    const open = f.hidden; f.hidden = !open; b.setAttribute('aria-expanded', String(open)); if (open) f.note.focus();
+  }));
   $$('form[data-cand-note]').forEach(f => f.addEventListener('submit', async e => {
     e.preventDefault(); const btn = $('button', f); btn.disabled = true;
     try { const r = await api('candidats/note', { id: Number(f.dataset.id), note: f.note.value }); toast(r.toast); } catch (err) { toast(err.message); }

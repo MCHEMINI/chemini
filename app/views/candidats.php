@@ -61,42 +61,41 @@ $nShown = count($list);
   <?php foreach ($rows as $c): $id = (int)$c['id']; $new = !$c['seen_at']; ?>
     <article class="panel cd-card<?= $c['starred'] ? ' is-star' : '' ?>" id="cand-<?= $id ?>">
       <button type="button" class="cd-star" data-cand-star data-id="<?= $id ?>" aria-pressed="<?= $c['starred'] ? 'true' : 'false' ?>" title="<?= $c['starred'] ? 'Validé : dans la base de recrutement (cliquer pour retirer)' : 'Valider ce candidat (ajout à la base de recrutement)' ?>" aria-label="<?= $c['starred'] ? 'Retirer de la base de recrutement' : 'Valider le candidat' ?>">
-        <svg width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6L12 16.7 6.6 19.6l1.1-6-4.5-4.2 6.1-.8z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6L12 16.7 6.6 19.6l1.1-6-4.5-4.2 6.1-.8z"/></svg>
       </button>
-      <div class="cd-main">
+      <div class="cd-id">
         <div class="cd-name"><b><?= e($c['first_name'] . ' ' . mb_strtoupper($c['last_name'])) ?></b>
           <?php if ($new): ?><span class="chip todo">Nouveau</span><?php endif; ?>
-          <?php if (($c['site_flag'] ?? '') === 'spam'): ?><span class="chip warn" title="L'anti-robot du site a jugé cet envoi douteux : vérifiez avant de répondre">Signalé indésirable par le site</span><?php endif; ?>
+          <?php if (($c['site_flag'] ?? '') === 'spam'): ?><span class="chip warn" title="L'anti-robot du site a jugé cet envoi douteux : vérifiez avant de répondre">Signalé indésirable</span><?php endif; ?>
           <?php if (($c['site_flag'] ?? '') === 'mail_failed'): ?><span class="chip neutral" title="Le site n'a pas pu envoyer son e-mail habituel : la candidature n'est qu'ici">E-mail du site non envoyé</span><?php endif; ?>
           <?php if ($c['times'] > 1): ?><span class="chip neutral" title="Même adresse e-mail"><?= $c['times'] ?> candidatures</span><?php endif; ?>
           <?php if ($c['job'] === 'autre' || $c['job_label'] !== (CAND_JOBS[$c['job']] ?? '')): ?><span class="chip neutral"><?= e($c['job_label']) ?></span><?php endif; ?>
         </div>
-        <div class="cd-meta">Reçue le <?= date('d/m/Y à H:i', (int)$c['created_at']) ?>
-          · <a href="mailto:<?= e($c['email']) ?>" data-outlook><?= e($c['email']) ?></a>
-          <?php if ($c['phone']): ?>· <a href="tel:<?= e(preg_replace('/[^\d+]/', '', $c['phone'])) ?>"><?= e($c['phone']) ?></a><?php endif; ?>
-          <?php if ($c['starred'] && $c['starred_name']): ?>· validé par <?= e(explode(' ', $c['starred_name'])[0]) ?><?php endif; ?></div>
-        <?php if ($c['files']): ?>
-        <ul class="cd-files">
-          <?php foreach ($c['files'] as $fl): $ok = (int)$fl['scan_ok']; $ext = strtoupper(pathinfo($fl['name'], PATHINFO_EXTENSION)) ?: 'DOC'; ?>
-          <li class="<?= $ok ? 'ok' : 'bad' ?>">
-            <?php if ($ok): ?><a href="/candidats/fichier/<?= (int)$fl['id'] ?>" target="_blank" rel="noopener"><?php else: ?><span><?php endif; ?>
-              <span class="cd-ext"><?= e($ext) ?></span>
-              <span class="cd-fn"><b><?= e(CAND_FILE_KINDS[$fl['kind']] ?? 'Document') ?></b><small><?= e($fl['name']) ?> · <?= $fmtSize((int)$fl['size']) ?></small></span>
-            <?php if ($ok): ?></a><?php else: ?></span><?php endif; ?>
-            <span class="cd-scan" title="<?= e((string)$fl['scan_detail']) ?>"><?php if ($ok): ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>Contrôlé, sans menace<?php else: ?><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3z"/><path d="m9.5 9.5 5 5M14.5 9.5l-5 5"/></svg>Bloqué : <?= e(explode(' · ', (string)$fl['scan_detail'])[0]) ?><?php endif; ?></span>
-          </li>
-          <?php endforeach; ?>
-        </ul>
-        <?php else: ?><p class="muted small">Aucun fichier joint.</p><?php endif; ?>
+        <div class="cd-meta"><span title="Reçue le <?= date('d/m/Y à H:i', (int)$c['created_at']) ?>"><?= date('d/m/Y', (int)$c['created_at']) ?></span>
+          <a href="mailto:<?= e($c['email']) ?>" data-outlook><?= e($c['email']) ?></a>
+          <?php if ($c['phone']): ?><a href="tel:<?= e(preg_replace('/[^\d+]/', '', $c['phone'])) ?>"><?= e($c['phone']) ?></a><?php endif; ?>
+          <?php if ($c['starred'] && $c['starred_name']): ?><span>validé par <?= e(explode(' ', $c['starred_name'])[0]) ?></span><?php endif; ?></div>
+      </div>
+      <ul class="cd-files">
+        <?php if (!$c['files']): ?><li class="none">Aucun fichier</li><?php endif; ?>
+        <?php foreach ($c['files'] as $fl): $ok = (int)$fl['scan_ok']; $ext = strtoupper(pathinfo($fl['name'], PATHINFO_EXTENSION)) ?: 'DOC'; $tip = $fl['name'] . ' · ' . $fmtSize((int)$fl['size']) . ' — ' . $fl['scan_detail']; ?>
+        <li class="<?= $ok ? 'ok' : 'bad' ?>">
+          <?php if ($ok): ?><a href="/candidats/fichier/<?= (int)$fl['id'] ?>" target="_blank" rel="noopener" title="<?= e($tip) ?>"><?php else: ?><span title="<?= e($tip) ?>"><?php endif; ?>
+            <span class="cd-ext"><?= e($ext) ?></span>
+            <span class="cd-fn"><b><?= e(CAND_FILE_KINDS[$fl['kind']] ?? 'Document') ?></b><small><?php if ($ok): ?><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><?= $fmtSize((int)$fl['size']) ?> · sans menace<?php else: ?><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6l-8-3z"/><path d="m9.5 9.5 5 5M14.5 9.5l-5 5"/></svg>Bloqué : <?= e(explode(' · ', (string)$fl['scan_detail'])[0]) ?><?php endif; ?></small></span>
+          <?php if ($ok): ?></a><?php else: ?></span><?php endif; ?>
+        </li>
+        <?php endforeach; ?>
+      </ul>
+      <div class="cd-act">
+        <button type="button" class="btn-link" data-cand-note-open aria-expanded="<?= $c['note'] ? 'true' : 'false' ?>" aria-controls="cdn-<?= $id ?>"><?= $c['note'] ? 'Modifier la note' : 'Ajouter une note' ?></button>
+        <button type="button" class="btn-link cd-del" data-api="candidats/delete" data-id="<?= $id ?>" data-confirm="Confirmer la suppression">Supprimer</button>
+      </div>
+      <div class="cd-row2">
         <?php if ($c['snip']): ?><p class="cd-snip"><?= $c['snip'] ?></p><?php endif; ?>
-        <?php if ($c['message'] !== ''): ?><details class="cd-msg"<?= mb_strlen($c['message']) < 220 ? ' open' : '' ?>><summary>Message du candidat</summary><p><?= nl2br(e($c['message'])) ?></p></details><?php endif; ?>
-        <details class="cd-note"<?= $c['note'] ? ' open' : '' ?>><summary>Note de la Direction</summary>
-          <form data-cand-note data-id="<?= $id ?>"><textarea class="input" name="note" rows="2" maxlength="2000" placeholder="Impression, entretien prévu, disponibilité…"><?= e((string)$c['note']) ?></textarea><button class="btn btn-ghost" type="submit">Enregistrer</button></form>
-        </details>
-        <div class="cd-foot">
-          <span class="muted small"><?= (int)$c['needs_text'] && array_filter($c['files'], fn($x) => (int)$x['scan_ok']) ? 'Texte du CV en cours de lecture par l\'IA pour la recherche · ' : '' ?>Suppression automatique le <?= date('d/m/Y', $c['purge_at']) ?> (2 ans, RGPD)</span>
-          <button type="button" class="btn-link cd-del" data-api="candidats/delete" data-id="<?= $id ?>" data-confirm="Confirmer la suppression définitive">Supprimer</button>
-        </div>
+        <?php if ($c['message'] !== ''): ?><p class="cd-msg" title="Message du candidat"><span class="cd-lab">Message</span><?= nl2br(e($c['message'])) ?></p><?php endif; ?>
+        <form class="cd-note" id="cdn-<?= $id ?>" data-cand-note data-id="<?= $id ?>"<?= $c['note'] ? '' : ' hidden' ?>><label class="cd-lab" for="cdt-<?= $id ?>">Note</label><textarea class="input" id="cdt-<?= $id ?>" name="note" rows="1" maxlength="2000" placeholder="Impression, entretien prévu, disponibilité…"><?= e((string)$c['note']) ?></textarea><button class="btn btn-ghost" type="submit">Enregistrer</button></form>
+        <p class="cd-purge"><?= (int)$c['needs_text'] && array_filter($c['files'], fn($x) => (int)$x['scan_ok']) ? 'Texte du CV en cours de lecture pour la recherche · ' : '' ?>Suppression automatique le <?= date('d/m/Y', $c['purge_at']) ?> (RGPD)</p>
       </div>
     </article>
   <?php endforeach; ?>
