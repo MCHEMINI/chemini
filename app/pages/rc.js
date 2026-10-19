@@ -8,7 +8,7 @@
   if (!form) return;
 
   var css = [
-    '.gidf-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;width:100%;margin:0 0 6px}',
+    '.gidf-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;width:100%;margin:10px 0 8px}',
     '.gidf-row>div{min-width:0}.gidf-row p{margin:0}',
     '.gidf-lab{display:block;font:600 14px/1.3 Roboto,sans-serif;color:#1D1953;margin:0 0 8px}.gidf-lab em{font-style:normal;font-weight:400;color:#6B7280}',
     '.gidf-drop{position:relative;display:flex;align-items:center;gap:14px;min-height:92px;padding:16px 18px;border:1.5px dashed #B3BBCA;border-radius:10px;background:#F7F7FB;transition:border-color .15s,background .15s,box-shadow .15s;box-sizing:border-box}',
@@ -17,7 +17,7 @@
     '.gidf-drop input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:1;font-size:0}',
     '.gidf-ico{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#E8540D;box-shadow:0 1px 4px rgba(29,25,83,.12)}',
     '.gidf-txt{display:grid;gap:2px;min-width:0;font:400 14px/1.4 Roboto,sans-serif;color:#212A3A}',
-    '.gidf-txt b{font-weight:600;color:#1D1953}.gidf-txt u{color:#E8540D;text-underline-offset:2px;font-weight:600}',
+    '.gidf-txt b{font-weight:600;color:#1D1953}form.gidf-on .gidf-txt u{color:#E8540D!important;text-decoration:underline;text-underline-offset:2px;font-weight:600}',
     '.gidf-txt small{font-size:12.5px;color:#6B7280}',
     '.gidf-file{display:none;align-items:center;gap:12px;width:100%;min-width:0}',
     '.gidf-drop.is-filled{border-style:solid;border-color:#1D1953;background:#fff}',
@@ -28,10 +28,12 @@
     '.gidf-meta{display:grid;min-width:0;flex:1}.gidf-meta b{font:600 14px/1.35 Roboto,sans-serif;color:#1D1953;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '.gidf-meta small{font:400 12.5px Roboto,sans-serif;color:#2E7D4F;display:flex;align-items:center;gap:4px}',
     '.gidf-act{display:flex;gap:6px;flex:none;position:relative;z-index:2}',
-    '.gidf-btn{appearance:none;border:1px solid #D5D9E2;background:#fff;color:#1D1953;border-radius:8px;height:36px;padding:0 12px;font:500 13px Roboto,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:6px}',
-    '.gidf-btn:hover{border-color:#1D1953}.gidf-btn.x{width:36px;padding:0;justify-content:center}',
-    '.gidf-btn:focus-visible{outline:2px solid #E8540D;outline-offset:2px}',
-    '.gidf-err{display:none;margin:8px 0 0;font:500 13px Roboto,sans-serif;color:#C0392B}.gidf-err.on{display:block}',
+    // le thème du site met en forme tous les <button> (orange, majuscules) : on repart de zéro pour ces petits boutons
+    'form.gidf-on .gidf-drop button.gidf-btn{all:unset;box-sizing:border-box;border:1px solid #D5D9E2;background:#fff;color:#1D1953;border-radius:8px;height:36px;padding:0 12px;font:500 13px/1 Roboto,sans-serif;text-transform:none;letter-spacing:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}',
+    'form.gidf-on .gidf-drop button.gidf-btn:hover{border-color:#1D1953;background:#F7F7FB;color:#1D1953}',
+    'form.gidf-on .gidf-drop button.gidf-btn.x{width:36px;padding:0}',
+    'form.gidf-on .gidf-drop button.gidf-btn:focus-visible{outline:2px solid #E8540D;outline-offset:2px}',
+    'form.gidf-on .gidf-err{display:none;margin:8px 0 0;font:500 13px/1.4 Roboto,sans-serif;color:#C0392B!important}.gidf-on .gidf-err.on{display:block}',
     '.gidf-drop.is-error{border-color:#C0392B;background:#FDF2F1}',
     '.gidf-row .wpcf7-not-valid-tip{margin-top:6px;font-size:13px}',
     'form.gidf-on .wpcf7-submit{min-height:48px;padding:12px 28px!important;border-radius:8px!important;letter-spacing:.02em;cursor:pointer}',
@@ -45,6 +47,7 @@
 
   var ICON_UP = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>';
   var ICON_X = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  var ICON_SW = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></svg>';
   var ICON_OK = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>';
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function size(b) { return b >= 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' Mo' : Math.max(1, Math.round(b / 1024)) + ' Ko'; }
@@ -60,7 +63,7 @@
     var lab = el('label', 'gidf-lab', esc(title) + (optional ? ' <em>(facultatif)</em>' : ' <em>*</em>')); lab.htmlFor = input.id;
     var drop = el('div', 'gidf-drop');
     var empty = el('div', 'gidf-empty', '<span class="gidf-ico">' + ICON_UP + '</span><span class="gidf-txt"><span>Glissez votre fichier ici ou <u>parcourez</u></span><small>PDF ou Word (.doc, .docx) · 5 Mo maximum</small></span>');
-    var file = el('div', 'gidf-file', '<span class="gidf-ext"></span><span class="gidf-meta"><b></b><small>' + ICON_OK + '<span></span></small></span><span class="gidf-act"><button type="button" class="gidf-btn" data-r>Remplacer</button><button type="button" class="gidf-btn x" data-x aria-label="Retirer le fichier">' + ICON_X + '</button></span>');
+    var file = el('div', 'gidf-file', '<span class="gidf-ext"></span><span class="gidf-meta"><b></b><small>' + ICON_OK + '<span></span></small></span><span class="gidf-act"><button type="button" class="gidf-btn x" data-r aria-label="Remplacer le fichier" title="Remplacer le fichier">' + ICON_SW + '</button><button type="button" class="gidf-btn x" data-x aria-label="Retirer le fichier" title="Retirer le fichier">' + ICON_X + '</button></span>');
     var err = el('p', 'gidf-err'); err.setAttribute('role', 'alert'); err.id = id + '-err';
     input.setAttribute('aria-describedby', err.id);
     wrap.insertBefore(drop, input); drop.appendChild(input); drop.appendChild(empty); drop.appendChild(file);
@@ -71,7 +74,7 @@
       if (!f) return;
       var ext = (f.name.split('.').pop() || '').toUpperCase();
       var x = file.querySelector('.gidf-ext'); x.textContent = ext; x.className = 'gidf-ext ' + ext.toLowerCase();
-      file.querySelector('b').textContent = f.name; file.querySelector('small span').textContent = size(f.size) + ' · prêt à envoyer';
+      file.querySelector('b').textContent = f.name; file.querySelector('small span').textContent = size(f.size) + ' · prêt';
     }
     function fail(msg) { input.value = ''; show(); drop.classList.add('is-error'); err.textContent = msg; err.classList.add('on'); }
     input.addEventListener('change', function () {
