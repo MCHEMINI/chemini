@@ -72,13 +72,13 @@
     'form.gidf-lay .cf-container p{margin:0!important;padding:0!important}',
     'form.gidf-lay label.gid-field{display:block!important;margin:0}',
     '.gidf-flab,.gidf-lab{display:block;font:600 14px/1.3 Roboto,sans-serif!important;color:#1D1953!important;margin:0 0 7px!important;text-transform:none;letter-spacing:0}',
-    '.gidf-flab em,.gidf-lab em{font-style:normal;font-weight:400;color:#6B7280}.gidf-flab em.req,.gidf-lab em.req{color:#E8540D;font-weight:700}',
+    '.gidf-flab em,.gidf-lab em{font-style:normal;font-weight:400;color:#6B7280}.gidf-flab em.req,.gidf-lab em.req{color:#E8540D!important;font-weight:700}',
     'form.gidf-lay :where(input.wpcf7-form-control:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=file]),select.wpcf7-form-control){height:48px!important;min-height:48px;padding:0 14px!important;font:400 15px/1.2 Roboto,sans-serif!important;box-sizing:border-box!important;width:100%!important;margin:0!important}',
     'form.gidf-lay :where(textarea.wpcf7-form-control){height:150px!important;min-height:110px;padding:12px 14px!important;font:400 15px/1.5 Roboto,sans-serif!important;box-sizing:border-box!important;width:100%!important;margin:0!important;resize:vertical}',
     // menu déroulant : même hauteur que les autres champs, vraie flèche
     'form.gidf-lay select.wpcf7-form-control{-webkit-appearance:none!important;appearance:none!important;padding-right:42px!important;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%231D1953%27 stroke-width=%272.4%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 14px center!important;background-size:16px!important}',
     'form.gidf-lay select.wpcf7-form-control.gidf-empty-sel{color:#6B7280!important}',
-    'form.gidf-lay .gidf-row{margin:0!important;gap:20px}',
+    'form.gidf-lay .gidf-row{margin:0!important;gap:20px}form.gidf-lay .gidf-row>*{padding:0!important;margin:0!important;width:auto!important;max-width:none!important}',
     '@media (max-width:767px){form.gidf-lay .cf-container{grid-template-columns:minmax(0,1fr);gap:16px}}',
     '@media (max-width:767px){.gidf-row{grid-template-columns:minmax(0,1fr);gap:16px}form.gidf-on .wpcf7-submit{width:100%}.gidf-drop{min-height:84px}}'
   ].join('');
