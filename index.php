@@ -35,7 +35,7 @@ header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
 header('X-Robots-Tag: noindex, nofollow, noarchive, nosnippet'); // plateforme privée : jamais référencée (dashboard.gidsas.fr comme chemini.gidsas.fr)
-$wpImg = ''; try { $wpH = parse_url((string)(json_decode((string)q("SELECT v FROM kv WHERE k='wp_conn'")->fetchColumn(), true)['url'] ?? ''), PHP_URL_HOST); if ($wpH && preg_match('/^[a-z0-9.-]+$/i', $wpH)) $wpImg = ' https://' . $wpH; } catch (Throwable) {} // visuels des annonces du site
+$wpImg = ''; try { $wpH = parse_url((string)(json_decode((string)q("SELECT v FROM kv WHERE k='wp_conn'")->fetchColumn(), true)['url'] ?? ''), PHP_URL_HOST); if ($wpH && preg_match('/^[a-z0-9.-]+$/i', $wpH)) { $wpB = preg_replace('/^www\./i', '', $wpH); $wpImg = ' https://' . $wpB . ' https://www.' . $wpB; } } catch (Throwable) {} // visuels des annonces du site (avec et sans www : WordPress sert les médias sur www)
 header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:$wpImg; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self' https://login.microsoftonline.com");
 if (str_starts_with(BASE_URL, 'https://')) header('Strict-Transport-Security: max-age=31536000');
 
