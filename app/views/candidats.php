@@ -5,7 +5,7 @@ $byJob = [];
 foreach ($list as $c) $byJob[$c['job']][] = $c;
 $order = array_keys(CAND_JOBS);
 uksort($byJob, fn($a, $b) => array_search($a, $order, true) <=> array_search($b, $order, true));
-$qs = fn(array $x) => '?' . http_build_query(array_filter($x + ['q' => $f['q'], 'metier' => $f['job']], fn($v) => $v !== '' && $v !== null));
+$qs = fn(array $x) => '?' . http_build_query(array_filter($x + ['q' => $f['q'], 'metier' => $f['job'], 'attente' => !empty($f['pending']) ? 1 : null], fn($v) => $v !== '' && $v !== null));
 $self = $base ? '/candidats/base' : '/candidats';
 $nShown = count($list);
 ?>
@@ -29,11 +29,13 @@ $nShown = count($list);
     <input type="search" name="q" value="<?= e($f['q']) ?>" placeholder="<?= $base ? 'Compétence, logiciel, ville, nom… (ex. : ImmOpen, comptabilité copropriété)' : 'Rechercher un candidat, un mot du CV…' ?>" aria-label="Rechercher"></label>
   <?php if ($f['job']): ?><input type="hidden" name="metier" value="<?= e($f['job']) ?>"><?php endif; ?>
   <button class="btn btn-primary" type="submit">Rechercher</button>
-  <?php if ($f['q'] !== '' || $f['job'] !== ''): ?><a class="btn-link" href="<?= $self ?>">Tout afficher</a><?php endif; ?>
+  <?php if (!empty($f['pending'])): ?><input type="hidden" name="attente" value="1"><?php endif; ?>
+  <?php if ($f['q'] !== '' || $f['job'] !== '' || !empty($f['pending'])): ?><a class="btn-link" href="<?= $self ?>">Tout afficher</a><?php endif; ?>
 </form>
 
 <nav class="cd-jobs" aria-label="Métiers">
-  <a href="<?= $self . $qs(['metier' => null]) ?>" class="<?= $f['job'] === '' ? 'on' : '' ?>">Tous <b><?= $base ? $counts['starred'] : $counts['total'] ?></b></a>
+  <?php if (!$base): ?><a href="<?= $self . $qs(['attente' => empty($f['pending']) ? 1 : null]) ?>" class="cd-pend<?= !empty($f['pending']) ? ' on' : '' ?>" title="Ni validées, ni supprimées">En attente de décision <b><?= $counts['pending'] ?></b></a><?php endif; ?>
+  <a href="<?= $self . $qs(['metier' => null, 'attente' => null]) ?>" class="<?= $f['job'] === '' && empty($f['pending']) ? 'on' : '' ?>">Tous <b><?= $base ? $counts['starred'] : $counts['total'] ?></b></a>
   <?php foreach (CAND_JOBS as $k => $lab): $j = $counts['jobs'][$k] ?? null; $n = $j ? ($base ? $j['starred'] : $j['n']) : 0; if (!$n && $f['job'] !== $k) continue; ?>
   <a href="<?= $self . $qs(['metier' => $k]) ?>" class="<?= $f['job'] === $k ? 'on' : '' ?>"><?= e($lab) ?> <b><?= $n ?></b><?php if (!$base && $j && $j['new']): ?><span class="cd-new-dot" title="<?= $j['new'] ?> nouvelle<?= $j['new'] > 1 ? 's' : '' ?>"></span><?php endif; ?></a>
   <?php endforeach; ?>

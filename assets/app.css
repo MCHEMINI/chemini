@@ -1776,3 +1776,13 @@ img[data-zoom]{cursor:zoom-in}
   .cd-note{flex-wrap:wrap}.cd-note textarea{flex:1 1 100%}.cd-purge{margin-left:0!important;white-space:normal}
   .cd-ask-row{flex-direction:column;align-items:stretch}
 }
+
+/* Direction : bloc « Candidatures en attente de décision » */
+.dir-cand{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:6px 18px;padding:14px 18px;margin:0 0 18px;border:1px solid var(--line);border-left:3px solid var(--bronze);border-radius:8px;background:var(--surface)}
+.dir-cand-n{display:grid;justify-items:center;min-width:72px;padding:8px 10px;border-radius:10px;background:var(--bronze-soft);color:var(--bronze);text-decoration:none;line-height:1.1}
+.dir-cand-n b{font:600 30px/1 var(--f-display)}.dir-cand-n span{font-size:12px;margin-top:3px}
+.dir-cand-b{min-width:0;display:grid;gap:4px}.dir-cand-b h2{margin:0;font:600 17px/1.3 var(--f-body)}.dir-cand-b p{margin:0;font-size:14px;color:var(--muted)}.dir-cand-b p b{color:var(--ink);font-weight:600}
+.dir-cand-jobs{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.dir-cand-jobs a{display:inline-flex;gap:6px;align-items:center;padding:3px 10px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--ink);text-decoration:none;background:var(--bg)}.dir-cand-jobs a:hover{border-color:var(--bronze)}.dir-cand-jobs b{color:var(--bronze)}
+.cd-jobs a.cd-pend{border-color:var(--bronze);color:var(--bronze)}.cd-jobs a.cd-pend b{color:inherit}.cd-jobs a.cd-pend.on{background:var(--bronze);color:#fff;border-color:var(--bronze)}
+@media (max-width:640px){.dir-cand{grid-template-columns:auto minmax(0,1fr);padding:12px 14px}.dir-cand-go{grid-column:1/-1;justify-self:stretch;text-align:center}}

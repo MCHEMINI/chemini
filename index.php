@@ -152,7 +152,7 @@ try {
             $u = require_user();
             if (!cand_viewer($u)) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Réservé à la Direction.'], false); }
             $base = $route === 'candidats/base';
-            $f = ['job' => (string)($_GET['metier'] ?? ''), 'q' => mb_substr((string)($_GET['q'] ?? ''), 0, 120), 'starred' => $base];
+            $f = ['job' => (string)($_GET['metier'] ?? ''), 'q' => mb_substr((string)($_GET['q'] ?? ''), 0, 120), 'starred' => $base, 'pending' => !$base && !empty($_GET['attente'])];
             $list = cand_list($f); $counts = cand_counts();
             if ($ids = array_column(array_filter($list, fn($c) => !$c['seen_at']), 'id')) q('UPDATE candidates SET seen_at=? WHERE seen_at IS NULL AND id IN (' . implode(',', array_map('intval', $ids)) . ')', [time()]); // « Nouveau » affiché une fois
             render('candidats', ['title' => $base ? 'Base de recrutement' : 'Candidats', 'nav' => $base ? 'cand-base' : 'cand', 'u' => $u, 'base' => $base, 'f' => $f, 'list' => $list, 'counts' => $counts]);

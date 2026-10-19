@@ -15,6 +15,17 @@
 
 
 <?php $iaP = (int)q("SELECT COUNT(*) FROM consignes WHERE status='pending'")->fetchColumn(); if ($iaP): ?><a class="dir-iapend" href="/assistant"><span class="aiq-n"><?= $iaP ?></span><span><b><?= $iaP ?> consigne<?= $iaP > 1 ? 's' : '' ?> de l'équipe à valider</b> pour les Tâches IA</span><span class="hm-go" style="margin-left:auto">Ouvrir →</span></a><?php endif; ?>
+<?php $CP = cand_counts(); if ($CP['pending']): $ageD = $CP['oldest'] ? (int)floor((time() - $CP['oldest']) / 86400) : 0; ?>
+<section class="dir-cand" aria-labelledby="dcT">
+  <a class="dir-cand-n" href="/candidats?attente=1" aria-label="<?= $CP['pending'] ?> candidatures en attente"><b><?= $CP['pending'] ?></b><span>candidature<?= $CP['pending'] > 1 ? 's' : '' ?></span></a>
+  <div class="dir-cand-b">
+    <h2 id="dcT">Candidature<?= $CP['pending'] > 1 ? 's' : '' ?> en attente de décision</h2>
+    <p><?= $ageD >= 1 ? 'La plus ancienne attend depuis ' . $ageD . ' jour' . ($ageD > 1 ? 's' : '') : 'Reçue' . ($CP['pending'] > 1 ? 's' : '') . ' aujourd\'hui' ?><?= $CP['new'] ? ' · <b>' . $CP['new'] . ' jamais ouverte' . ($CP['new'] > 1 ? 's' : '') . '</b>' : '' ?> · validez avec l'étoile ou supprimez.</p>
+    <div class="dir-cand-jobs"><?php foreach (CAND_JOBS as $k => $lab): $pd = $CP['jobs'][$k]['pending'] ?? 0; if (!$pd) continue; ?><a href="/candidats?attente=1&amp;metier=<?= e($k) ?>"><?= e($lab) ?> <b><?= $pd ?></b></a><?php endforeach; ?></div>
+  </div>
+  <a class="btn btn-primary dir-cand-go" href="/candidats?attente=1">Traiter</a>
+</section>
+<?php endif; ?>
 <?php require __DIR__ . '/_aiq.php'; ?>
 <?php require __DIR__ . '/_mq.php'; ?>
 <?php require __DIR__ . '/_rq_dir.php'; ?>

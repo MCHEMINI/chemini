@@ -360,6 +360,7 @@ function cand_list(array $f = []): array {
     $w = ['1=1']; $p = [];
     if (!empty($f['job']) && isset(CAND_JOBS[$f['job']])) { $w[] = 'c.job=?'; $p[] = $f['job']; }
     if (!empty($f['starred'])) $w[] = 'c.starred=1';
+    if (!empty($f['pending'])) $w[] = 'c.starred=0'; // en attente de décision (ni validée, ni supprimée)
     $terms = array_values(array_filter(preg_split('/\s+/u', mb_strtolower(trim((string)($f['q'] ?? '')))), fn($t) => mb_strlen($t) >= 2));
     foreach (array_slice($terms, 0, 6) as $t) {
         $w[] = "(lower(c.last_name||' '||c.first_name||' '||c.email||' '||c.job_label||' '||c.message||' '||COALESCE(c.note,'')||' '||COALESCE(c.doc_text,'')) LIKE ?)"; $p[] = '%' . $t . '%';
@@ -380,10 +381,11 @@ function cand_list(array $f = []): array {
 }
 
 function cand_counts(): array {
-    $o = ['total' => 0, 'new' => 0, 'starred' => 0, 'threat' => 0, 'jobs' => []];
-    foreach (q('SELECT job, COUNT(*) n, SUM(seen_at IS NULL) nw, SUM(starred) st, SUM(threat) th FROM candidates GROUP BY job')->fetchAll() as $r) {
-        $o['jobs'][$r['job']] = ['n' => (int)$r['n'], 'new' => (int)$r['nw'], 'starred' => (int)$r['st']];
-        $o['total'] += (int)$r['n']; $o['new'] += (int)$r['nw']; $o['starred'] += (int)$r['st']; $o['threat'] += (int)$r['th'];
+    $o = ['total' => 0, 'new' => 0, 'starred' => 0, 'threat' => 0, 'pending' => 0, 'oldest' => null, 'jobs' => []];
+    foreach (q('SELECT job, COUNT(*) n, SUM(seen_at IS NULL) nw, SUM(starred) st, SUM(threat) th, SUM(starred=0) pd, MIN(CASE WHEN starred=0 THEN created_at END) old FROM candidates GROUP BY job')->fetchAll() as $r) {
+        $o['jobs'][$r['job']] = ['n' => (int)$r['n'], 'new' => (int)$r['nw'], 'starred' => (int)$r['st'], 'pending' => (int)$r['pd']];
+        $o['total'] += (int)$r['n']; $o['new'] += (int)$r['nw']; $o['starred'] += (int)$r['st']; $o['threat'] += (int)$r['th']; $o['pending'] += (int)$r['pd'];
+        if ($r['old'] !== null && ($o['oldest'] === null || (int)$r['old'] < $o['oldest'])) $o['oldest'] = (int)$r['old'];
     }
     return $o;
 }
