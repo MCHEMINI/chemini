@@ -284,18 +284,29 @@ function cand_receive(): never {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') $out(['error' => 'POST attendu'], 405);
     if (!in_array($origin, cand_origins(), true)) $out(['error' => 'origine refusée'], 403);
     $ip = client_ip();
+    // Suivi anonyme du résultat des envois du formulaire (aucune donnée personnelle) : pour diagnostiquer un envoi qui n'arrive pas
+    if (isset($_POST['_gid_ping'])) {
+        if (rate_limited('candping:' . $ip, 40, 3600)) $out(['ok' => true]);
+        rate_hit('candping:' . $ip);
+        $st = preg_replace('/[^a-z0-9_:\-]/', '', strtolower(substr((string)$_POST['_gid_ping'], 0, 40)));
+        $L = json_decode((string)q("SELECT v FROM kv WHERE k='cand_pings'")->fetchColumn(), true) ?: [];
+        array_unshift($L, ['at' => time(), 's' => $st, 'ua' => preg_match('/iPhone|iPad|Android/i', (string)($_SERVER['HTTP_USER_AGENT'] ?? '')) ? 'mobile' : 'ordinateur']);
+        q("INSERT INTO kv(k,v,updated_at) VALUES('cand_pings',?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v, updated_at=excluded.updated_at", [json_encode(array_slice($L, 0, 60)), time()]);
+        $out(['ok' => true]);
+    }
     if (rate_limited('cand:' . $ip, 6, 3600) || rate_limited('cand-all', 120, 3600)) $out(['error' => 'trop de candidatures, réessayez plus tard'], 429);
     rate_hit('cand:' . $ip); rate_hit('cand-all');
     $p = fn(string $k, int $max) => mb_substr(trim(preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', (string)($_POST[$k] ?? ''))), 0, $max);
     if ($p('_gid_hp', 50) !== '' || (int)$p('_gid_t', 12) < 3000) $out(['ok' => true]); // robot : ignoré sans le signaler
     $last = $p('your-name', 120); $first = $p('your-firstname', 120); $email = strtolower($p('your-email', 190)); $phone = $p('your-phone', 40);
     $job = $p('your-poste', 120); $msg = $p('your-message', 2000); $consent = $p('your-consent', 5) !== '';
+    $flag = in_array($p('_gid_status', 20), ['spam', 'mail_failed'], true) ? $p('_gid_status', 20) : null;
     if ($last === '' || $first === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) $out(['error' => 'champs obligatoires manquants'], 400);
     $dup = q('SELECT id FROM candidates WHERE email=? AND created_at>?', [$email, time() - 600])->fetchColumn(); // double envoi
     if ($dup) $out(['ok' => true, 'dup' => true]);
     $now = time(); $jk = cand_job_key($job);
-    q('INSERT INTO candidates(job,job_label,last_name,first_name,email,phone,message,consent,source,ip_hash,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
-      [$jk, $job !== '' ? $job : CAND_JOBS[$jk], $last, $first, $email, $phone, $msg, $consent ? 1 : 0, 'site', hash('sha256', $ip . '|' . date('Y-m')), $now, $now]);
+    q('INSERT INTO candidates(job,job_label,last_name,first_name,email,phone,message,consent,source,site_flag,ip_hash,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+      [$jk, $job !== '' ? $job : CAND_JOBS[$jk], $last, $first, $email, $phone, $msg, $consent ? 1 : 0, 'site', $flag, hash('sha256', $ip . '|' . date('Y-m')), $now, $now]);
     $cid = (int)db()->lastInsertId();
     $texts = []; $bad = 0;
     foreach (['your-cv' => 'cv', 'your-lettre' => 'lettre'] as $field => $kind) {

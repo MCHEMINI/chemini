@@ -41,7 +41,7 @@ function ingest_handle(string $kind): never {
         $rows = q("SELECT id, job_label, first_name, last_name, message, note, starred, needs_text, created_at, substr(COALESCE(doc_text,''),1,20000) AS doc_text FROM candidates WHERE $w ORDER BY created_at DESC LIMIT 300")->fetchAll();
         foreach ($rows as &$r) $r['files'] = q('SELECT id, kind, name, scan_ok FROM candidate_files WHERE cand_id=?', [(int)$r['id']])->fetchAll();
         unset($r);
-        $send(['ok' => true, 'items' => $rows]);
+        $send(['ok' => true, 'items' => $rows, 'pings' => json_decode((string)q("SELECT v FROM kv WHERE k='cand_pings'")->fetchColumn(), true) ?: []]);
     }
     if ($kind === 'requests' && $method === 'GET') { // demandes des collaborateurs à préparer (nouvelles, ou toutes avec ?all=1)
         $rows = q("SELECT r.id, r.cat, r.subject, r.body, r.status, r.created_at, u.name AS user_name, s.role AS user_role FROM staff_requests r JOIN users u ON u.id=r.user_id LEFT JOIN staff s ON lower(s.email)=lower(u.email) WHERE " . (isset($_GET['all']) ? "r.status<>'withdrawn'" : "r.status='new'") . " ORDER BY r.created_at")->fetchAll();

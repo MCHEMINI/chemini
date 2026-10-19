@@ -40,6 +40,13 @@
     'form.gidf-on .wpcf7-submit:disabled{opacity:.55;cursor:not-allowed}',
     'form.gidf-on .gidf-submit{display:flex;align-items:center;gap:14px;flex-wrap:wrap}',
     'form.gidf-on .gidf-submit .wpcf7-spinner{margin:0}',
+    // message de résultat bien visible (le thème l'affiche en tout petit) et état « Envoi en cours »
+    'form.gidf-on .wpcf7-response-output{display:none!important}',
+    '.gidf-status{display:flex;gap:12px;align-items:flex-start;margin:18px 0 0;padding:14px 16px;border-radius:10px;font:500 15px/1.45 Roboto,sans-serif;border:1px solid transparent}',
+    '.gidf-status svg{flex:none;margin-top:1px}',
+    '.gidf-status.ok{background:#EAF6EE;border-color:#B9E0C5;color:#1F6B3A}.gidf-status.err{background:#FDF2F1;border-color:#F2C4BF;color:#A93226}.gidf-status.wait{background:#F3F3F9;border-color:#DCDCEA;color:#1D1953}',
+    '.gidf-spin{width:18px;height:18px;border:2.5px solid rgba(29,25,83,.2);border-top-color:#1D1953;border-radius:50%;animation:gidfspin .8s linear infinite;flex:none}',
+    '@keyframes gidfspin{to{transform:rotate(360deg)}}',
     '@media (max-width:767px){.gidf-row{grid-template-columns:minmax(0,1fr);gap:16px}form.gidf-on .wpcf7-submit{width:100%}.gidf-drop{min-height:84px}}'
   ].join('');
   var st = document.createElement('style'); st.id = 'gidf-css'; st.textContent = css; document.head.appendChild(st);
@@ -101,19 +108,58 @@
   }
   var sb = form.querySelector('.wpcf7-submit'); if (sb && sb.parentNode) sb.parentNode.classList.add('gidf-submit');
 
-  /* Transmission au tableau de bord Direction : copie des données au moment de l'envoi, transmise seulement si le site a accepté la candidature. */
+  /* Message de résultat, visible, sous le bouton */
+  var stat = el('div', 'gidf-status'); stat.hidden = true; stat.setAttribute('role', 'status'); stat.setAttribute('aria-live', 'polite');
+  var out = form.querySelector('.wpcf7-response-output'); (out ? out.parentNode : form).insertBefore(stat, out || null);
+  var ICON_DONE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 10"/></svg>';
+  var ICON_WARN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/></svg>';
+  function say(kind, html) { stat.hidden = false; stat.className = 'gidf-status ' + kind; stat.innerHTML = (kind === 'wait' ? '<span class="gidf-spin" aria-hidden="true"></span>' : kind === 'ok' ? ICON_DONE : ICON_WARN) + '<span>' + html + '</span>'; }
+  var sbLabel = sb ? sb.value : '';
+  function busy(on) { if (!sb) return; sb.value = on ? 'Envoi en cours…' : sbLabel; }
+
+  /* Suivi anonyme du résultat (sans aucune donnée personnelle), pour diagnostiquer un envoi qui n'arrive pas */
+  function ping(s) { try { var p = new FormData(); p.append('_gid_ping', s); fetch(ENDPOINT, { method: 'POST', body: p, mode: 'cors', credentials: 'omit', keepalive: true }).catch(function () {}); } catch (e) {} }
+
+  /* Transmission au tableau de bord Direction : copie des données au moment de l'envoi, transmise une fois la candidature acceptée par le site
+     (ou si le site l'a jugée indésirable ou n'a pas pu envoyer son e-mail : elle arrive alors avec une mention, pour ne perdre aucun candidat). */
   var snap = null, box = form.closest('.wpcf7') || form;
-  form.addEventListener('submit', function () { try { snap = new FormData(form); } catch (e) { snap = null; } }, true);
-  function relay() {
+  var started = false, guard = null;
+  form.addEventListener('submit', function () {
+    try { snap = new FormData(form); } catch (e) { snap = null; }
+    started = false; busy(true); say('wait', 'Envoi de votre candidature en cours… Merci de patienter quelques secondes.');
+    // champs incomplets repérés dans la page même : le site n'envoie rien, on rend la main tout de suite
+    clearTimeout(guard); guard = setTimeout(function () { if (!started) { busy(false); snap = null; say('err', 'Certains champs sont à compléter ou à corriger (indiqués en rouge). Vérifiez-les puis renvoyez votre candidature.'); } }, 1500);
+  }, true);
+  box.addEventListener('wpcf7beforesubmit', function () { started = true; });
+  function relay(status) {
     if (!snap) return; var src = snap; snap = null;
     var fd = new FormData();
     ['your-name', 'your-firstname', 'your-email', 'your-phone', 'your-poste', 'your-message', 'your-consent'].forEach(function (k) { var v = src.get(k); if (v != null) fd.append(k, v); });
     ['your-cv', 'your-lettre'].forEach(function (k) { var f = src.get(k); if (f && f.name && f.size) fd.append(k, f, f.name); });
-    fd.append('_gid_hp', ''); fd.append('_gid_t', String(Date.now() - T0)); fd.append('_gid_page', location.pathname);
+    fd.append('_gid_hp', ''); fd.append('_gid_t', String(Date.now() - T0)); fd.append('_gid_page', location.pathname); fd.append('_gid_status', status);
     var tries = 0;
-    (function go() { fetch(ENDPOINT, { method: 'POST', body: fd, mode: 'cors', credentials: 'omit' }).then(function (r) { if (r.status >= 500 && ++tries < 3) setTimeout(go, 1500 * tries); }).catch(function () { if (++tries < 3) setTimeout(go, 1500 * tries); }); })();
+    (function go() {
+      fetch(ENDPOINT, { method: 'POST', body: fd, mode: 'cors', credentials: 'omit' })
+        .then(function (r) { if (r.ok) return; if (r.status >= 500 && ++tries < 3) return setTimeout(go, 1500 * tries); ping('relay-' + r.status); })
+        .catch(function () { if (++tries < 3) setTimeout(go, 1500 * tries); else ping('relay-reseau'); });
+    })();
   }
-  box.addEventListener('wpcf7mailsent', relay);
-  box.addEventListener('wpcf7mailfailed', relay);
-  ['wpcf7invalid', 'wpcf7spam'].forEach(function (t) { box.addEventListener(t, function () { snap = null; }); });
+  var MSG = {
+    mail_sent: ['ok', '<b>Merci, votre candidature a bien été envoyée.</b> Vous allez recevoir un accusé de réception par e-mail. Nous l’étudierons avec attention.'],
+    mail_failed: ['ok', '<b>Merci, votre candidature a bien été reçue.</b> L’accusé de réception par e-mail n’a pas pu partir, mais votre dossier nous est bien parvenu.'],
+    validation_failed: ['err', 'Certains champs sont à compléter ou à corriger (indiqués en rouge). Vérifiez-les puis renvoyez votre candidature.'],
+    acceptance_missing: ['err', 'Merci de cocher la case d’accord sur l’utilisation de vos informations avant d’envoyer.'],
+    spam: ['err', 'Votre envoi n’a pas pu être vérifié par notre protection anti-robots. Nous l’avons tout de même transmis à notre équipe ; si vous n’avez pas de nouvelles sous quelques jours, écrivez-nous à contact@gidsas.fr ou appelez le 01 42 66 20 88.']
+  };
+  box.addEventListener('wpcf7submit', function (e) {
+    busy(false);
+    var st = (e.detail && (e.detail.status || (e.detail.apiResponse && e.detail.apiResponse.status))) || 'inconnu';
+    ping('site-' + st);
+    if (st === 'mail_sent' || st === 'mail_failed' || st === 'spam') relay(st); else snap = null;
+    var m = MSG[st] || ['err', (e.detail && e.detail.apiResponse && e.detail.apiResponse.message ? String(e.detail.apiResponse.message).replace(/[<>&]/g, '') : 'L’envoi n’a pas abouti.') + ' Vous pouvez aussi écrire à contact@gidsas.fr.'];
+    say(m[0], m[1]);
+    if (m[0] === 'ok' || st === 'spam') try { stat.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (x) {}
+  });
+  // le site ne répond pas (coupure réseau, serveur) : le bouton ne reste pas bloqué
+  box.addEventListener('wpcf7aborted', function () { busy(false); ping('site-aborted'); say('err', 'L’envoi n’a pas abouti (connexion interrompue). Vérifiez votre connexion puis réessayez, ou écrivez à contact@gidsas.fr.'); });
 })();

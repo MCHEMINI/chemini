@@ -66,6 +66,8 @@ $nShown = count($list);
       <div class="cd-main">
         <div class="cd-name"><b><?= e($c['first_name'] . ' ' . mb_strtoupper($c['last_name'])) ?></b>
           <?php if ($new): ?><span class="chip todo">Nouveau</span><?php endif; ?>
+          <?php if (($c['site_flag'] ?? '') === 'spam'): ?><span class="chip warn" title="L'anti-robot du site a jugé cet envoi douteux : vérifiez avant de répondre">Signalé indésirable par le site</span><?php endif; ?>
+          <?php if (($c['site_flag'] ?? '') === 'mail_failed'): ?><span class="chip neutral" title="Le site n'a pas pu envoyer son e-mail habituel : la candidature n'est qu'ici">E-mail du site non envoyé</span><?php endif; ?>
           <?php if ($c['times'] > 1): ?><span class="chip neutral" title="Même adresse e-mail"><?= $c['times'] ?> candidatures</span><?php endif; ?>
           <?php if ($c['job'] === 'autre' || $c['job_label'] !== (CAND_JOBS[$c['job']] ?? '')): ?><span class="chip neutral"><?= e($c['job_label']) ?></span><?php endif; ?>
         </div>

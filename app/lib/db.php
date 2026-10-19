@@ -443,6 +443,7 @@ SQL);
                         size INTEGER NOT NULL DEFAULT 0, sha256 TEXT NOT NULL DEFAULT '', path TEXT NOT NULL DEFAULT '', scan_ok INTEGER NOT NULL DEFAULT 0, scan_detail TEXT, created_at INTEGER NOT NULL);
                     CREATE INDEX IF NOT EXISTS candidate_files_cand ON candidate_files(cand_id); PRAGMA user_version = 57;");
     }
+    if ($v < 58) { $pdo->exec("ALTER TABLE candidates ADD COLUMN site_flag TEXT; PRAGMA user_version = 58;"); } // candidature filtrée comme indésirable par le site, ou e-mail du site en échec
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
