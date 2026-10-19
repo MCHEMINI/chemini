@@ -173,6 +173,7 @@
     c1.parentNode.insertBefore(row, c1); row.appendChild(c1); row.appendChild(c2);
   }
   var sb = form.querySelector('.wpcf7-submit'); if (sb && sb.parentNode) sb.parentNode.classList.add('gidf-submit');
+  if (sb && /^\s*soumettre\s*$/i.test(sb.value)) sb.value = 'Envoyer mon message'; // même formulation que les autres formulaires
 
   /* Message de résultat, visible, sous le bouton */
   var stat = el('div', 'gidf-status'); stat.hidden = true; stat.setAttribute('role', 'status'); stat.setAttribute('aria-live', 'polite');
