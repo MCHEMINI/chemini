@@ -130,7 +130,7 @@
     '.hm-list{list-style:none;margin:0;padding:0}.hm-list li{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:10px 16px;border-top:1px solid var(--grid,var(--border));font-size:14px}.hm-list li:first-child{border-top:0}',
     '.hm-time{color:var(--text-2);font-size:12.5px;font-variant-numeric:tabular-nums}.hm-tab{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}',
     '.hm-field{display:block;color:var(--text-2);margin-top:2px}.hm-field del{color:#a6403a}.hm-field ins{color:#2e7d4f;text-decoration:none;font-weight:600}',
-    '.hm-who{font-size:12.5px;color:var(--text-2);white-space:nowrap}.hm-who.auto{color:var(--accent)}',
+    '.hm-who{font-size:12.5px;color:var(--text-2);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}.hm-who.auto{color:var(--accent)}.hm-dev{display:inline-grid;place-items:center;color:var(--accent);cursor:help}',
     '.hm-more{display:inline-block;margin-top:6px;font-weight:600;color:var(--accent);text-decoration:none}.hm-more:hover{text-decoration:underline}',
     '@media (max-width:640px){.hm-list li{grid-template-columns:44px minmax(0,1fr)}.hm-who{grid-column:2}.hd-al .hd-tbl,.hd-todo{margin-left:16px;width:calc(100% - 32px)}.hd-t{font-size:22px}}',
     /* Fenêtres : même charte que les dialogues du site (sur-titre, titre Lora, boutons sobres) */
@@ -942,12 +942,21 @@
         var li = h('li'); li.appendChild(h('span', 'hm-time', new Date(c.at * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })));
         var wh = h('span', 'hm-what'); wh.appendChild(h('span', 'hm-tab', c.tab)); if (c.ref) { wh.appendChild(document.createTextNode(' · ')); wh.appendChild(h('strong', null, c.ref)); }
         var f = h('span', 'hm-field', c.field); if (c.old !== '' || c.new !== '') { f.appendChild(document.createTextNode(' : ')); f.appendChild(h('del', null, c.old !== '' ? c.old : 'vide')); f.appendChild(document.createTextNode(' → ')); f.appendChild(h('ins', null, c.new !== '' ? c.new : 'vide')); } wh.appendChild(f);
-        li.appendChild(wh); li.appendChild(h('span', 'hm-who' + (c.source === 'auto' ? ' auto' : ''), c.user)); ul.appendChild(li);
+        li.appendChild(wh); var who = h('span', 'hm-who' + (c.source === 'auto' ? ' auto' : '')), di = devIco(c.device); if (di) who.appendChild(di); who.appendChild(document.createTextNode(c.user)); li.appendChild(who); ul.appendChild(li);
       });
       card.appendChild(ul); sec.appendChild(card);
     });
     var a = h('a', 'hm-more', 'Voir les mois précédents →'); a.href = '/honoraires/modifications'; a.target = '_top'; sec.appendChild(a);
     if (location.hash === '#modifs') btn.click();
+  }
+  var DEV = { iphone: ['un iPhone', 'p'], android: ['un smartphone Android', 'p'], ipad: ['un iPad', 't'], tablette: ['une tablette', 't'], mac: ['un Mac', 'c'], pc: ['un PC', 'c'] };
+  function devIco(d) {
+    var x = DEV[d]; if (!x) return null;
+    var ns = 'http://www.w3.org/2000/svg', sp = h('span', 'hm-dev'), t = 'Saisi depuis ' + x[0]; sp.title = t; sp.setAttribute('aria-label', t);
+    var svg = document.createElementNS(ns, 'svg'); svg.setAttribute('width', '14'); svg.setAttribute('height', '14'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '2'); svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('aria-hidden', 'true');
+    var parts = x[1] === 'p' ? [['rect', { x: 7, y: 2, width: 10, height: 20, rx: 2.5 }], ['path', { d: 'M11 18.5h2' }]] : x[1] === 't' ? [['rect', { x: 4, y: 2, width: 16, height: 20, rx: 2.5 }], ['path', { d: 'M11 18.5h2' }]] : [['rect', { x: 2.5, y: 4, width: 19, height: 12.5, rx: 1.5 }], ['path', { d: 'M8 20.5h8M12 16.5v4' }]];
+    parts.forEach(function (p) { var el = document.createElementNS(ns, p[0]); Object.keys(p[1]).forEach(function (k) { el.setAttribute(k, p[1][k]); }); svg.appendChild(el); });
+    sp.appendChild(svg); return sp;
   }
   var MOIS_L = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 

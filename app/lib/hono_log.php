@@ -33,8 +33,19 @@ function hono_v($v): string {
     return $s;
 }
 
+/** Appareil de la saisie d'après le navigateur : iphone, ipad, android, mac ou pc. */
+function hono_device(): string {
+    $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
+    if (stripos($ua, 'iPhone') !== false || stripos($ua, 'iPod') !== false) return 'iphone';
+    if (stripos($ua, 'iPad') !== false) return 'ipad';
+    if (stripos($ua, 'Android') !== false) return stripos($ua, 'Mobile') !== false ? 'android' : 'tablette';
+    if (stripos($ua, 'Macintosh') !== false) return 'mac';
+    return 'pc';
+}
+const HONO_DEVICES = ['iphone' => 'iPhone', 'ipad' => 'iPad', 'android' => 'smartphone Android', 'tablette' => 'tablette', 'mac' => 'Mac', 'pc' => 'PC'];
+
 /** Compare deux états et enregistre les différences. Renvoie le nombre de changements notés. */
-function hono_log_diff(array $old, array $new, ?int $uid, string $source): int {
+function hono_log_diff(array $old, array $new, ?int $uid, string $source, ?string $device = null): int {
     if (!$old) return 0;
     $rows = [];
     $ref = fn(array $b) => trim((isset($b['num']) && $b['num'] !== '' ? $b['num'] . ' · ' : '') . (string)($b['imm'] ?? $b['nom'] ?? ''));
@@ -56,7 +67,7 @@ function hono_log_diff(array $old, array $new, ?int $uid, string $source): int {
     if (json_encode($old['hist'] ?? null) !== json_encode($new['hist'] ?? null)) $rows[] = ['Historique 2019-2029', '', 'Données de l’historique', '', 'modifiées'];
     if (count($rows) > 300) $rows = [['Tous les onglets', '', 'Remplacement des données', '', count($rows) . ' valeurs modifiées']];
     $t = time();
-    foreach ($rows as $r) q('INSERT INTO hono_changes(at,user_id,source,tab,ref,field,old,new) VALUES(?,?,?,?,?,?,?,?)', [$t, $uid, $source, $r[0], mb_substr($r[1], 0, 200), mb_substr($r[2], 0, 80), mb_substr($r[3], 0, 300), mb_substr($r[4], 0, 300)]);
+    foreach ($rows as $r) q('INSERT INTO hono_changes(at,user_id,source,tab,ref,field,old,new,device) VALUES(?,?,?,?,?,?,?,?,?)', [$t, $uid, $source, $r[0], mb_substr($r[1], 0, 200), mb_substr($r[2], 0, 80), mb_substr($r[3], 0, 300), mb_substr($r[4], 0, 300), $device]);
     return count($rows);
 }
 
@@ -73,7 +84,7 @@ function hono_daily(): void {
 function hono_changes(int $since = 0, int $limit = 3000): array {
     hono_backfill(); hono_split_ags(); hono_daily();
     return array_map(fn($r) => ['at' => (int)$r['at'], 'user' => $r['name'] ?: ($r['source'] === 'auto' ? 'Mise à jour automatique' : ($r['source'] === 'evolution' ? 'Évolution' : '—')), 'source' => $r['source'], 'tab' => $r['tab'],
-        'ref' => (string)$r['ref'], 'field' => (string)$r['field'], 'old' => (string)$r['old'], 'new' => (string)$r['new']],
+        'ref' => (string)$r['ref'], 'field' => (string)$r['field'], 'old' => (string)$r['old'], 'new' => (string)$r['new'], 'device' => (string)($r['device'] ?? '')],
         q('SELECT c.*, u.name FROM hono_changes c LEFT JOIN users u ON u.id=c.user_id WHERE c.at>=? ORDER BY c.at DESC, c.id DESC LIMIT ' . (int)$limit, [$since])->fetchAll());
 }
 

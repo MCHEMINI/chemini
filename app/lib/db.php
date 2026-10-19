@@ -433,6 +433,7 @@ SQL);
         foreach ($seed as $g) if ($g[0] === 'chemini-mot-president') $pdo->prepare('UPDATE guides SET body=?, updated_at=? WHERE slug=? AND updated_by IS NULL')->execute([$g[7], time(), $g[0]]);
         $pdo->exec('PRAGMA user_version = 55;');
     }
+    if ($v < 56) { $pdo->exec('ALTER TABLE hono_changes ADD COLUMN device TEXT; PRAGMA user_version = 56;'); } // appareil utilisé pour la saisie (iPhone, PC…)
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
