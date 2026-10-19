@@ -378,6 +378,24 @@
     location.href = 'ms-outlook://compose?to=' + encodeURIComponent(to);
   }));
 
+  // Candidats : étoile (validé → base de recrutement) et note de la Direction, sans rechargement
+  $$('[data-cand-star]').forEach(b => b.addEventListener('click', async () => {
+    const on = b.getAttribute('aria-pressed') !== 'true'; b.disabled = true;
+    try {
+      const r = await api('candidats/star', { id: Number(b.dataset.id), on });
+      b.setAttribute('aria-pressed', String(on)); b.closest('.cd-card')?.classList.toggle('is-star', on);
+      b.title = on ? 'Validé : dans la base de recrutement (cliquer pour retirer)' : 'Valider ce candidat (ajout à la base de recrutement)';
+      b.setAttribute('aria-label', on ? 'Retirer de la base de recrutement' : 'Valider le candidat');
+      toast(r.toast);
+    } catch (err) { toast(err.message); }
+    b.disabled = false;
+  }));
+  $$('form[data-cand-note]').forEach(f => f.addEventListener('submit', async e => {
+    e.preventDefault(); const btn = $('button', f); btn.disabled = true;
+    try { const r = await api('candidats/note', { id: Number(f.dataset.id), note: f.note.value }); toast(r.toast); } catch (err) { toast(err.message); }
+    btn.disabled = false;
+  }));
+
   // Formulaires [data-api]
   $$('form[data-api]').forEach(f => f.addEventListener('submit', async e => {
     e.preventDefault();

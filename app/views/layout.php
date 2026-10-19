@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/app.css?v=86">
+<link rel="stylesheet" href="/assets/app.css?v=87">
 </head>
 <body>
 <div id="app">
@@ -50,6 +50,7 @@
       <a class="<?= in_array($n, ['honoraires', 'strategies'], true) ? 'active' : '' ?>" href="/honoraires"><i class="dot"></i>Honoraires</a>
       <a class="<?= $cls('compta') ?>" href="/comptabilite"><i class="dot"></i>Comptabilité</a>
       <a class="<?= in_array($n, ['pilot', 'survey'], true) ? 'active' : '' ?>" href="/pilotage"><i class="dot"></i>Pilotage</a>
+      <a class="<?= in_array($n, ['cand', 'cand-base'], true) ? 'active' : '' ?>" href="/candidats"><i class="dot"></i>Candidats<?php $nCand = (int)q('SELECT COUNT(*) FROM candidates WHERE seen_at IS NULL')->fetchColumn(); if ($nCand): ?> <span class="nav-n"><?= $nCand ?></span><?php endif; ?></a>
       <a class="<?= $cls('sig') ?>" href="/signatures"><i class="dot"></i>Signatures</a>
       <?php endif; ?>
       <?= $grp('Équipe', 'gid', space_members('gid')) ?>
@@ -92,6 +93,7 @@
       $isDirU ? [['immeubles', '/immeubles', 'Immeubles'], ['ag', '/planning-ag', 'Planning des AG']] : [],
       $isDirU ? [['honoraires', '/honoraires', 'Honoraires'], ['strategies', '/strategies', 'Stratégies']] : [],
       $isDirU ? [['pilot', '/pilotage', 'Pilotage'], ['survey', '/enquete/resultats', 'Enquête']] : [],
+      $isDirU ? [['cand', '/candidats', 'Candidats par métier'], ['cand-base', '/candidats/base', 'Base de recrutement']] : [],
       [['space-gid', '/gid', 'Informations'], ['accueil', '/accueil', 'Accueil']],
     ];
     foreach ($TABS as $T) { if (!in_array($n, array_column($T, 0), true)) continue;
@@ -148,6 +150,6 @@
   <button type="button" class="ia-fab" id="iaFab" aria-expanded="false" aria-controls="iaPop" title="Créer une tâche IA ou une tâche d'équipe"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><?php if (!empty($nIa)): ?><span class="ia-fab-n"><?= (int)$nIa ?></span><?php endif; ?></button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=59"></script>
+<script src="/assets/app.js?v=60"></script>
 </body>
 </html>

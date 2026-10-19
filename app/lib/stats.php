@@ -57,7 +57,11 @@ function stats_collect(): never {
 function stats_script(): never {
     header('Content-Type: application/javascript; charset=utf-8'); header('Cache-Control: public, max-age=86400'); header('X-Robots-Tag: noindex');
     $e = json_encode(site_url() . '/t');
-    echo "/* Mesure d'audience GID (sans cookie) */\n(function(){var E=$e;if(navigator.webdriver||/[?&]nostat/.test(location.search))return;"
+    $rc = json_encode(BASE_URL . '/rc.js');
+    echo "/* Mesure d'audience GID (sans cookie) + page Recrutement */\n(function(){var E=$e;"
+       . "function rc(){if(document.querySelector('form.wpcf7-form input[type=file]')&&!document.getElementById('gid-rc')){var x=document.createElement('script');x.id='gid-rc';x.src=$rc;x.async=true;document.head.appendChild(x)}}"
+       . "if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',rc);else rc();"
+       . "if(navigator.webdriver||/[?&]nostat/.test(location.search))return;"
        . "function on(){return !(document.body&&document.body.classList.contains('logged-in'))}"
        . "function s(k,l){if(!on())return;var d=JSON.stringify({k:k,p:location.pathname,t:document.title,r:k==='pv'?document.referrer:'',q:k==='pv'?location.search:'',w:screen.width||0,l:l||''});"
        . "try{if(navigator.sendBeacon&&navigator.sendBeacon(E,new Blob([d],{type:'text/plain'})))return}catch(e){}try{fetch(E,{method:'POST',body:d,keepalive:true,mode:'no-cors'})}catch(e){}}"

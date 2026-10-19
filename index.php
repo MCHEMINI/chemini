@@ -26,6 +26,7 @@ require APP_DIR . '/lib/news.php';
 require APP_DIR . '/lib/search.php';
 require APP_DIR . '/lib/aiq.php';
 require APP_DIR . '/lib/requests.php';
+require APP_DIR . '/lib/candidates.php';
 
 date_default_timezone_set('Europe/Paris');
 mb_internal_encoding('UTF-8');
@@ -43,7 +44,9 @@ if ($route0 === 'signature/banniere') sig_serve_image();
 if ($route0 === 'signature/lien') sig_redirect();
 if ($route0 === 't') stats_collect(); // mesure d'audience du site gidsas.fr (public, sans cookie)
 if ($route0 === 't.js') stats_script();
-if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts|banners|president|ocr|questions|maquettes|users|requests)$#', $route0, $m)) ingest_handle($m[1]);
+if ($route0 === 'candidature') cand_receive(); // formulaire Recrutement du site gidsas.fr (public)
+if ($route0 === 'rc.js') cand_script();
+if (preg_match('#^ingest/(mails|trip|veille|audit|honoraires|buildings|compta|consignes|annexes|ag|pv|honofill|news|reg|staff|contacts|banners|president|ocr|questions|maquettes|users|requests|candidats)$#', $route0, $m)) ingest_handle($m[1]);
 
 session_boot();
 
@@ -144,6 +147,15 @@ try {
             $u = require_user();
             require APP_DIR . '/pages/site.php';
             page_site($u, (string)substr($route, 9));
+        case 'candidats':
+        case 'candidats/base':
+            $u = require_user();
+            if (!cand_viewer($u)) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Réservé à la Direction.'], false); }
+            $base = $route === 'candidats/base';
+            $f = ['job' => (string)($_GET['metier'] ?? ''), 'q' => mb_substr((string)($_GET['q'] ?? ''), 0, 120), 'starred' => $base];
+            $list = cand_list($f); $counts = cand_counts();
+            if ($ids = array_column(array_filter($list, fn($c) => !$c['seen_at']), 'id')) q('UPDATE candidates SET seen_at=? WHERE seen_at IS NULL AND id IN (' . implode(',', array_map('intval', $ids)) . ')', [time()]); // « Nouveau » affiché une fois
+            render('candidats', ['title' => $base ? 'Base de recrutement' : 'Candidats', 'nav' => $base ? 'cand-base' : 'cand', 'u' => $u, 'base' => $base, 'f' => $f, 'list' => $list, 'counts' => $counts]);
         case 'signatures':
             $u = require_user();
             if (!can_space($u, 'direction')) { http_response_code(403); render('notfound', ['title' => 'Accès réservé', 'message' => 'Réservé à la Direction.'], false); }
@@ -271,6 +283,7 @@ try {
                 require APP_DIR . '/pages/pilot.php';
                 ical_feed($m[1]);
             }
+            if (preg_match('#^candidats/fichier/(\d+)$#', $route, $m)) cand_file_serve(require_user(), (int)$m[1]);
             if (preg_match('#^signatures/image/(\d+)$#', $route, $m)) {
                 $u = require_user(); if (!can_space($u, 'direction')) { http_response_code(403); exit; }
                 $b = q('SELECT * FROM banners WHERE id=?', [(int)$m[1]])->fetch(); $f = $b ? sig_dir() . '/' . basename($b['file']) : '';

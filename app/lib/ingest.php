@@ -11,7 +11,7 @@ function ingest_key(): string { return hash_hmac('sha256', 'chemini-ingest-v1', 
 function ingest_handle(string $kind): never {
     $send = function (array $d, int $c = 200): never { http_response_code($c); header('Content-Type: application/json'); header('Cache-Control: no-store'); echo json_encode($d, JSON_UNESCAPED_UNICODE); exit; };
     $method = $_SERVER['REQUEST_METHOD'] ?? '';
-    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes', 'pv', 'mails', 'ocr', 'banners', 'questions', 'users', 'requests'], true))) $send(['error' => 'POST attendu'], 405);
+    if ($method !== 'POST' && !($method === 'GET' && in_array($kind, ['honoraires', 'consignes', 'pv', 'mails', 'ocr', 'banners', 'questions', 'users', 'requests', 'candidats'], true))) $send(['error' => 'POST attendu'], 405);
     if (ip_blocked()) $send(['error' => 'IP bloquée'], 429);
     if (!hash_equals(ingest_key(), (string)($_SERVER['HTTP_X_INGEST_KEY'] ?? ''))) { ip_fail(null, 'ingest'); $send(['error' => 'clé invalide'], 403); }
     if ($kind === 'pv' && $method === 'GET') { // PV déjà traités (identifiants de message) pour ne pas les relire
@@ -28,6 +28,20 @@ function ingest_handle(string $kind): never {
         foreach (sig_all() as $b) { $f = sig_dir() . '/' . basename($b['file']); $out[] = ['id' => (int)$b['id'], 'title' => $b['title'], 'mode' => sig_mode($b), 'start' => $b['start'], 'end' => $b['end'], 'w' => (int)$b['w'], 'h' => (int)$b['h'],
             'data' => isset($_GET['img']) && is_file($f) ? 'data:' . $b['mime'] . ';base64,' . base64_encode((string)file_get_contents($f)) : null]; }
         $send(['ok' => true, 'items' => $out]);
+    }
+    if ($kind === 'candidats' && $method === 'GET') { // base de recrutement (?starred=1), documents à lire par l'IA (?needs_text=1), fichier sain (?file=id)
+        $fid = (int)($_GET['file'] ?? 0);
+        if ($fid) {
+            $f = q('SELECT * FROM candidate_files WHERE id=? AND scan_ok=1', [$fid])->fetch();
+            $b = $f && preg_match('/^[0-9a-f]{32}\.bin$/', (string)$f['path']) && is_file(cand_dir() . '/' . $f['path']) ? unseal((string)file_get_contents(cand_dir() . '/' . $f['path'])) : null;
+            if ($b === null) $send(['error' => 'introuvable'], 404);
+            header('Content-Type: ' . ($f['mime'] ?: 'application/octet-stream')); header('Cache-Control: no-store'); header('Content-Length: ' . strlen($b)); echo $b; exit;
+        }
+        $w = !empty($_GET['needs_text']) ? 'needs_text=1' : (!empty($_GET['starred']) ? 'starred=1' : '1=1');
+        $rows = q("SELECT id, job_label, first_name, last_name, message, note, starred, needs_text, created_at, substr(COALESCE(doc_text,''),1,20000) AS doc_text FROM candidates WHERE $w ORDER BY created_at DESC LIMIT 300")->fetchAll();
+        foreach ($rows as &$r) $r['files'] = q('SELECT id, kind, name, scan_ok FROM candidate_files WHERE cand_id=?', [(int)$r['id']])->fetchAll();
+        unset($r);
+        $send(['ok' => true, 'items' => $rows]);
     }
     if ($kind === 'requests' && $method === 'GET') { // demandes des collaborateurs à préparer (nouvelles, ou toutes avec ?all=1)
         $rows = q("SELECT r.id, r.cat, r.subject, r.body, r.status, r.created_at, u.name AS user_name, s.role AS user_role FROM staff_requests r JOIN users u ON u.id=r.user_id LEFT JOIN staff s ON lower(s.email)=lower(u.email) WHERE " . (isset($_GET['all']) ? "r.status<>'withdrawn'" : "r.status='new'") . " ORDER BY r.created_at")->fetchAll();
@@ -70,6 +84,11 @@ function ingest_handle(string $kind): never {
     }
     if ($kind === 'requests') { // réponses préparées : {items:[{id, analysis, accept, refuse}]}
         $send(['ok' => true, 'items' => rq_drafts((array)($d['items'] ?? []))]);
+    }
+    if ($kind === 'candidats') { // texte lu par l'IA des documents d'un candidat : {id, text}
+        $t = mb_substr(trim(preg_replace('/[ \t]+/u', ' ', (string)($d['text'] ?? ''))), 0, 200000);
+        $n = q('UPDATE candidates SET doc_text=?, needs_text=0, updated_at=? WHERE id=?', [$t, time(), (int)($d['id'] ?? 0)])->rowCount();
+        $send($n ? ['ok' => true, 'chars' => mb_strlen($t)] : ['error' => 'introuvable'], $n ? 200 : 404);
     }
     if ($kind === 'ocr') { // texte reconnu d'un document (OCR) : {id, text}
         $id = (int)($d['id'] ?? 0);

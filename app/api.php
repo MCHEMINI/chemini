@@ -167,6 +167,16 @@ function api(string $r): never {
         if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
         $res = rq_answer($u, in_int('id'), in_str('decision', 10), in_str('text', 6000)); json_out($res, isset($res['error']) ? 400 : 200);
     }
+    if (str_starts_with($r, 'candidats/')) { // Candidats (Direction) : étoile = validé dans la base de recrutement, note, suppression, question à l'IA
+        if (!cand_viewer($u)) json_out(['error' => 'Réservé à la Direction.'], 403);
+        $id = in_int('id');
+        if ($r === 'candidats/star') { $on = !empty(body()['on']); cand_star($u, $id, $on); json_out(['ok' => true, 'on' => $on, 'toast' => $on ? 'Candidat validé : ajouté à la base de recrutement' : 'Retiré de la base de recrutement']); }
+        if ($r === 'candidats/seen') { q('UPDATE candidates SET seen_at=COALESCE(seen_at,?) WHERE id=?', [time(), $id]); json_out(['ok' => true]); }
+        if ($r === 'candidats/note') { q('UPDATE candidates SET note=?, seen_at=COALESCE(seen_at,?), updated_at=? WHERE id=?', [in_str('note', 2000), time(), time(), $id]); json_out(['ok' => true, 'toast' => 'Note enregistrée']); }
+        if ($r === 'candidats/delete') { cand_delete($id, $uid); json_out(['ok' => true]); }
+        if ($r === 'candidats/ask') { $res = cand_ask($u, in_str('question', 1000)); json_out($res, isset($res['error']) ? 400 : 200); }
+        json_out(['error' => 'Action inconnue'], 404);
+    }
     if ($r === 'maquettes/decide') { // Valider / demander des modifications / refuser une maquette
         if (!can_space($u, 'direction')) json_out(['error' => 'Réservé à la Direction.'], 403);
         $res = mq_decide($u, in_int('id'), in_str('decision', 10), in_str('comment', 3000));

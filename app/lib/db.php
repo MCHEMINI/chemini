@@ -434,6 +434,15 @@ SQL);
         $pdo->exec('PRAGMA user_version = 55;');
     }
     if ($v < 56) { $pdo->exec('ALTER TABLE hono_changes ADD COLUMN device TEXT; PRAGMA user_version = 56;'); } // appareil utilisé pour la saisie (iPhone, PC…)
+    if ($v < 57) { // Candidats (formulaire Recrutement du site) : Direction uniquement, fichiers chiffrés hors du site
+        $pdo->exec("CREATE TABLE IF NOT EXISTS candidates(id INTEGER PRIMARY KEY, job TEXT NOT NULL, job_label TEXT NOT NULL, last_name TEXT NOT NULL, first_name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT, message TEXT NOT NULL DEFAULT '',
+                        consent INTEGER NOT NULL DEFAULT 0, source TEXT NOT NULL DEFAULT 'site', ip_hash TEXT, doc_text TEXT, needs_text INTEGER NOT NULL DEFAULT 0, threat INTEGER NOT NULL DEFAULT 0,
+                        starred INTEGER NOT NULL DEFAULT 0, starred_at INTEGER, starred_by INTEGER, note TEXT, seen_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+                    CREATE INDEX IF NOT EXISTS candidates_job ON candidates(job, starred, created_at); CREATE INDEX IF NOT EXISTS candidates_email ON candidates(email);
+                    CREATE TABLE IF NOT EXISTS candidate_files(id INTEGER PRIMARY KEY, cand_id INTEGER NOT NULL REFERENCES candidates(id) ON DELETE CASCADE, kind TEXT NOT NULL, name TEXT NOT NULL, mime TEXT NOT NULL DEFAULT '',
+                        size INTEGER NOT NULL DEFAULT 0, sha256 TEXT NOT NULL DEFAULT '', path TEXT NOT NULL DEFAULT '', scan_ok INTEGER NOT NULL DEFAULT 0, scan_detail TEXT, created_at INTEGER NOT NULL);
+                    CREATE INDEX IF NOT EXISTS candidate_files_cand ON candidate_files(cand_id); PRAGMA user_version = 57;");
+    }
 }
 
 /** Préférences d'affichage propres à chaque utilisateur (colonnes visibles, exercice choisi…). */
