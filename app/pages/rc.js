@@ -47,6 +47,17 @@
     '.gidf-status.ok{background:#EAF6EE;border-color:#B9E0C5;color:#1F6B3A}.gidf-status.err{background:#FDF2F1;border-color:#F2C4BF;color:#A93226}.gidf-status.wait{background:#F3F3F9;border-color:#DCDCEA;color:#1D1953}',
     '.gidf-spin{width:18px;height:18px;border:2.5px solid rgba(29,25,83,.2);border-top-color:#1D1953;border-radius:50%;animation:gidfspin .8s linear infinite;flex:none}',
     '@keyframes gidfspin{to{transform:rotate(360deg)}}',
+    // champs oubliés en rouge
+    'form.gidf-on .gidf-bad,form.gidf-on .wpcf7-not-valid{border-color:#C0392B!important;background-color:#FDF2F1!important;box-shadow:0 0 0 3px rgba(192,57,43,.14)!important}',
+    'form.gidf-on .wpcf7-not-valid-tip,form.gidf-on .gidf-tip{display:block;color:#C0392B!important;font:500 13px/1.4 Roboto,sans-serif!important;margin:5px 0 0}',
+    // case d'accord bien visible
+    'form.gidf-on label.gidf-consent{display:flex!important;gap:12px;align-items:flex-start;margin:4px 0 6px;padding:14px 16px;border:1.5px solid #C9CEDA;border-radius:10px;background:#F7F7FB;cursor:pointer;font:400 14px/1.5 Roboto,sans-serif!important;color:#212A3A;transition:border-color .15s,background .15s}',
+    'form.gidf-on label.gidf-consent:hover{border-color:#1D1953}',
+    'form.gidf-on label.gidf-consent input[type=checkbox]{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:#E8540D;cursor:pointer}',
+    'form.gidf-on label.gidf-consent:has(input:checked){border-color:#E8540D;background:#FFF5EF}',
+    'form.gidf-on label.gidf-consent.is-bad{border-color:#C0392B;background:#FDF2F1;box-shadow:0 0 0 3px rgba(192,57,43,.14)}',
+    'form.gidf-on label.gidf-consent .wpcf7-list-item-label{font-weight:500}',
+    'form.gidf-on .wpcf7-acceptance .wpcf7-list-item{margin:0;display:block}',
     '@media (max-width:767px){.gidf-row{grid-template-columns:minmax(0,1fr);gap:16px}form.gidf-on .wpcf7-submit{width:100%}.gidf-drop{min-height:84px}}'
   ].join('');
   var st = document.createElement('style'); st.id = 'gidf-css'; st.textContent = css; document.head.appendChild(st);
@@ -115,7 +126,7 @@
   var ICON_WARN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/></svg>';
   function say(kind, html) { stat.hidden = false; stat.className = 'gidf-status ' + kind; stat.innerHTML = (kind === 'wait' ? '<span class="gidf-spin" aria-hidden="true"></span>' : kind === 'ok' ? ICON_DONE : ICON_WARN) + '<span>' + html + '</span>'; }
   var sbLabel = sb ? sb.value : '';
-  function busy(on) { if (!sb) return; sb.value = on ? 'Envoi en cours…' : sbLabel; }
+  function busy(on) { if (!sb) return; sending = on; sb.value = on ? 'Envoi en cours…' : sbLabel; }
 
   /* Suivi anonyme du résultat (sans aucune donnée personnelle), pour diagnostiquer un envoi qui n'arrive pas */
   function ping(s) { try { var p = new FormData(); p.append('_gid_ping', s); fetch(ENDPOINT, { method: 'POST', body: p, mode: 'cors', credentials: 'omit', keepalive: true }).catch(function () {}); } catch (e) {} }
@@ -123,6 +134,59 @@
   /* Transmission au tableau de bord Direction : copie des données au moment de l'envoi, transmise une fois la candidature acceptée par le site
      (ou si le site l'a jugée indésirable ou n'a pas pu envoyer son e-mail : elle arrive alors avec une mention, pour ne perdre aucun candidat). */
   var snap = null, box = form.closest('.wpcf7') || form;
+  /* Validation dans la page : champs obligatoires, e-mail, CV et case d'accord ; tout oubli passe en rouge avec un message */
+  var consent = form.querySelector('input[type=checkbox][name="your-consent"]'), consentLab = consent && consent.closest('label');
+  if (consentLab) { consentLab.classList.add('gidf-consent'); var ws = consentLab.closest('small'); if (ws) ws.style.fontSize = 'inherit'; }
+  // le bouton reste actif : sinon, case non cochée, rien ne se passe et on ne sait pas pourquoi
+  if (sb) { sb.disabled = false; new MutationObserver(function () { if (sb.disabled && !sending) sb.disabled = false; }).observe(sb, { attributes: true, attributeFilter: ['disabled'] }); }
+  var sending = false;
+  var NAMES = { 'your-name': 'votre nom', 'your-firstname': 'votre prénom', 'your-email': 'votre e-mail', 'your-phone': 'votre téléphone', 'your-poste': 'le poste souhaité' };
+  function tip(elm, msg) {
+    var w = elm.closest('.wpcf7-form-control-wrap') || elm.parentNode, t = w.querySelector('.gidf-tip');
+    if (!msg) { elm.classList.remove('gidf-bad'); elm.removeAttribute('aria-invalid'); if (t) t.remove(); return; }
+    elm.classList.add('gidf-bad'); elm.setAttribute('aria-invalid', 'true');
+    if (w.querySelector('.wpcf7-not-valid-tip')) return;
+    if (!t) { t = el('span', 'gidf-tip'); t.setAttribute('role', 'alert'); w.appendChild(t); }
+    t.textContent = msg;
+  }
+  function checkField(elm) {
+    var v = (elm.value || '').trim();
+    if (!v) return 'Merci d’indiquer ' + (NAMES[elm.name] || 'ce champ') + '.';
+    if (elm.name === 'your-email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return 'Cette adresse e-mail ne semble pas valide.';
+    if (elm.name === 'your-phone' && v.replace(/\D/g, '').length < 9) return 'Ce numéro de téléphone semble incomplet.';
+    return '';
+  }
+  var req = [].slice.call(form.querySelectorAll('input[aria-required="true"]:not([type=file]):not([type=checkbox]),select[aria-required="true"],textarea[aria-required="true"]'));
+  req.forEach(function (elm) { ['input', 'change', 'blur'].forEach(function (t) { elm.addEventListener(t, function () { if (elm.classList.contains('gidf-bad') || (t === 'blur' && elm.value)) tip(elm, checkField(elm)); }); }); });
+  if (consent) consent.addEventListener('change', function () { if (consent.checked) { consentLab.classList.remove('is-bad'); var t = consentLab.parentNode.querySelector('.gidf-tip'); if (t) t.remove(); } });
+  function validate() {
+    var bad = [];
+    req.forEach(function (elm) { var m = checkField(elm); tip(elm, m); if (m) bad.push(elm); });
+    if (cv && !(cv.files && cv.files[0])) {
+      var d = cv.closest('.gidf-drop'), er = d && d.parentNode.querySelector('.gidf-err');
+      if (d) d.classList.add('is-error'); if (er) { er.textContent = 'Merci de joindre votre CV (PDF ou Word).'; er.classList.add('on'); }
+      bad.push(cv);
+    }
+    if (consent && !consent.checked) {
+      consentLab.classList.add('is-bad');
+      var w = consentLab.parentNode, t = w.querySelector('.gidf-tip');
+      if (!t) { t = el('span', 'gidf-tip'); t.setAttribute('role', 'alert'); consentLab.insertAdjacentElement('afterend', t); }
+      t.textContent = 'Merci de cocher cette case pour pouvoir envoyer votre candidature.';
+      bad.push(consent);
+    }
+    return bad;
+  }
+  form.addEventListener('submit', function (e) {
+    var bad = validate();
+    if (!bad.length) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var n = bad.length;
+    say('err', n === 1 && bad[0] === consent ? 'Il reste à cocher la case d’accord (en rouge) pour envoyer votre candidature.' : 'Il manque ' + n + ' élément' + (n > 1 ? 's' : '') + ' (en rouge) : complétez-' + (n > 1 ? 'les' : 'le') + ' puis renvoyez votre candidature.');
+    var first = bad[0], target = first === cv ? first.closest('.gidf-drop') : first === consent ? consentLab : first;
+    try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (x) {}
+    setTimeout(function () { try { first.focus({ preventScroll: true }); } catch (x) {} }, 350);
+  }, true);
+
   var started = false, guard = null;
   form.addEventListener('submit', function () {
     try { snap = new FormData(form); } catch (e) { snap = null; }
