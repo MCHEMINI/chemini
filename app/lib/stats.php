@@ -55,7 +55,7 @@ function stats_collect(): never {
 
 /** Script de mesure (/t.js) à placer sur le site. */
 function stats_script(): never {
-    header('Content-Type: application/javascript; charset=utf-8'); header('Cache-Control: public, max-age=86400'); header('X-Robots-Tag: noindex');
+    header('Content-Type: application/javascript; charset=utf-8'); header('Cache-Control: public, max-age=3600'); header('X-Robots-Tag: noindex');
     $e = json_encode(site_url() . '/t');
     $rc = json_encode(BASE_URL . '/rc.js');
     echo "/* Mesure d'audience GID (sans cookie) + page Recrutement */\n(function(){var E=$e;"
