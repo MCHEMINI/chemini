@@ -135,7 +135,6 @@
     return col;
   }
 
-  FORMS.forEach(function (f) { try { setup(f); } catch (e) {} });
 
   var HINTS = { email: 'exemple@domaine.fr', tel: '06 12 34 56 78' };
   /* Structure commune : libellé visible au-dessus de chaque champ (repris du libellé caché pour les lecteurs d'écran ou du texte d'exemple) */
@@ -296,4 +295,6 @@
   // le site ne répond pas (coupure réseau, serveur) : le bouton ne reste pas bloqué
   box.addEventListener('wpcf7aborted', function () { busy(false); ping('site-aborted'); say('err', 'L’envoi n’a pas abouti (connexion interrompue). Vérifiez votre connexion puis réessayez, ou écrivez à contact@gidsas.fr.'); });
   }
+  // lancé à la fin, une fois toutes les valeurs du script définies
+  FORMS.forEach(function (f) { try { setup(f); } catch (e) {} });
 })();
