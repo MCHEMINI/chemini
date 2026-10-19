@@ -1,11 +1,12 @@
-/* GID · page Recrutement de gidsas.fr : pièces jointes modernes (glisser-déposer, aperçu du fichier, contrôle du type et de la taille)
-   et transmission de la candidature au tableau de bord Direction une fois qu'elle a été acceptée par le formulaire du site. */
+/* GID · formulaires du site gidsas.fr (devis, contact, recrutement…) : champs bien visibles, case d'accord encadrée,
+   champs obligatoires oubliés en rouge avec un message, bouton toujours actif, message de résultat bien visible.
+   Formulaire Recrutement en plus : pièces jointes modernes (glisser-déposer) et transmission de la candidature au tableau de bord Direction. */
 (function () {
   'use strict';
   if (window.__gidRc) return; window.__gidRc = true;
   var ENDPOINT = '__BASE__/candidature', MAX = 5 * 1024 * 1024, OK = /\.(pdf|docx?)$/i, T0 = Date.now();
-  var form = (function () { var i = document.querySelector('form.wpcf7-form input[type=file][name="your-cv"]'); return i && i.form; })();
-  if (!form) return;
+  var FORMS = [].slice.call(document.querySelectorAll('form.wpcf7-form'));
+  if (!FORMS.length) return;
 
   var css = [
     '.gidf-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;width:100%;margin:10px 0 8px}',
@@ -58,10 +59,15 @@
     'form.gidf-on label.gidf-consent.is-bad{border-color:#C0392B;background:#FDF2F1;box-shadow:0 0 0 3px rgba(192,57,43,.14)}',
     'form.gidf-on label.gidf-consent .wpcf7-list-item-label{font-weight:500}',
     'form.gidf-on .wpcf7-acceptance .wpcf7-list-item{margin:0;display:block}',
+    // champs bien délimités (le thème les dessine presque invisibles)
+    'form.gidf-on :where(input.wpcf7-form-control:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=file]),select.wpcf7-form-control,textarea.wpcf7-form-control){border:1.5px solid #C9CEDA!important;border-radius:8px!important;background-color:#fff!important;color:#1D1953;transition:border-color .15s,box-shadow .15s}',
+    'form.gidf-on :where(input.wpcf7-form-control:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=file]),select.wpcf7-form-control,textarea.wpcf7-form-control):hover{border-color:#8F96A8!important}',
+    'form.gidf-on :where(input.wpcf7-form-control:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=file]),select.wpcf7-form-control,textarea.wpcf7-form-control):focus{border-color:#E8540D!important;box-shadow:0 0 0 3px rgba(232,84,13,.18)!important;outline:none}',
+    'form.gidf-on ::placeholder{color:#6B7280;opacity:1}',
+    'form.gidf-on .gidf-bad.gidf-bad,form.gidf-on .wpcf7-not-valid.wpcf7-not-valid{border-color:#C0392B!important;background-color:#FDF2F1!important;box-shadow:0 0 0 3px rgba(192,57,43,.14)!important}',
     '@media (max-width:767px){.gidf-row{grid-template-columns:minmax(0,1fr);gap:16px}form.gidf-on .wpcf7-submit{width:100%}.gidf-drop{min-height:84px}}'
   ].join('');
   var st = document.createElement('style'); st.id = 'gidf-css'; st.textContent = css; document.head.appendChild(st);
-  form.classList.add('gidf-on');
 
   var ICON_UP = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>';
   var ICON_X = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
@@ -110,12 +116,19 @@
     ['dragleave', 'drop'].forEach(function (t) { drop.addEventListener(t, function () { drop.classList.remove('is-over'); }); });
     file.querySelector('[data-r]').addEventListener('click', function () { input.click(); });
     file.querySelector('[data-x]').addEventListener('click', function () { input.value = ''; input.dispatchEvent(new Event('change', { bubbles: true })); input.focus(); });
-    form.addEventListener('reset', function () { setTimeout(show, 0); });
+    input.form && input.form.addEventListener('reset', function () { setTimeout(show, 0); });
     return col;
   }
 
+  FORMS.forEach(function (f) { try { setup(f); } catch (e) {} });
+
+  function setup(form) {
+  if (form.__gidf) return; form.__gidf = true; form.classList.add('gidf-on');
+  var REC = !!form.querySelector('input[type=file][name="your-cv"]'); // formulaire Recrutement
+  var NOUN = REC ? 'candidature' : 'demande';
+  var FID = (form.querySelector('input[name="_wpcf7"]') || {}).value || 'x';
   var cv = form.querySelector('input[type=file][name="your-cv"]'), lt = form.querySelector('input[type=file][name="your-lettre"]');
-  var c1 = enhance(cv, 'Votre CV', false), c2 = lt ? enhance(lt, 'Lettre de motivation', true) : null;
+  var c1 = cv ? enhance(cv, 'Votre CV', false) : null, c2 = lt ? enhance(lt, 'Lettre de motivation', true) : null;
   // les deux zones côte à côte, alignées (l'une sous l'autre sur téléphone)
   if (c1 && c2 && c1.parentNode === c2.parentNode) {
     var row = el('div', 'gidf-row ' + c1.className.replace(/\bcf-col-\d+\b/, '').trim());
@@ -133,13 +146,13 @@
   function busy(on) { if (!sb) return; sending = on; sb.value = on ? 'Envoi en cours…' : sbLabel; }
 
   /* Suivi anonyme du résultat (sans aucune donnée personnelle), pour diagnostiquer un envoi qui n'arrive pas */
-  function ping(s) { try { var p = new FormData(); p.append('_gid_ping', s); fetch(ENDPOINT, { method: 'POST', body: p, mode: 'cors', credentials: 'omit', keepalive: true }).catch(function () {}); } catch (e) {} }
+  function ping(s) { try { var p = new FormData(); p.append('_gid_ping', 'f' + FID + ':' + s); fetch(ENDPOINT, { method: 'POST', body: p, mode: 'cors', credentials: 'omit', keepalive: true }).catch(function () {}); } catch (e) {} }
 
   /* Transmission au tableau de bord Direction : copie des données au moment de l'envoi, transmise une fois la candidature acceptée par le site
      (ou si le site l'a jugée indésirable ou n'a pas pu envoyer son e-mail : elle arrive alors avec une mention, pour ne perdre aucun candidat). */
   var snap = null, box = form.closest('.wpcf7') || form;
   /* Validation dans la page : champs obligatoires, e-mail, CV et case d'accord ; tout oubli passe en rouge avec un message */
-  var consent = form.querySelector('input[type=checkbox][name="your-consent"]'), consentLab = consent && consent.closest('label');
+  var consent = form.querySelector('.wpcf7-acceptance input[type=checkbox]') || form.querySelector('input[type=checkbox][name="your-consent"]'), consentLab = consent && consent.closest('label');
   if (consentLab) { consentLab.classList.add('gidf-consent'); var ws = consentLab.closest('small'); if (ws) ws.style.fontSize = 'inherit'; }
   // le bouton reste actif : sinon, case non cochée, rien ne se passe et on ne sait pas pourquoi
   if (sb) { sb.disabled = false; new MutationObserver(function () { if (sb.disabled && !sending) sb.disabled = false; }).observe(sb, { attributes: true, attributeFilter: ['disabled'] }); }
@@ -153,11 +166,17 @@
     if (!t) { t = el('span', 'gidf-tip'); t.setAttribute('role', 'alert'); w.appendChild(t); }
     t.textContent = msg;
   }
+  function label(elm) {
+    var t = elm.getAttribute('placeholder') || (elm.tagName === 'SELECT' && elm.options[0] ? elm.options[0].text : '') || elm.getAttribute('aria-label') || '';
+    if (!t) { var l = elm.id && form.querySelector('label[for="' + elm.id + '"]'); t = l ? l.textContent : 'ce champ'; }
+    return t.replace(/\*|\(.*?\)/g, '').trim() || 'ce champ';
+  }
   function checkField(elm) {
     var v = (elm.value || '').trim();
-    if (!v) return 'Merci d’indiquer ' + (NAMES[elm.name] || 'ce champ') + '.';
-    if (elm.name === 'your-email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return 'Cette adresse e-mail ne semble pas valide.';
-    if (elm.name === 'your-phone' && v.replace(/\D/g, '').length < 9) return 'Ce numéro de téléphone semble incomplet.';
+    if (!v) return NAMES[elm.name] ? 'Merci d’indiquer ' + NAMES[elm.name] + '.' : 'Merci de renseigner « ' + label(elm) + ' ».';
+    if ((elm.type === 'email' || elm.name === 'your-email') && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return 'Cette adresse e-mail ne semble pas valide.';
+    if ((elm.type === 'tel' || elm.name === 'your-phone') && v.replace(/\D/g, '').length < 9) return 'Ce numéro de téléphone semble incomplet.';
+    if (/code postal/i.test(label(elm)) && !/^\d{5}$/.test(v.replace(/\s/g, ''))) return 'Le code postal doit comporter 5 chiffres.';
     return '';
   }
   var req = [].slice.call(form.querySelectorAll('input[aria-required="true"]:not([type=file]):not([type=checkbox]),select[aria-required="true"],textarea[aria-required="true"]'));
@@ -175,7 +194,7 @@
       consentLab.classList.add('is-bad');
       var w = consentLab.parentNode, t = w.querySelector('.gidf-tip');
       if (!t) { t = el('span', 'gidf-tip'); t.setAttribute('role', 'alert'); consentLab.insertAdjacentElement('afterend', t); }
-      t.textContent = 'Merci de cocher cette case pour pouvoir envoyer votre candidature.';
+      t.textContent = 'Merci de cocher cette case pour pouvoir envoyer votre ' + NOUN + '.';
       bad.push(consent);
     }
     return bad;
@@ -185,7 +204,7 @@
     if (!bad.length) return;
     e.preventDefault(); e.stopImmediatePropagation();
     var n = bad.length;
-    say('err', n === 1 && bad[0] === consent ? 'Il reste à cocher la case d’accord (en rouge) pour envoyer votre candidature.' : 'Il manque ' + n + ' élément' + (n > 1 ? 's' : '') + ' (en rouge) : complétez-' + (n > 1 ? 'les' : 'le') + ' puis renvoyez votre candidature.');
+    say('err', n === 1 && bad[0] === consent ? 'Il reste à cocher la case d’accord (en rouge) pour envoyer votre ' + NOUN + '.' : 'Il manque ' + n + ' élément' + (n > 1 ? 's' : '') + ' (en rouge) : complétez-' + (n > 1 ? 'les' : 'le') + ' puis renvoyez votre ' + NOUN + '.');
     var first = bad[0], target = first === cv ? first.closest('.gidf-drop') : first === consent ? consentLab : first;
     try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (x) {}
     setTimeout(function () { try { first.focus({ preventScroll: true }); } catch (x) {} }, 350);
@@ -194,13 +213,13 @@
   var started = false, guard = null;
   form.addEventListener('submit', function () {
     try { snap = new FormData(form); } catch (e) { snap = null; }
-    started = false; busy(true); say('wait', 'Envoi de votre candidature en cours… Merci de patienter quelques secondes.');
+    started = false; busy(true); say('wait', 'Envoi de votre ' + NOUN + ' en cours… Merci de patienter quelques secondes.');
     // champs incomplets repérés dans la page même : le site n'envoie rien, on rend la main tout de suite
-    clearTimeout(guard); guard = setTimeout(function () { if (!started) { busy(false); snap = null; say('err', 'Certains champs sont à compléter ou à corriger (indiqués en rouge). Vérifiez-les puis renvoyez votre candidature.'); } }, 1500);
+    clearTimeout(guard); guard = setTimeout(function () { if (!started) { busy(false); snap = null; say('err', 'Certains champs sont à compléter ou à corriger (indiqués en rouge). Vérifiez-les puis renvoyez votre ' + NOUN + '.'); } }, 1500);
   }, true);
   box.addEventListener('wpcf7beforesubmit', function () { started = true; });
   function relay(status) {
-    if (!snap) return; var src = snap; snap = null;
+    if (!REC || !snap) return; var src = snap; snap = null;
     var fd = new FormData();
     ['your-name', 'your-firstname', 'your-email', 'your-phone', 'your-poste', 'your-message', 'your-consent'].forEach(function (k) { var v = src.get(k); if (v != null) fd.append(k, v); });
     ['your-cv', 'your-lettre'].forEach(function (k) { var f = src.get(k); if (f && f.name && f.size) fd.append(k, f, f.name); });
@@ -212,7 +231,13 @@
         .catch(function () { if (++tries < 3) setTimeout(go, 1500 * tries); else ping('relay-reseau'); });
     })();
   }
-  var MSG = {
+  var MSG = !REC ? {
+    mail_sent: ['ok', '<b>Merci, votre demande a bien été envoyée.</b> Notre équipe vous répondra dans les meilleurs délais.'],
+    mail_failed: ['err', 'Votre demande n’a pas pu être envoyée pour le moment. Réessayez dans quelques minutes, ou écrivez-nous à contact@gidsas.fr ou appelez le 01 42 66 20 88.'],
+    validation_failed: ['err', 'Certains champs sont à compléter ou à corriger (indiqués en rouge). Vérifiez-les puis renvoyez votre demande.'],
+    acceptance_missing: ['err', 'Merci de cocher la case d’accord avant d’envoyer.'],
+    spam: ['err', 'Votre envoi n’a pas pu être vérifié par notre protection anti-robots. Réessayez, ou écrivez-nous à contact@gidsas.fr ou appelez le 01 42 66 20 88.']
+  } : {
     mail_sent: ['ok', '<b>Merci, votre candidature a bien été envoyée.</b> Vous allez recevoir un accusé de réception par e-mail. Nous l’étudierons avec attention.'],
     mail_failed: ['ok', '<b>Merci, votre candidature a bien été reçue.</b> L’accusé de réception par e-mail n’a pas pu partir, mais votre dossier nous est bien parvenu.'],
     validation_failed: ['err', 'Certains champs sont à compléter ou à corriger (indiqués en rouge). Vérifiez-les puis renvoyez votre candidature.'],
@@ -230,4 +255,5 @@
   });
   // le site ne répond pas (coupure réseau, serveur) : le bouton ne reste pas bloqué
   box.addEventListener('wpcf7aborted', function () { busy(false); ping('site-aborted'); say('err', 'L’envoi n’a pas abouti (connexion interrompue). Vérifiez votre connexion puis réessayez, ou écrivez à contact@gidsas.fr.'); });
+  }
 })();

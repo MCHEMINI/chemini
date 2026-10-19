@@ -59,7 +59,7 @@ function stats_script(): never {
     $e = json_encode(site_url() . '/t');
     $rc = json_encode(BASE_URL . '/rc.js');
     echo "/* Mesure d'audience GID (sans cookie) + page Recrutement */\n(function(){var E=$e;"
-       . "function rc(){if(document.querySelector('form.wpcf7-form input[type=file]')&&!document.getElementById('gid-rc')){var x=document.createElement('script');x.id='gid-rc';x.src=$rc;x.async=true;document.head.appendChild(x)}}"
+       . "function rc(){if(document.querySelector('form.wpcf7-form')&&!document.getElementById('gid-rc')){var x=document.createElement('script');x.id='gid-rc';x.src=$rc;x.async=true;document.head.appendChild(x)}}"
        . "if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',rc);else rc();"
        . "if(navigator.webdriver||/[?&]nostat/.test(location.search))return;"
        . "function on(){return !(document.body&&document.body.classList.contains('logged-in'))}"
