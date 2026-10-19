@@ -72,8 +72,12 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   function enhance(input, title, optional) {
-    var wrap = input.closest('.wpcf7-form-control-wrap'), col = wrap && wrap.closest('[class*="cf-col"]'), p = wrap && wrap.parentNode;
+    var wrap = input.closest('.wpcf7-form-control-wrap');
     if (!wrap || input.__gidf) return null; input.__gidf = true;
+    // libellé du site qui entoure le champ (« <label>Votre CV* … [champ]</label> ») : on sort le champ et on retire ce libellé
+    var outer = wrap.parentNode && wrap.parentNode.closest ? wrap.parentNode.closest('label') : null;
+    if (outer && outer.contains(wrap)) { outer.parentNode.insertBefore(wrap, outer); outer.remove(); }
+    var col = wrap.closest('[class*="cf-col"]'), p = wrap.parentNode;
     // libellé d'origine (« Votre CV* (PDF, Word – 5 Mo maximum) ») remplacé par un libellé net, au-dessus de la zone
     if (p) [].slice.call(p.querySelectorAll('label')).forEach(function (l) { if (!l.contains(input)) l.remove(); });
     [].slice.call((p || wrap).childNodes).forEach(function (n) { if (n.nodeType === 3 && !n.textContent.trim()) n.remove(); if (n.tagName === 'BR') n.remove(); });
