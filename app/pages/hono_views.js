@@ -213,9 +213,20 @@
   function css() {
     var s = h('style');
     s.textContent = [
-      '.hv-views{display:inline-flex;gap:3px;padding:3px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);overflow-x:auto;max-width:100%}',
-      '.hv-views button{border:0;background:none;color:var(--text-2);font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;white-space:nowrap}',
-      '.hv-views button[aria-pressed="true"]{background:var(--text);color:var(--surface)}',
+      // Barre « Affichage du tableau » : une ligne à part, boutons bien visibles
+      '.hv-viewbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:2px 0 12px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}',
+      '.hv-vlab{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2)}',
+      '.hv-views{display:flex;flex-wrap:wrap;gap:6px;max-width:100%}',
+      '.hv-views button{border:1px solid var(--border-strong,var(--border));background:var(--surface);color:var(--text);font:inherit;font-size:14px;font-weight:600;padding:8px 15px;border-radius:9px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}',
+      '.hv-views button:hover{border-color:var(--text)}',
+      '.hv-views button[aria-pressed="true"]{background:var(--text);color:var(--surface);border-color:var(--text);box-shadow:0 2px 6px rgba(0,0,0,.12)}',
+      // Onglets du haut : de vrais boutons, l'onglet ouvert en plein (ordinateur ; sur téléphone, menu déroulant)
+      '@media (min-width:821px){nav.tabs{display:flex!important;flex-wrap:wrap;gap:6px;padding:6px!important;margin:12px 0 4px!important;border:1px solid var(--border)!important;border-radius:12px;background:var(--surface-2)!important;overflow:visible}',
+      'nav.tabs button{margin:0!important;padding:9px 16px!important;border:1px solid transparent!important;border-radius:9px!important;background:transparent!important;color:var(--text-2)!important;font-size:14.5px!important;font-weight:600!important;box-shadow:none!important;cursor:pointer}',
+      'nav.tabs button::after,nav.tabs button::before{display:none!important}',
+      'nav.tabs button:hover{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important}',
+      'nav.tabs button[aria-selected="true"]{background:var(--text)!important;color:var(--surface)!important;border-color:var(--text)!important;box-shadow:0 2px 6px rgba(0,0,0,.14)!important}}',
+      '@media (max-width:820px){.tabpop-btn{background:var(--text)!important;color:var(--surface)!important;border-color:var(--text)!important;padding:13px 16px!important;font-size:15px!important;justify-content:flex-start!important;gap:6px}.tabpop-btn svg{margin-left:auto}.tabpop-btn::before{content:"Onglet · ";font-weight:500;opacity:.7;margin-right:4px}}',
       '.hv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}',
       '.hv-chip{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:99px;padding:4px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}',
       '.hv-chip b{font-variant-numeric:tabular-nums}.hv-chip.crit{border-color:#c0392b;color:#b4412f}.hv-chip.warn{border-color:#c08a2c;color:#a8741d}',
@@ -253,7 +264,7 @@
       '[data-theme="dark"] .hv-chip.crit,[data-theme="dark"] .hv-tag.crit{color:#f09a8d}[data-theme="dark"] .hv-tag.ok,[data-theme="dark"] .hv-pill.up{color:#7fcf9a}[data-theme="dark"] .hv-pill.dn{color:#f09a8d}',
       '@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hv-chip.crit,:root:not([data-theme="light"]) .hv-tag.crit,:root:not([data-theme="light"]) .hv-pill.dn{color:#f09a8d}:root:not([data-theme="light"]) .hv-tag.ok,:root:not([data-theme="light"]) .hv-pill.up{color:#7fcf9a}}',
       '@media (max-width:760px){',
-      '#tab-imm .tbl-wrap,#tab-imm>.note,.hv-views{display:none!important}#hvCards{display:flex;flex-direction:column;gap:10px}',
+      '#tab-imm .tbl-wrap,#tab-imm>.note,.hv-viewbar{display:none!important}#hvCards{display:flex;flex-direction:column;gap:10px}',
       '#tab-imm .toolbar{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0}.hv-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.hv-chip{flex:none}',
       '.hv-card{display:flex;flex-direction:column;gap:8px;text-align:left;width:100%;padding:14px;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer}',
       '.hv-card.crit{box-shadow:inset 3px 0 0 #c0392b}.hv-c1{display:flex;justify-content:space-between;gap:8px}.hv-c1 b{font-size:15px;font-weight:600;line-height:1.3;display:block}',
@@ -278,8 +289,9 @@
     css();
     var vs = h('div', 'hv-views'); vs.setAttribute('role', 'group'); vs.setAttribute('aria-label', 'Vue du tableau');
     VIEWS.forEach(function (v) { var b = h('button', null, v[1]); b.type = 'button'; b.dataset.v = v[0]; b.addEventListener('click', function () { view = v[0]; savePref('hono_view', view); applyView(); }); vs.appendChild(b); });
-    var sp = bar.querySelector('.spacer'); bar.insertBefore(vs, sp || null);
-    var chips = h('div', 'hv-chips'); bar.parentNode.insertBefore(chips, bar.nextSibling);
+    var vb = h('div', 'hv-viewbar'); vb.appendChild(h('span', 'hv-vlab', 'Affichage du tableau')); vb.appendChild(vs);
+    bar.parentNode.insertBefore(vb, bar.nextSibling);
+    var chips = h('div', 'hv-chips'); bar.parentNode.insertBefore(chips, vb.nextSibling);
     var cards = h('div'); cards.id = 'hvCards'; var wrap = tab.querySelector('.tbl-wrap'); wrap.parentNode.insertBefore(cards, wrap.nextSibling);
     t.addEventListener('click', function (e) { var b = e.target.closest('.hv-open'); if (b) { e.preventDefault(); openFiche(+b.closest('tr').dataset.i); } });
     var tm = null;
