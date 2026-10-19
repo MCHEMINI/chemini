@@ -65,6 +65,21 @@
     'form.gidf-on :where(input.wpcf7-form-control:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=file]),select.wpcf7-form-control,textarea.wpcf7-form-control):focus{border-color:#E8540D!important;box-shadow:0 0 0 3px rgba(232,84,13,.18)!important;outline:none}',
     'form.gidf-on ::placeholder{color:#6B7280;opacity:1}',
     'form.gidf-on .gidf-bad.gidf-bad,form.gidf-on .wpcf7-not-valid.wpcf7-not-valid{border-color:#C0392B!important;background-color:#FDF2F1!important;box-shadow:0 0 0 3px rgba(192,57,43,.14)!important}',
+    // structure commune à tous les formulaires : grille 2 colonnes, libellé visible au-dessus de chaque champ, hauteurs identiques
+    'form.gidf-lay .cf-container{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 20px;margin:0!important}',
+    'form.gidf-lay .cf-container>*{width:auto!important;max-width:none!important;flex:none!important;padding:0!important;margin:0!important;min-width:0}',
+    'form.gidf-lay .cf-container>.cf-col-12,form.gidf-lay .cf-container>.gidf-row{grid-column:1/-1}',
+    'form.gidf-lay .cf-container p{margin:0!important;padding:0!important}',
+    'form.gidf-lay label.gid-field{display:block!important;margin:0}',
+    '.gidf-flab,.gidf-lab{display:block;font:600 14px/1.3 Roboto,sans-serif!important;color:#1D1953!important;margin:0 0 7px!important;text-transform:none;letter-spacing:0}',
+    '.gidf-flab em,.gidf-lab em{font-style:normal;font-weight:400;color:#6B7280}.gidf-flab em.req,.gidf-lab em.req{color:#E8540D;font-weight:700}',
+    'form.gidf-lay :where(input.wpcf7-form-control:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=file]),select.wpcf7-form-control){height:48px!important;min-height:48px;padding:0 14px!important;font:400 15px/1.2 Roboto,sans-serif!important;box-sizing:border-box!important;width:100%!important;margin:0!important}',
+    'form.gidf-lay :where(textarea.wpcf7-form-control){height:150px!important;min-height:110px;padding:12px 14px!important;font:400 15px/1.5 Roboto,sans-serif!important;box-sizing:border-box!important;width:100%!important;margin:0!important;resize:vertical}',
+    // menu déroulant : même hauteur que les autres champs, vraie flèche
+    'form.gidf-lay select.wpcf7-form-control{-webkit-appearance:none!important;appearance:none!important;padding-right:42px!important;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%231D1953%27 stroke-width=%272.4%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 14px center!important;background-size:16px!important}',
+    'form.gidf-lay select.wpcf7-form-control.gidf-empty-sel{color:#6B7280!important}',
+    'form.gidf-lay .gidf-row{margin:0!important;gap:20px}',
+    '@media (max-width:767px){form.gidf-lay .cf-container{grid-template-columns:minmax(0,1fr);gap:16px}}',
     '@media (max-width:767px){.gidf-row{grid-template-columns:minmax(0,1fr);gap:16px}form.gidf-on .wpcf7-submit{width:100%}.gidf-drop{min-height:84px}}'
   ].join('');
   var st = document.createElement('style'); st.id = 'gidf-css'; st.textContent = css; document.head.appendChild(st);
@@ -88,7 +103,7 @@
     if (p) [].slice.call(p.querySelectorAll('label')).forEach(function (l) { if (!l.contains(input)) l.remove(); });
     [].slice.call((p || wrap).childNodes).forEach(function (n) { if (n.nodeType === 3 && !n.textContent.trim()) n.remove(); if (n.tagName === 'BR') n.remove(); });
     var id = 'gidf-' + input.name; input.id = input.id || id;
-    var lab = el('label', 'gidf-lab', esc(title) + (optional ? ' <em>(facultatif)</em>' : ' <em>*</em>')); lab.htmlFor = input.id;
+    var lab = el('label', 'gidf-lab', esc(title) + (optional ? ' <em>(facultatif)</em>' : ' <em class="req">*</em>')); lab.htmlFor = input.id;
     var drop = el('div', 'gidf-drop');
     var empty = el('div', 'gidf-empty', '<span class="gidf-ico">' + ICON_UP + '</span><span class="gidf-txt"><span>Glissez votre fichier ici ou <u>parcourez</u></span><small>PDF ou Word (.doc, .docx) · 5 Mo maximum</small></span>');
     var file = el('div', 'gidf-file', '<span class="gidf-ext"></span><span class="gidf-meta"><b></b><small>' + ICON_OK + '<span></span></small></span><span class="gidf-act"><button type="button" class="gidf-btn x" data-r aria-label="Remplacer le fichier" title="Remplacer le fichier">' + ICON_SW + '</button><button type="button" class="gidf-btn x" data-x aria-label="Retirer le fichier" title="Retirer le fichier">' + ICON_X + '</button></span>');
@@ -122,8 +137,32 @@
 
   FORMS.forEach(function (f) { try { setup(f); } catch (e) {} });
 
+  var HINTS = { email: 'exemple@domaine.fr', tel: '06 12 34 56 78' };
+  /* Structure commune : libellé visible au-dessus de chaque champ (repris du libellé caché pour les lecteurs d'écran ou du texte d'exemple) */
+  function structure(form) {
+    form.classList.add('gidf-lay');
+    [].slice.call(form.querySelectorAll('.wpcf7-form-control-wrap > input, .wpcf7-form-control-wrap > select, .wpcf7-form-control-wrap > textarea')).forEach(function (elm) {
+      if (elm.__gidl || /^(hidden|file|checkbox|radio|submit)$/.test(elm.type)) return; elm.__gidl = true;
+      var lab = elm.closest('label'), sr = lab && lab.querySelector('.screen-reader-text');
+      var first = elm.tagName === 'SELECT' && elm.options[0] && !elm.options[0].value ? elm.options[0] : null;
+      var raw = (sr && sr.textContent) || elm.getAttribute('placeholder') || (first && first.text) || elm.name;
+      var opt = /\(facultatif\)/i.test(raw), req = elm.getAttribute('aria-required') === 'true';
+      var text = raw.replace(/\*/g, '').replace(/\s*\(facultatif\)/i, '').replace(/^[—–-]+|[—–-]+$/g, '').trim();
+      if (/veuillez choisir/i.test(text)) text = 'Votre choix';
+      elm.dataset.gidLabel = text;
+      var span = el('span', 'gidf-flab', esc(text) + (req ? ' <em class="req" aria-hidden="true">*</em>' : opt ? ' <em>(facultatif)</em>' : ''));
+      if (sr) sr.replaceWith(span);
+      else { var wrap = elm.closest('.wpcf7-form-control-wrap'); elm.id = elm.id || 'gidf-' + elm.name + '-' + Math.random().toString(36).slice(2, 6); var l = el('label', 'gidf-flab', span.innerHTML); l.htmlFor = elm.id; wrap.parentNode.insertBefore(l, wrap); }
+      // le texte d'exemple ne répète plus le libellé
+      if (elm.tagName === 'SELECT') { if (first) { first.text = 'Choisissez…'; var upd = function () { elm.classList.toggle('gidf-empty-sel', !elm.value); }; elm.addEventListener('change', upd); upd(); } }
+      else if (elm.tagName === 'TEXTAREA') { if ((elm.getAttribute('placeholder') || '').replace(/\*|\(facultatif\)/gi, '').trim() === text) elm.setAttribute('placeholder', 'Votre message…'); }
+      else elm.setAttribute('placeholder', HINTS[elm.type] || (/code postal/i.test(text) ? '75009' : ''));
+    });
+  }
+
   function setup(form) {
   if (form.__gidf) return; form.__gidf = true; form.classList.add('gidf-on');
+  try { structure(form); } catch (e) {}
   var REC = !!form.querySelector('input[type=file][name="your-cv"]'); // formulaire Recrutement
   var NOUN = REC ? 'candidature' : 'demande';
   var FID = (form.querySelector('input[name="_wpcf7"]') || {}).value || 'x';
@@ -167,6 +206,7 @@
     t.textContent = msg;
   }
   function label(elm) {
+    if (elm.dataset && elm.dataset.gidLabel) return elm.dataset.gidLabel;
     var t = elm.getAttribute('placeholder') || (elm.tagName === 'SELECT' && elm.options[0] ? elm.options[0].text : '') || elm.getAttribute('aria-label') || '';
     if (!t) { var l = elm.id && form.querySelector('label[for="' + elm.id + '"]'); t = l ? l.textContent : 'ce champ'; }
     return t.replace(/\*|\(.*?\)/g, '').trim() || 'ce champ';
