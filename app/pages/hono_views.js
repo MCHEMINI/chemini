@@ -96,6 +96,9 @@
           if (!cell.querySelector('.hv-open')) { var b = h('button', 'hv-open', '›'); b.type = 'button'; b.title = 'Ouvrir la fiche de l’immeuble'; b.setAttribute('aria-label', 'Ouvrir la fiche'); cell.appendChild(b); }
         }
         tr.classList.toggle('hv-crit', fl.some(function (x) { return x[0] === 'crit'; }));
+        var vc = tr.querySelector('td[data-col="h2627e"]'); // honoraires votés comparés au proposé : noir = égal, vert = au-dessus, rouge = en dessous
+        if (vc) { var hvP = num(d.h2627v), heV = num(d.h2627e), cmp = heV > 0 && hvP > 0 ? (heV > hvP + 1 ? 'up' : heV < hvP - 1 ? 'dn' : 'eq') : '';
+          ['eq', 'up', 'dn'].forEach(function (k) { vc.classList.toggle('hv-vote-' + k, cmp === k); }); }
         var show = !only || FILTERS.filter(function (f) { return f[0] === only; })[0][3](d);
         tr.classList.toggle('hv-off', !show);
       });
@@ -257,6 +260,7 @@
       '.hv-f input{font:inherit;font-size:14.5px;font-weight:600;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;width:100%;font-variant-numeric:tabular-nums;transition:border-color .2s,box-shadow .2s}',
       '.hv-f input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}.hv-f input.saved{border-color:#4f7a5a;box-shadow:0 0 0 3px rgba(79,122,90,.2)}.hv-f input.bad{border-color:#c0392b}',
       '.hv-note{margin:0;font-size:12.5px;color:var(--muted)}',
+      '#immTbl td.hv-vote-eq .hv-fmt,#immTbl td.hv-vote-eq input:focus{color:var(--text);font-weight:600}#immTbl td.hv-vote-up .hv-fmt,#immTbl td.hv-vote-up input:focus{color:#3e7a52;font-weight:700}#immTbl td.hv-vote-dn .hv-fmt,#immTbl td.hv-vote-dn input:focus{color:#b4412f;font-weight:700}',
       '#hvCards{display:none}',
       '#immTbl td.hv-eur{position:relative}#immTbl td.hv-eur input:not(:focus){color:transparent;caret-color:var(--text)}#immTbl td.hv-eur input:focus+.hv-fmt{visibility:hidden}',
       '.hv-fmt{position:absolute;top:0;bottom:0;right:10px;left:4px;display:flex;align-items:center;justify-content:flex-end;pointer-events:none;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;font-size:inherit}',

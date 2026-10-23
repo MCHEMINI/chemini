@@ -165,6 +165,7 @@ const HONO_EVOLUTIONS = [
     ['2026-10-17 02:06', 'Dates en champ texte JJ/MM/AAAA, complétées aussi d’après le planning ImmOpen'],
     ['2026-10-17 02:17', 'Onglet « Modifications », tableau de décision dans « Optimisation & stratégie », mise à jour automatique des cellules vides'],
     ['2026-10-17 10:08', '« AGO tenue le » limité aux AG ordinaires (vote du contrat de syndic), AG spéciales dans une colonne distincte'],
+    ['2026-10-23 11:20', '« Hon. 26-27 voté » en couleur : noir si égal au proposé, vert si au-dessus, rouge si en dessous'],
 ];
 
 /** Reprise unique de l'historique antérieur au journal : PV relevés, archives, saisies depuis le fichier d'origine, évolutions de l'outil. */
